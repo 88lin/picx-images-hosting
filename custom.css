@@ -64,11 +64,11 @@ div.border:not(div.animate__animated):not(.lg\:p-6.p-4.border.rounded-xl.bg-\[\#
 
 /*设置鼠标样式*/
 body {
-    cursor: url(https://lanyundev.com/cur/Normal.svg),
+    cursor: url(https://jsd.akass.cn/gh/88lin/picx-images-hosting@master/Normal.9rjs0snhjl.svg),
         default;
 }
 a,img {
-    cursor: url(https://lanyundev.com/cur/Link.svg),
+    cursor: url(https://jsd.akass.cn/gh/88lin/picx-images-hosting@master/Link.2rviiwb4pe.svg),
         pointer;
 }
 
@@ -349,3 +349,4 @@ box-shadow: 0px 0px 0px 6px rgb(74, 157, 236, 0.2);
     width: 100%;
     left: 50%;
 }
+
