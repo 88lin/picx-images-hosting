@@ -42,26 +42,6 @@
   pointer-events: none;
 }
 
-/* 卡片动态渐变色 */
-div.border:not(div.animate__animated):not(.lg\:p-6.p-4.border.rounded-xl.bg-\[\#57bd6a\]) {
-  background: linear-gradient(
-    150deg,
-    #e8d8b9 0%,
-    #eccec5 25%,
-    #a3e9eb 50%,
-    #bdbdf0 75%,
-    #eec1ea 100%
-  );
-  background-size: 400% 400%;
-  animation: Gradient 16s ease infinite;
-  will-change: background-position; /* 优化渲染性能 */
-}
-
-/* 黑夜模式适配 */
-.dark div.border:not(div.animate__animated):not(.lg\:p-6.p-4.border.rounded-xl.bg-\[\#57bd6a\]) {
-  background:  #191919ee;
-}
-
 /*设置鼠标样式*/
 body {
     cursor: url(https://jsd.akass.cn/gh/88lin/picx-images-hosting@master/Normal.9rjs0snhjl.svg),
