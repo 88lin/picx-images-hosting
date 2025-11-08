@@ -134,10 +134,6 @@ body {
     opacity: 0.8;
 }
 
-.start-button, .restart-button, .browse-button, .back-button {
-  pointer-events: auto;
-}
-
 .screen {
     padding: 40px;
     animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
@@ -191,6 +187,7 @@ p { color: var(--secondary-text); line-height: 1.8; margin-bottom: 30px; font-si
     position: relative;
     overflow: hidden;
     z-index: 1;
+    min-height: 44px; /* iOS推荐的最小点击区域 */
     -webkit-appearance: none;
     /* ★ 关键：让移动端 Safari 立即触发 click，避免 300ms 延迟与双击缩放，引导不要产生合成 click */
     touch-action: manipulation;
@@ -309,4 +306,13 @@ p { color: var(--secondary-text); line-height: 1.8; margin-bottom: 30px; font-si
 
 @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* iOS特定样式 */
+@supports (-webkit-touch-callout: none) {
+    .start-button, .restart-button, .browse-button, .back-button {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        -webkit-tap-highlight-color: transparent;
+    }
 }
