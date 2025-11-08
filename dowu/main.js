@@ -233,28 +233,25 @@ const quizData = [
 
     function showQuestion(afterRender) {
         if (currentQuestionIndex >= quizData.length) { showResult(); return; }
-
+		// ★ 新增：进入新题时解锁并确保容器可用
+        optionList.dataset.locked = '0';
+		optionList.classList.remove('pointer-guard');
         const currentQuestion = quizData[currentQuestionIndex];
         questionTitle.innerHTML = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
         questionCounter.textContent = `${currentQuestionIndex + 1}/${quizData.length}`;
         backBtn.style.visibility = currentQuestionIndex > 0 ? 'visible' : 'hidden';
 
         optionList.innerHTML = '';
-        ['A', 'B', 'C', 'D'].forEach(key => {
-            if (currentQuestion.options[key]) {
-                const li = document.createElement('li');
-                li.className = 'option-item';
-                if (selectedOptions[currentQuestionIndex] === key) li.classList.add('selected');
-                li.innerHTML = `<span class="option-prefix">${key}</span><span class="option-text">${currentQuestion.options[key]}</span>`;
-	            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-	                li.addEventListener('touchstart', (e) => { e.preventDefault(); selectOption(key, li); }, { passive: false });
-	            }
-                li.addEventListener('touchend', (e) => { e.preventDefault(); selectOption(key, li); }, { passive: false });
-	            li.addEventListener('pointerup', (e) => { e.preventDefault(); selectOption(key, li); }, { passive: false });
-	            li.addEventListener('click', (e) => { e.preventDefault(); selectOption(key, li); }, { passive: false });
-	            optionList.appendChild(li);
-            }
-        });
+		['A', 'B', 'C', 'D'].forEach(key => {
+		    if (currentQuestion.options[key]) {
+		        const li = document.createElement('li');
+		        li.className = 'option-item';
+		        if (selectedOptions[currentQuestionIndex] === key) li.classList.add('selected');
+		        li.innerHTML = `<span class="option-prefix">${key}</span><span class="option-text">${currentQuestion.options[key]}</span>`;
+		        onTap(li, () => selectOption(key, li));
+		        optionList.appendChild(li);
+		    }
+		});
 
         updateProgressBar();
         if (typeof afterRender === 'function') afterRender();
@@ -266,6 +263,9 @@ const quizData = [
     }
 
     function selectOption(optionKey, element) {
+		// ★ 题目级锁：同一题只接受第一次有效点击/触控
+	    if (optionList.dataset.locked === '1') return;
+	    optionList.dataset.locked = '1';
         if (isProcessing) return;
         isProcessing = true;
         selectedOptions[currentQuestionIndex] = optionKey;
@@ -361,28 +361,51 @@ const quizData = [
         }, 1500);
     }
 
-    // 只修改onTap函数，添加touchstart（仅iOS）
+	// 统一 Tap：无额外锁，靠轻量阈值 + preventDefault 防幽灵点击
 	function onTap(el, handler) {
-	    let locked = false;
-	    const wrap = (e) => {
-	        if (e && e.preventDefault) e.preventDefault();
-	        if (locked) return;
-	        locked = true;
-	        try { 
-	            console.log('Button clicked');
-	            handler(e); 
-	        } finally { 
-	            setTimeout(() => (locked = false), 250); 
-	        }
-	    };
-	    
-	    // 只在iOS设备上添加touchstart
-	    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-	        el.addEventListener('touchstart', wrap, { passive: false });
+	    try { el.style.touchAction = 'manipulation'; } catch (e) {}
+	
+	    let startX = 0, startY = 0, startTime = 0;
+	    const MOVE_TOL = 10;     // 允许的指针位移（像素）
+	    const TIME_TOL = 500;    // 认为是一次 Tap 的最长按压时间（毫秒）
+	    const hasPointer = !!window.PointerEvent;
+	    if (hasPointer) {
+	        el.addEventListener('pointerdown', (e) => {
+	            if (!e.isPrimary) return;
+	            startX = e.clientX;
+	            startY = e.clientY;
+	            startTime = e.timeStamp || performance.now();
+	            try { el.setPointerCapture(e.pointerId); } catch (err) {}
+	        }, { passive: true });
+	
+	        el.addEventListener('pointerup', (e) => {
+	            if (!e.isPrimary) return;
+	
+	            const dt = (e.timeStamp || performance.now()) - startTime;
+	            const dx = e.clientX - startX;
+	            const dy = e.clientY - startY;
+	            const moved = (dx*dx + dy*dy) > (MOVE_TOL*MOVE_TOL);
+	
+	            if (dt <= TIME_TOL && !moved) {
+	                e.preventDefault();
+	                e.stopPropagation();
+	                handler(e);
+	            }
+	
+	            try { el.releasePointerCapture(e.pointerId); } catch (err) {}
+	        }, { passive: false });
+	
+	        el.addEventListener('click', (e) => {
+	            e.preventDefault();
+	            e.stopPropagation();
+	        }, { capture: true, passive: false });
+	
+	    } else {
+	        el.addEventListener('click', (e) => {
+	            e.preventDefault();
+	            handler(e);
+	        }, { passive: false });
 	    }
-	    el.addEventListener('touchend', wrap, { passive: false });
-	    el.addEventListener('pointerup', wrap, { passive: false });
-	    el.addEventListener('click', wrap, { passive: false });
 	}
 
     onTap(startBtn, startQuiz);
@@ -403,14 +426,5 @@ const quizData = [
         
         // 添加iOS特定的事件处理
         document.addEventListener('touchstart', function() {}, { passive: true });
-		// 防止iOS上的双击缩放
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', function (event) {
-            const now = Date.now();
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
-            }
-            lastTouchEnd = now;
-        }, false);
     }
 });
