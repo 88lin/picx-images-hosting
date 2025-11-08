@@ -201,9 +201,11 @@ const quizData = [
     }
 
     function startQuiz() {
-        if (isProcessing) return;
-        isProcessing = true;
+    console.log('startQuiz called, isProcessing:', isProcessing); // 添加调试信息
+    if (isProcessing) return;
+    isProcessing = true;
 
+    try {
         currentQuestionIndex = 0;
         initScores();
         selectedOptions = [];
@@ -215,16 +217,19 @@ const quizData = [
         quizScreen.classList.remove('hidden');
         quizScreen.classList.remove('fade-out');
 
-        // ★ 关键：切到第一题前，先渲染题目，再在短时间内屏蔽选项区域的指针事件，防止“开始测试”的手指抬起穿透到第一题选项
+        // ★ 关键：切到第一题前，先渲染题目，再在短时间内屏蔽选项区域的指针事件，防止"开始测试"的手指抬起穿透到第一题选项
         showQuestion(() => {
             optionList.classList.add('pointer-guard');   // 屏蔽点击
             setTimeout(() => {
                 optionList.classList.remove('pointer-guard'); // 350ms 后恢复
             }, 350);
         });
-
+    } catch (error) {
+        console.error('Error in startQuiz:', error); // 添加错误处理
+    } finally {
         isProcessing = false;
     }
+}
 
     function showQuestion(afterRender) {
         if (currentQuestionIndex >= quizData.length) { showResult(); return; }
@@ -353,18 +358,24 @@ const quizData = [
         }, 1500);
     }
 
-    // ===== 「通用点按」封装：iOS/WKWebView 更稳 =====
     function onTap(el, handler) {
     let locked = false;
     const wrap = (e) => {
         if (e && e.preventDefault) e.preventDefault();
         if (locked) return;
         locked = true;
-        try { handler(e); } finally { setTimeout(() => (locked = false), 250); }
+        try { 
+            console.log('Button clicked'); // 添加调试信息
+            handler(e); 
+        } finally { 
+            setTimeout(() => (locked = false), 250); 
+        }
     };
+    // 添加touchend事件监听，确保在iOS上也能正确触发
+    el.addEventListener('touchend', wrap, { passive: false });
     el.addEventListener('pointerup', wrap, { passive: false });
     el.addEventListener('click', wrap, { passive: false });
-    }
+}
 
     onTap(startBtn, startQuiz);
     onTap(restartBtn, startQuiz);
@@ -374,12 +385,15 @@ const quizData = [
     onTap(backToResultBtn, backToResult);
 
     document.addEventListener('DOMContentLoaded', () => {
-        initScores();
-        initAnimalGuide();
-        document.getElementById('quiz-container').style.transform = 'perspective(1000px) rotateX(0deg)';
+    initScores();
+    initAnimalGuide();
+    document.getElementById('quiz-container').style.transform = 'perspective(1000px) rotateX(0deg)';
 
-        // iOS 字体微调（原逻辑保留）
-        if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
-            document.documentElement.style.fontSize = '16px';
-        }
-    });
+    // iOS 字体微调（原逻辑保留）
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+        document.documentElement.style.fontSize = '16px';
+        
+        // 添加iOS特定的事件处理
+        document.addEventListener('touchstart', function() {}, { passive: true });
+    }
+});
