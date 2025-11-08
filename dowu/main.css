@@ -77,7 +77,6 @@ body {
     align-items: center;
     text-align: center;
     gap: 8px;
-
     color: var(--secondary-text);
     font-size: 16px;
     line-height: 1.5;
@@ -315,4 +314,9 @@ p { color: var(--secondary-text); line-height: 1.8; margin-bottom: 30px; font-si
         transform: translateZ(0);
         -webkit-tap-highlight-color: transparent;
     }
+}
+
+/* 防止 iOS Safari 穿透点击 */
+#option-list.pointer-guard {
+  pointer-events: none !important;
 }
