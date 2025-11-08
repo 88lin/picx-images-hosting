@@ -263,10 +263,10 @@ const quizData = [
     }
 
     function selectOption(optionKey, element) {
-		// ★ 题目级锁：同一题只接受第一次有效点击/触控
+		if (currentQuestionIndex >= quizData.length) return;
 	    if (optionList.dataset.locked === '1') return;
+		if (isProcessing) return;
 	    optionList.dataset.locked = '1';
-        if (isProcessing) return;
         isProcessing = true;
         selectedOptions[currentQuestionIndex] = optionKey;
         document.querySelectorAll('.option-item').forEach(item => item.classList.remove('selected'));
@@ -428,3 +428,4 @@ const quizData = [
         document.addEventListener('touchstart', function() {}, { passive: true });
     }
 });
+
