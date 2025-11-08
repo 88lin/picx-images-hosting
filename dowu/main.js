@@ -363,6 +363,7 @@ const quizData = [
 
 	// 统一 Tap：无额外锁，靠轻量阈值 + preventDefault 防幽灵点击
 	function onTap(el, handler) {
+		if (!el) return;
 	    try { el.style.touchAction = 'manipulation'; } catch (e) {}
 	
 	    let startX = 0, startY = 0, startTime = 0;
@@ -428,4 +429,3 @@ const quizData = [
         document.addEventListener('touchstart', function() {}, { passive: true });
     }
 });
-
