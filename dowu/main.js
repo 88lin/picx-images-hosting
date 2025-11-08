@@ -246,10 +246,13 @@ const quizData = [
                 li.className = 'option-item';
                 if (selectedOptions[currentQuestionIndex] === key) li.classList.add('selected');
                 li.innerHTML = `<span class="option-prefix">${key}</span><span class="option-text">${currentQuestion.options[key]}</span>`;
-                // ★ 统一只绑定 click，结合 CSS 的 touch-action: manipulation，解决 iOS “点不动/重复触发/幽灵点击”
-                li.addEventListener('pointerup', (e) => { e.preventDefault(); selectOption(key, li); }, { passive: false });
-                li.addEventListener('click', (e) => { e.preventDefault(); selectOption(key, li); }, { passive: false });
-                optionList.appendChild(li);
+	            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+	                li.addEventListener('touchstart', (e) => { e.preventDefault(); selectOption(key, li); }, { passive: false });
+	            }
+                li.addEventListener('touchend', (e) => { e.preventDefault(); selectOption(key, li); }, { passive: false });
+	            li.addEventListener('pointerup', (e) => { e.preventDefault(); selectOption(key, li); }, { passive: false });
+	            li.addEventListener('click', (e) => { e.preventDefault(); selectOption(key, li); }, { passive: false });
+	            optionList.appendChild(li);
             }
         });
 
@@ -411,4 +414,3 @@ const quizData = [
         }, false);
     }
 });
-
