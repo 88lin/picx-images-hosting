@@ -181,6 +181,12 @@ const quizData = [
     const resultAnimal = document.getElementById('result-animal');
     const resultDescription = document.getElementById('result-description');
 
+	function lockOptions(locked) {
+	  optionList.dataset.locked = locked ? '1' : '0';
+	  optionList.classList.toggle('pointer-guard', !!locked);
+	  optionList.style.pointerEvents = locked ? 'none' : 'auto';
+	}
+
     const dimensionKeys = ["DOM", "STR", "COM", "SOL", "AGI", "SEC", "AES"];
 
     let currentQuestionIndex = 0;
@@ -232,30 +238,39 @@ const quizData = [
 }
 
     function showQuestion(afterRender) {
-        if (currentQuestionIndex >= quizData.length) { showResult(); return; }
-		// ★ 新增：进入新题时解锁并确保容器可用
-        optionList.dataset.locked = '0';
-		optionList.classList.remove('pointer-guard');
-        const currentQuestion = quizData[currentQuestionIndex];
-        questionTitle.innerHTML = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
-        questionCounter.textContent = `${currentQuestionIndex + 1}/${quizData.length}`;
-        backBtn.style.visibility = currentQuestionIndex > 0 ? 'visible' : 'hidden';
+  if (currentQuestionIndex >= quizData.length) { showResult(); return; }
 
-        optionList.innerHTML = '';
-		['A', 'B', 'C', 'D'].forEach(key => {
-		    if (currentQuestion.options[key]) {
-		        const li = document.createElement('li');
-		        li.className = 'option-item';
-		        if (selectedOptions[currentQuestionIndex] === key) li.classList.add('selected');
-		        li.innerHTML = `<span class="option-prefix">${key}</span><span class="option-text">${currentQuestion.options[key]}</span>`;
-		        onTap(li, () => selectOption(key, li));
-		        optionList.appendChild(li);
-		    }
-		});
+  // 进入新题前先上锁，避免过渡期穿透
+  lockOptions(true);
+  isProcessing = false;
 
-        updateProgressBar();
-        if (typeof afterRender === 'function') afterRender();
+  const currentQuestion = quizData[currentQuestionIndex];
+  questionTitle.innerHTML = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+  questionCounter.textContent = `${currentQuestionIndex + 1}/${quizData.length}`;
+  backBtn.style.visibility = currentQuestionIndex > 0 ? 'visible' : 'hidden';
+
+  optionList.innerHTML = '';
+  ['A','B','C','D'].forEach(key => {
+    if (currentQuestion.options[key]) {
+      const li = document.createElement('li');
+      li.className = 'option-item';
+      if (selectedOptions[currentQuestionIndex] === key) li.classList.add('selected');
+      li.innerHTML = `<span class="option-prefix">${key}</span><span class="option-text">${currentQuestion.options[key]}</span>`;
+      onTap(li, () => selectOption(key, li));
+      optionList.appendChild(li);
     }
+  });
+
+  updateProgressBar();
+
+  // 等浏览器把新 DOM 布局/绘制完成再解锁（1 帧 + 少许延迟），兜住 iOS 的延迟 click/touchend
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      lockOptions(false);
+      if (typeof afterRender === 'function') afterRender();
+    }, 250);
+  });
+}
 
     function updateProgressBar() {
         const progress = (currentQuestionIndex / quizData.length) * 100;
@@ -263,31 +278,27 @@ const quizData = [
     }
 
     function selectOption(optionKey, element) {
-		if (currentQuestionIndex >= quizData.length) return;
-	    if (optionList.dataset.locked === '1') return;
-		if (isProcessing) return;
-	    optionList.dataset.locked = '1';
-        isProcessing = true;
-        selectedOptions[currentQuestionIndex] = optionKey;
-        document.querySelectorAll('.option-item').forEach(item => item.classList.remove('selected'));
-        element.classList.add('selected');
-        optionList.classList.add('pointer-guard');
-        setTimeout(() => {
-            quizScreen.classList.add('fade-out');
-
-            setTimeout(() => {
-            currentQuestionIndex++;
-            quizScreen.classList.remove('fade-out');
-            showQuestion(() => {
-                setTimeout(() => {
-                optionList.classList.remove('pointer-guard');
-                }, 300);
-            });
-
-            isProcessing = false;
-            }, 600);
-        }, 350);
-        }
+	  if (currentQuestionIndex >= quizData.length) return;
+	  if (optionList.dataset.locked === '1') return;
+	  if (isProcessing) return;
+	
+	  lockOptions(true);
+	  isProcessing = true;
+	
+	  selectedOptions[currentQuestionIndex] = optionKey;
+	  document.querySelectorAll('.option-item').forEach(item => item.classList.remove('selected'));
+	  element.classList.add('selected');
+	
+	  setTimeout(() => {
+	    quizScreen.classList.add('fade-out');
+	
+	    setTimeout(() => {
+	      currentQuestionIndex++;
+	      quizScreen.classList.remove('fade-out');
+	      showQuestion(); // 解锁动作由 showQuestion 统一负责
+	    }, 600);
+	  }, 200);
+	}
 
     function goBack() {
         if (isProcessing || currentQuestionIndex <= 0) return;
@@ -363,50 +374,43 @@ const quizData = [
 
 	// 统一 Tap：无额外锁，靠轻量阈值 + preventDefault 防幽灵点击
 	function onTap(el, handler) {
-		if (!el) return;
-	    try { el.style.touchAction = 'manipulation'; } catch (e) {}
+	  if (!el) return;
+	  try { el.style.touchAction = 'manipulation'; } catch (e) {}
 	
-	    let startX = 0, startY = 0, startTime = 0;
-	    const MOVE_TOL = 10;     // 允许的指针位移（像素）
-	    const TIME_TOL = 500;    // 认为是一次 Tap 的最长按压时间（毫秒）
-	    const hasPointer = !!window.PointerEvent;
-	    if (hasPointer) {
-	        el.addEventListener('pointerdown', (e) => {
-	            if (!e.isPrimary) return;
-	            startX = e.clientX;
-	            startY = e.clientY;
-	            startTime = e.timeStamp || performance.now();
-	            try { el.setPointerCapture(e.pointerId); } catch (err) {}
-	        }, { passive: true });
+	  let startX = 0, startY = 0, startTime = 0;
+	  const MOVE_TOL = 10;
+	  const TIME_TOL = 500;
+	  const hasPointer = !!window.PointerEvent;
 	
-	        el.addEventListener('pointerup', (e) => {
-	            if (!e.isPrimary) return;
+	  if (hasPointer) {
+	    el.addEventListener('pointerdown', (e) => {
+	      if (!e.isPrimary) return;
+	      startX = e.clientX;
+	      startY = e.clientY;
+	      startTime = e.timeStamp || performance.now();
+	      try { el.setPointerCapture(e.pointerId); } catch (err) {}
+	    }, { passive: true });
 	
-	            const dt = (e.timeStamp || performance.now()) - startTime;
-	            const dx = e.clientX - startX;
-	            const dy = e.clientY - startY;
-	            const moved = (dx*dx + dy*dy) > (MOVE_TOL*MOVE_TOL);
-	
-	            if (dt <= TIME_TOL && !moved) {
-	                e.preventDefault();
-	                e.stopPropagation();
-	                handler(e);
-	            }
-	
-	            try { el.releasePointerCapture(e.pointerId); } catch (err) {}
-	        }, { passive: false });
-	
-	        el.addEventListener('click', (e) => {
-	            e.preventDefault();
-	            e.stopPropagation();
-	        }, { capture: true, passive: false });
-	
-	    } else {
-	        el.addEventListener('click', (e) => {
-	            e.preventDefault();
-	            handler(e);
-	        }, { passive: false });
-	    }
+	    el.addEventListener('pointerup', (e) => {
+	      if (!e.isPrimary) return;
+	      const dt = (e.timeStamp || performance.now()) - startTime;
+	      const dx = e.clientX - startX;
+	      const dy = e.clientY - startY;
+	      const moved = (dx*dx + dy*dy) > (MOVE_TOL*MOVE_TOL);
+	      if (dt <= TIME_TOL && !moved) {
+	        e.preventDefault();
+	        e.stopPropagation();
+	        handler(e);
+	      }
+	      try { el.releasePointerCapture(e.pointerId); } catch (err) {}
+	    }, { passive: false });
+	  } else {
+	    // 极老的设备（无 PointerEvent）才用 click 兜底
+	    el.addEventListener('click', (e) => {
+	      e.preventDefault();
+	      handler(e);
+	    }, { passive: false });
+	  }
 	}
 
     onTap(startBtn, startQuiz);
@@ -429,3 +433,4 @@ const quizData = [
         document.addEventListener('touchstart', function() {}, { passive: true });
     }
 });
+
