@@ -201,7 +201,7 @@ const quizData = [
     }
 
     function startQuiz() {
-    console.log('startQuiz called, isProcessing:', isProcessing); // 添加调试信息
+    console.log('startQuiz called, isProcessing:', isProcessing);
     if (isProcessing) return;
     isProcessing = true;
 
@@ -219,15 +219,15 @@ const quizData = [
 
         // ★ 关键：切到第一题前，先渲染题目，再在短时间内屏蔽选项区域的指针事件，防止"开始测试"的手指抬起穿透到第一题选项
         showQuestion(() => {
-            optionList.classList.add('pointer-guard');   // 屏蔽点击
+            optionList.classList.add('pointer-guard');
             setTimeout(() => {
-                optionList.classList.remove('pointer-guard'); // 350ms 后恢复
+                optionList.classList.remove('pointer-guard');
+                isProcessing = false; // 在这里重置isProcessing
             }, 350);
         });
     } catch (error) {
-        console.error('Error in startQuiz:', error); // 添加错误处理
-    } finally {
-        isProcessing = false;
+        console.error('Error in startQuiz:', error);
+        isProcessing = false; // 确保在出错时重置isProcessing
     }
 }
 
@@ -358,24 +358,29 @@ const quizData = [
         }, 1500);
     }
 
-    function onTap(el, handler) {
-    let locked = false;
-    const wrap = (e) => {
-        if (e && e.preventDefault) e.preventDefault();
-        if (locked) return;
-        locked = true;
-        try { 
-            console.log('Button clicked'); // 添加调试信息
-            handler(e); 
-        } finally { 
-            setTimeout(() => (locked = false), 250); 
-        }
-    };
-    // 添加touchend事件监听，确保在iOS上也能正确触发
-    el.addEventListener('touchend', wrap, { passive: false });
-    el.addEventListener('pointerup', wrap, { passive: false });
-    el.addEventListener('click', wrap, { passive: false });
-}
+    // 只修改onTap函数，添加touchstart（仅iOS）
+	function onTap(el, handler) {
+	    let locked = false;
+	    const wrap = (e) => {
+	        if (e && e.preventDefault) e.preventDefault();
+	        if (locked) return;
+	        locked = true;
+	        try { 
+	            console.log('Button clicked');
+	            handler(e); 
+	        } finally { 
+	            setTimeout(() => (locked = false), 250); 
+	        }
+	    };
+	    
+	    // 只在iOS设备上添加touchstart
+	    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+	        el.addEventListener('touchstart', wrap, { passive: false });
+	    }
+	    el.addEventListener('touchend', wrap, { passive: false });
+	    el.addEventListener('pointerup', wrap, { passive: false });
+	    el.addEventListener('click', wrap, { passive: false });
+	}
 
     onTap(startBtn, startQuiz);
     onTap(restartBtn, startQuiz);
@@ -395,5 +400,15 @@ const quizData = [
         
         // 添加iOS特定的事件处理
         document.addEventListener('touchstart', function() {}, { passive: true });
+		// 防止iOS上的双击缩放
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
     }
 });
+
