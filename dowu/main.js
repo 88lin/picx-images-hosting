@@ -176,6 +176,7 @@ const quizData = [
     const startBrowseBtn = document.getElementById('start-browse-btn');
     const historyBtn = document.getElementById('history-btn');
     const historyBackBtn = document.getElementById('history-back-btn');
+    const resultHistoryBtn = document.getElementById('result-history-btn');
 
     const questionTitle = document.getElementById('question-title');
     const optionList = document.getElementById('option-list');
@@ -587,6 +588,7 @@ const quizData = [
     // 新增：历史记录入口 & 返回
     onTap(historyBtn, showHistory);
     onTap(historyBackBtn, backToStartFromHistory);
+    onTap(resultHistoryBtn, showHistory);
 
     document.addEventListener('DOMContentLoaded', () => {
     initScores();
