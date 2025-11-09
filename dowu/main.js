@@ -279,37 +279,34 @@ const quizData = [
 
     function selectOption(optionKey, element) {
 	  if (currentQuestionIndex >= quizData.length) return;
-	  if (optionList.dataset.locked === '1') return;
-	  if (isProcessing) return;
-	
+	  if (optionList.dataset.locked === '1' || isProcessing) return;
 	  lockOptions(true);
 	  isProcessing = true;
-	
 	  selectedOptions[currentQuestionIndex] = optionKey;
 	  document.querySelectorAll('.option-item').forEach(item => item.classList.remove('selected'));
 	  element.classList.add('selected');
-	
+
+	  void element.offsetWidth;
+
 	  setTimeout(() => {
 	    quizScreen.classList.add('fade-out');
-	
+
 	    setTimeout(() => {
 	      currentQuestionIndex++;
 	      quizScreen.classList.remove('fade-out');
-	      showQuestion(); // 解锁动作由 showQuestion 统一负责
-	    }, 600);
-	  }, 200);
+	      showQuestion();
+	    }, 500);
+	  }, 180);
 	}
 
     function goBack() {
         if (isProcessing || currentQuestionIndex <= 0) return;
         isProcessing = true;
-
         quizScreen.classList.add('fade-out');
         setTimeout(() => {
             currentQuestionIndex--;
             quizScreen.classList.remove('fade-out');
             showQuestion();
-            isProcessing = false;
         }, 600);
     }
 
@@ -377,35 +374,39 @@ const quizData = [
 	  if (!el) return;
 	  try { el.style.touchAction = 'manipulation'; } catch (e) {}
 	
-	  let startX = 0, startY = 0, startTime = 0;
-	  const MOVE_TOL = 10;
-	  const TIME_TOL = 500;
+	  let startX = 0, startY = 0, startTime = 0, downId = null;
+	  const MOVE_TOL = 12;
+	  const TIME_TOL = 650;
 	  const hasPointer = !!window.PointerEvent;
 	
 	  if (hasPointer) {
 	    el.addEventListener('pointerdown', (e) => {
 	      if (!e.isPrimary) return;
+	      downId = e.pointerId;
 	      startX = e.clientX;
 	      startY = e.clientY;
 	      startTime = e.timeStamp || performance.now();
-	      try { el.setPointerCapture(e.pointerId); } catch (err) {}
+	      try { el.setPointerCapture(downId); } catch (err) {}
 	    }, { passive: true });
 	
 	    el.addEventListener('pointerup', (e) => {
-	      if (!e.isPrimary) return;
-	      const dt = (e.timeStamp || performance.now()) - startTime;
+	      if (!e.isPrimary || (downId !== null && e.pointerId !== downId)) return;
+	      const t = e.timeStamp || performance.now();
+	      const dt = t - startTime;
 	      const dx = e.clientX - startX;
 	      const dy = e.clientY - startY;
 	      const moved = (dx*dx + dy*dy) > (MOVE_TOL*MOVE_TOL);
+	
 	      if (dt <= TIME_TOL && !moved) {
 	        e.preventDefault();
 	        e.stopPropagation();
 	        handler(e);
 	      }
 	      try { el.releasePointerCapture(e.pointerId); } catch (err) {}
+	      downId = null;
 	    }, { passive: false });
+	
 	  } else {
-	    // 极老的设备（无 PointerEvent）才用 click 兜底
 	    el.addEventListener('click', (e) => {
 	      e.preventDefault();
 	      handler(e);
@@ -433,4 +434,3 @@ const quizData = [
         document.addEventListener('touchstart', function() {}, { passive: true });
     }
 });
-
