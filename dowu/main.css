@@ -318,12 +318,38 @@ p { color: var(--secondary-text); line-height: 1.8; margin-bottom: 30px; font-si
   pointer-events: none !important;
 }
 
+/* 历史记录区域样式 */
+.history-tip {
+    margin-top: 2px;
+    font-size: 1em;
+    color: var(--secondary-text);
+    line-height: 1.6;
+    text-align: center;
+}
+
 .history-list {
   margin-top: 20px;
   max-height: 70vh;
   overflow-y: auto;
   padding-right: 6px;
   scroll-behavior: smooth;
+}
+
+/* Webkit 浏览器滚动条样式 */
+.history-list::-webkit-scrollbar {
+  width: 6px;
+}
+.history-list::-webkit-scrollbar-track {
+  background: rgba(99,102,241,.05);
+  border-radius: 3px;
+}
+.history-list::-webkit-scrollbar-thumb {
+  background: rgba(99,102,241,.2);
+  border-radius: 3px;
+  transition: background .2s ease;
+}
+.history-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(99,102,241,.3);
 }
 
 .history-item {
@@ -339,8 +365,9 @@ p { color: var(--secondary-text); line-height: 1.8; margin-bottom: 30px; font-si
 
 .history-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.10);
-  border-color: rgba(99, 102, 241, 0.25); /* 略带品牌色高亮 */
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.1), 
+              0 4px 12px rgba(99, 102, 241, 0.08); /* 带有颜色倾向的阴影，创造发光效果 */
+  border-color: rgba(99, 102, 241, 0.25);
 }
 
 /* 左侧时间轴与节点 */
@@ -462,6 +489,7 @@ p { color: var(--secondary-text); line-height: 1.8; margin-bottom: 30px; font-si
 .history-question {
   font-size: .92em;
   color: var(--primary-text, #0f172a);
+  font-weight: 500; /* 增加字重 */
 }
 .history-answer {
   font-size: .85em;
@@ -477,7 +505,7 @@ p { color: var(--secondary-text); line-height: 1.8; margin-bottom: 30px; font-si
   transition: height .25s ease, opacity .25s ease;
 }
 .collapse.show {
-  height: auto;        /* 通过 JS 动态控制高度 */
+  height: auto;
   opacity: 1;
 }
 
@@ -487,4 +515,27 @@ p { color: var(--secondary-text); line-height: 1.8; margin-bottom: 30px; font-si
   font-size: .95em;
   color: var(--secondary-text, #64748b);
   text-align: center;
+  padding: 40px 20px;
+  position: relative;
+}
+
+.history-empty::before {
+  content: "📝";
+  display: block;
+  font-size: 3em;
+  margin-bottom: 12px;
+  opacity: .5;
+}
+
+.history-empty::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(99,102,241,.05), transparent);
+  border-radius: 50%;
+  z-index: -1;
 }
