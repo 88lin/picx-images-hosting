@@ -706,6 +706,3 @@ const emojiForAnimal = (name = '') => {
         document.addEventListener('touchstart', function() {}, { passive: true });
     }
 });
-
-
-
