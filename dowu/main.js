@@ -165,13 +165,17 @@ const quizData = [
     const interludeScreen = document.getElementById('interlude-screen');
     const loadingScreen = document.getElementById('loading-screen');
     const animalGuideScreen = document.getElementById('animal-guide-screen');
+    const historyScreen = document.getElementById('history-screen');
+    const historyList = document.getElementById('history-list');
 
     const startBtn = document.getElementById('start-btn');
     const restartBtn = document.getElementById('restart-btn');
     const backBtn = document.getElementById('back-btn');
     const browseBtn = document.getElementById('browse-btn');
     const backToResultBtn = document.getElementById('back-to-result-btn');
-	const startBrowseBtn = document.getElementById('start-browse-btn');
+    const startBrowseBtn = document.getElementById('start-browse-btn');
+    const historyBtn = document.getElementById('history-btn');
+    const historyBackBtn = document.getElementById('history-back-btn');
 
     const questionTitle = document.getElementById('question-title');
     const optionList = document.getElementById('option-list');
@@ -188,6 +192,8 @@ const quizData = [
 	}
 
     const dimensionKeys = ["DOM", "STR", "COM", "SOL", "AGI", "SEC", "AES"];
+    const HISTORY_STORAGE_KEY = 'animalQuizHistory_v1';
+    const MAX_HISTORY_LENGTH = 20;
 
     let currentQuestionIndex = 0;
     let scores = {};
@@ -217,8 +223,8 @@ const quizData = [
         selectedOptions = [];
 
         // 隐藏其它屏幕
-        [startScreen, resultScreen, interludeScreen, animalGuideScreen, loadingScreen]
-            .forEach(s => s.classList.add('hidden'));
+        [startScreen, resultScreen, interludeScreen, animalGuideScreen, loadingScreen, historyScreen]
+            .forEach(s => s && s.classList.add('hidden'));
 
         quizScreen.classList.remove('hidden');
         quizScreen.classList.remove('fade-out');
@@ -325,6 +331,163 @@ const quizData = [
         else resultScreen.classList.remove('hidden');
     }
 
+    function getQuizHistory() {
+        try {
+            if (!window.localStorage) return [];
+        } catch (e) {
+            return [];
+        }
+        try {
+            const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
+            if (!raw) return [];
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+            console.error('Error reading quiz history:', e);
+            return [];
+        }
+    }
+
+    function saveQuizHistory(bestMatchAnimal, resultData) {
+        try {
+            if (!window.localStorage) return;
+        } catch (e) {
+            return;
+        }
+
+        try {
+            let history = getQuizHistory();
+
+            // 组装答题详情（题目 + 选项 + 选项内容）
+            const answersDetail = selectedOptions.map((optionKey, index) => {
+                if (!optionKey) return null;
+                const question = quizData[index];
+                if (!question || !question.options) return null;
+                const optionText = question.options[optionKey];
+                return {
+                    index: index + 1,
+                    question: question.question,
+                    optionKey,
+                    optionText
+                };
+            }).filter(Boolean);
+
+            const now = new Date();
+            const record = {
+                id: now.getTime(),
+                timestamp: now.toISOString(),
+                displayTime: now.toLocaleString('zh-CN', { hour12: false }),
+                resultAnimal: bestMatchAnimal,
+                resultDescription: resultData && resultData.desc ? resultData.desc : '',
+                answers: answersDetail
+            };
+
+            // 最新的记录放前面
+            history.unshift(record);
+
+            // 控制最多保存条数
+            if (history.length > MAX_HISTORY_LENGTH) {
+                history = history.slice(0, MAX_HISTORY_LENGTH);
+            }
+
+            localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+        } catch (e) {
+            console.error('Error saving quiz history:', e);
+        }
+    }
+
+    function renderHistoryList() {
+        if (!historyList) return;
+
+        historyList.innerHTML = '';
+
+        const history = getQuizHistory();
+        if (!history || history.length === 0) {
+            const emptyTip = document.createElement('p');
+            emptyTip.className = 'history-empty';
+            emptyTip.textContent = '当前暂无历史记录，完成一次测试后会自动保存到这里。';
+            historyList.appendChild(emptyTip);
+            return;
+        }
+
+        history.forEach((record) => {
+            const item = document.createElement('div');
+            item.className = 'history-item';
+
+            const header = document.createElement('div');
+            header.className = 'history-header';
+
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'history-time';
+            timeSpan.textContent = record.displayTime || '';
+
+            const resultSpan = document.createElement('span');
+            resultSpan.className = 'history-result';
+            resultSpan.textContent = `结果：【 ${record.resultAnimal || '未知'} 】`;
+
+            header.appendChild(timeSpan);
+            header.appendChild(resultSpan);
+            item.appendChild(header);
+
+            if (record.resultDescription) {
+                const desc = document.createElement('p');
+                desc.className = 'history-desc';
+                desc.textContent = record.resultDescription;
+                item.appendChild(desc);
+            }
+
+            if (record.answers && record.answers.length) {
+                const answersTitle = document.createElement('div');
+                answersTitle.className = 'history-answers-title';
+                answersTitle.textContent = '答题记录：';
+                item.appendChild(answersTitle);
+
+                const ul = document.createElement('ul');
+                ul.className = 'history-answer-list';
+
+                record.answers.forEach((answer) => {
+                    const li = document.createElement('li');
+                    li.className = 'history-answer-item';
+
+                    const qDiv = document.createElement('div');
+                    qDiv.className = 'history-question';
+                    qDiv.textContent = `${answer.index}. ${answer.question || ''}`;
+
+                    const aDiv = document.createElement('div');
+                    aDiv.className = 'history-answer';
+                    aDiv.textContent = `你的选择：${answer.optionKey || ''}、${answer.optionText || ''}`;
+
+                    li.appendChild(qDiv);
+                    li.appendChild(aDiv);
+                    ul.appendChild(li);
+                });
+
+                item.appendChild(ul);
+            }
+
+            historyList.appendChild(item);
+        });
+    }
+
+    function showHistory() {
+        // 隐藏其他屏幕
+        startScreen.classList.add('hidden');
+        quizScreen.classList.add('hidden');
+        resultScreen.classList.add('hidden');
+        interludeScreen.classList.add('hidden');
+        animalGuideScreen.classList.add('hidden');
+        loadingScreen.classList.add('hidden');
+
+        // 渲染历史记录
+        renderHistoryList();
+        historyScreen.classList.remove('hidden');
+    }
+
+    function backToStartFromHistory() {
+        historyScreen.classList.add('hidden');
+        startScreen.classList.remove('hidden');
+    }
+
     function showResult() {
         quizScreen.classList.add('hidden');
         loadingScreen.classList.remove('hidden');
@@ -362,6 +525,7 @@ const quizData = [
             const resultData = animalArchetypes[bestMatchAnimal];
             resultAnimal.textContent = `【 ${bestMatchAnimal} 】`;
             resultDescription.textContent = resultData.desc;
+            saveQuizHistory(bestMatchAnimal, resultData);
 
             loadingScreen.classList.add('hidden');
             resultScreen.classList.remove('hidden');
@@ -420,6 +584,9 @@ const quizData = [
     onTap(browseBtn, () => showAllAnimals('result'));
     onTap(startBrowseBtn, () => showAllAnimals('start'));
     onTap(backToResultBtn, backToResult);
+    // 新增：历史记录入口 & 返回
+    onTap(historyBtn, showHistory);
+    onTap(historyBackBtn, backToStartFromHistory);
 
     document.addEventListener('DOMContentLoaded', () => {
     initScores();
