@@ -60,10 +60,7 @@ const quizData = [
         { question: "在生命的尽头，你回望一生，最让你感到自豪的是？", options: { A: "我从未背叛过我自己。", B: "我用生命守护了我爱的一切。", C: "我过得舒适安逸，没留下什么遗憾。", D: "我达到了无人企及的高度。" } },
         { question: "选择你的灵魂图腾：", options: { A: "螺旋。", B: "心形。", C: "圆圈。", D: "三角。" } },
     ];
-
-    // 计分规则 - 均衡分配各维度得分权重
     const scoreMap = [
-        // 第一章：(1-15题)
         { A: { AES: 2 }, B: { COM: 2 }, C: { SOL: 2 }, D: { AGI: 2 } },
         { A: { COM: 2 }, B: { SEC: 2 }, C: { AES: 2 }, D: { STR: 2 } },
         { A: { STR: 2 }, B: { COM: 2 }, C: { SEC: 2 }, D: { DOM: 2 } },
@@ -79,8 +76,6 @@ const quizData = [
         { A: { AES: 2 }, B: { DOM: 2 }, C: { AES: 2 }, D: { SOL: 2 } },
         { A: { AES: 2 }, B: { COM: 2 }, C: { STR: 2 }, D: { SEC: 2 } },
         { A: { SOL: 2 }, B: { STR: 2 }, C: { COM: 2 }, D: { AGI: 2 } },
-        
-        // 第二章：(16-30题)
         { A: { DOM: 2 }, B: { COM: 2 }, C: { SOL: 2 }, D: { AGI: 2 } },
         { A: { DOM: 2 }, B: { SEC: 2 }, C: { AGI: 2 }, D: { SOL: 2 } },
         { A: { STR: 2 }, B: { AGI: 2 }, C: { SOL: 2 }, D: { DOM: 2 } },
@@ -96,8 +91,6 @@ const quizData = [
         { A: { STR: 2 }, B: { COM: 2 }, C: { SEC: 2 }, D: { DOM: 2 } },
         { A: { SOL: 2 }, B: { COM: 2 }, C: { AES: 2 }, D: { DOM: 2 } },
         { A: { AES: 2 }, B: { COM: 2 }, C: { DOM: 2 }, D: { STR: 2 } },
-        
-        // 第三章： (31-45题)
         { A: { STR: 2 }, B: { DOM: 2 }, C: { AGI: 2 }, D: { COM: 2 } },
         { A: { SOL: 2 }, B: { COM: 2 }, C: { AGI: 2 }, D: { STR: 2 } },
         { A: { DOM: 2 }, B: { AES: 2 }, C: { AGI: 2 }, D: { STR: 2 } },
@@ -113,8 +106,6 @@ const quizData = [
         { A: { STR: 2 }, B: { DOM: 2 }, C: { COM: 2 }, D: { AES: 2 } },
         { A: { DOM: 2 }, B: { SEC: 2 }, C: { AES: 2 }, D: { SOL: 2 } },
         { A: { DOM: 2 }, B: { STR: 2 }, C: { COM: 2 }, D: { AGI: 2 } },
-        
-        // 第四章：(46-60题)
         { A: { DOM: 2 }, B: { AES: 2 }, C: { STR: 2 }, D: { SOL: 2 } },
         { A: { DOM: 2 }, B: { COM: 2 }, C: { SEC: 2 }, D: { AGI: 2 } },
         { A: { STR: 2 }, B: { COM: 2 }, C: { SEC: 2 }, D: { DOM: 2 } },
@@ -131,10 +122,7 @@ const quizData = [
         { A: { STR: 2 }, B: { COM: 2 }, C: { SEC: 2 }, D: { SOL: 2 } },
         { A: { AES: 2 }, B: { COM: 2 }, C: { SEC: 2 }, D: { DOM: 2 } }
     ];
-
-    // 动物原型定义 - 增加原型总分基数，便于归一化
-    // DOM:支配, STR:策略, COM:社群, SOL:独行, AGI:灵动, SEC:安稳, AES:审美
-    const ANIMAL_ARCHETYPE_TOTAL = 20; // 定义一个原型总分基数
+    const ANIMAL_ARCHETYPE_TOTAL = 20; 
     const animalArchetypes = {
         "狗": { vector: { DOM: 1, STR: 1, COM: 5, SOL: 0, AGI: 3, SEC: 4, AES: 1 }, desc: "你是忠诚的伙伴与热情的守护者。你的世界围绕着“我们”展开，无论是家人、朋友还是团队。你擅长建立连接，给予温暖，并在群体中找到自己的价值。你的快乐简单而纯粹，来源于陪伴与被需要。" },
         "猫": { vector: { DOM: 1, STR: 2, COM: 0, SOL: 5, AGI: 4, SEC: 2, AES: 3 }, desc: "你是优雅的独立思想家，神秘且自我满足。你享受独处，拥有丰富的内心世界。你行动敏捷，好奇心强，但只对自己感兴趣的事物投入精力。你的魅力在于那份若即若离的疏离感和无法预测的灵动。" },
@@ -157,8 +145,6 @@ const quizData = [
         "浣熊":{ vector: { DOM: 1, STR: 4, COM: 2, SOL: 3, AGI: 5, SEC: 2, AES: 0 }, desc: "你是机灵的都市探险家，总能找到解决问题的“歪路子”。你好奇心极强，动手能力超群，为了达成目的可以不择手段（通常是为了吃的）。你非常灵活，总能在人类制定的规则中找到自己的生存空间。" },
         "猫鼬":{ vector: { DOM: 2, STR: 3, COM: 5, SOL: 1, AGI: 3, SEC: 5, AES: 0 }, desc: "你是警惕的哨兵与家庭的守护者。你对集体有着极强的归属感和责任心，时刻为家人的安全站岗放哨。你们的生存依赖于高效的团队协作和分工。你的勇敢不是为了个人，而是为了整个族群的安危。" }
     };
-
-// DOM元素
     const startScreen = document.getElementById('start-screen');
     const quizScreen = document.getElementById('quiz-screen');
     const resultScreen = document.getElementById('result-screen');
@@ -167,7 +153,6 @@ const quizData = [
     const animalGuideScreen = document.getElementById('animal-guide-screen');
     const historyScreen = document.getElementById('history-screen');
     const historyList = document.getElementById('history-list');
-
     const startBtn = document.getElementById('start-btn');
     const restartBtn = document.getElementById('restart-btn');
     const backBtn = document.getElementById('back-btn');
@@ -177,7 +162,6 @@ const quizData = [
     const historyBtn = document.getElementById('history-btn');
     const historyBackBtn = document.getElementById('history-back-btn');
     const resultHistoryBtn = document.getElementById('result-history-btn');
-
     const questionTitle = document.getElementById('question-title');
     const optionList = document.getElementById('option-list');
     const progressBar = document.getElementById('progress-bar');
@@ -185,24 +169,19 @@ const quizData = [
     const animalGuide = document.getElementById('animal-guide');
     const resultAnimal = document.getElementById('result-animal');
     const resultDescription = document.getElementById('result-description');
-
 	function lockOptions(locked) {
 	  optionList.dataset.locked = locked ? '1' : '0';
 	  optionList.classList.toggle('pointer-guard', !!locked);
 	  optionList.style.pointerEvents = locked ? 'none' : 'auto';
 	}
-
     const dimensionKeys = ["DOM", "STR", "COM", "SOL", "AGI", "SEC", "AES"];
     const HISTORY_STORAGE_KEY = 'animalQuizHistory_v1';
     const MAX_HISTORY_LENGTH = 20;
-
     let currentQuestionIndex = 0;
     let scores = {};
     let selectedOptions = [];
     let isProcessing = false;
-
     function initScores() { scores = {}; dimensionKeys.forEach(key => scores[key] = 0); }
-
     function initAnimalGuide() {
         animalGuide.innerHTML = '';
         Object.keys(animalArchetypes).forEach(animal => {
@@ -212,50 +191,38 @@ const quizData = [
             animalGuide.appendChild(card);
         });
     }
-
     function startQuiz() {
     console.log('startQuiz called, isProcessing:', isProcessing);
     if (isProcessing) return;
     isProcessing = true;
-
     try {
         currentQuestionIndex = 0;
         initScores();
         selectedOptions = [];
-
-        // 隐藏其它屏幕
         [startScreen, resultScreen, interludeScreen, animalGuideScreen, loadingScreen, historyScreen]
             .forEach(s => s && s.classList.add('hidden'));
-
         quizScreen.classList.remove('hidden');
         quizScreen.classList.remove('fade-out');
-
-        // ★ 关键：切到第一题前，先渲染题目，再在短时间内屏蔽选项区域的指针事件，防止"开始测试"的手指抬起穿透到第一题选项
         showQuestion(() => {
             optionList.classList.add('pointer-guard');
             setTimeout(() => {
                 optionList.classList.remove('pointer-guard');
-                isProcessing = false; // 在这里重置isProcessing
+                isProcessing = false; 
             }, 350);
         });
     } catch (error) {
         console.error('Error in startQuiz:', error);
-        isProcessing = false; // 确保在出错时重置isProcessing
+        isProcessing = false; 
     }
 }
-
     function showQuestion(afterRender) {
   if (currentQuestionIndex >= quizData.length) { showResult(); return; }
-
-  // 进入新题前先上锁，避免过渡期穿透
   lockOptions(true);
   isProcessing = false;
-
   const currentQuestion = quizData[currentQuestionIndex];
   questionTitle.innerHTML = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
   questionCounter.textContent = `${currentQuestionIndex + 1}/${quizData.length}`;
   backBtn.style.visibility = currentQuestionIndex > 0 ? 'visible' : 'hidden';
-
   optionList.innerHTML = '';
   ['A','B','C','D'].forEach(key => {
     if (currentQuestion.options[key]) {
@@ -267,10 +234,7 @@ const quizData = [
       optionList.appendChild(li);
     }
   });
-
   updateProgressBar();
-
-  // 等浏览器把新 DOM 布局/绘制完成再解锁（1 帧 + 少许延迟），兜住 iOS 的延迟 click/touchend
   requestAnimationFrame(() => {
     setTimeout(() => {
       lockOptions(false);
@@ -278,12 +242,10 @@ const quizData = [
     }, 250);
   });
 }
-
     function updateProgressBar() {
         const progress = (currentQuestionIndex / quizData.length) * 100;
         progressBar.style.width = `${progress}%`;
     }
-
     function selectOption(optionKey, element) {
 	  if (currentQuestionIndex >= quizData.length) return;
 	  if (optionList.dataset.locked === '1' || isProcessing) return;
@@ -292,12 +254,9 @@ const quizData = [
 	  selectedOptions[currentQuestionIndex] = optionKey;
 	  document.querySelectorAll('.option-item').forEach(item => item.classList.remove('selected'));
 	  element.classList.add('selected');
-
 	  void element.offsetWidth;
-
 	  setTimeout(() => {
 	    quizScreen.classList.add('fade-out');
-
 	    setTimeout(() => {
 	      currentQuestionIndex++;
 	      quizScreen.classList.remove('fade-out');
@@ -305,7 +264,6 @@ const quizData = [
 	    }, 600);
 	  }, 350);
 	}
-
     function goBack() {
         if (isProcessing || currentQuestionIndex <= 0) return;
         isProcessing = true;
@@ -316,8 +274,6 @@ const quizData = [
             showQuestion();
         }, 600);
     }
-
-    // 图鉴入口来源记录（原样）
     let guideOrigin = 'result';
     function showAllAnimals(origin = 'result') {
         guideOrigin = origin;
@@ -331,7 +287,6 @@ const quizData = [
         if (guideOrigin === 'start') startScreen.classList.remove('hidden');
         else resultScreen.classList.remove('hidden');
     }
-
     function getQuizHistory() {
         try {
             if (!window.localStorage) return [];
@@ -348,18 +303,14 @@ const quizData = [
             return [];
         }
     }
-
     function saveQuizHistory(bestMatchAnimal, resultData) {
         try {
             if (!window.localStorage) return;
         } catch (e) {
             return;
         }
-
         try {
             let history = getQuizHistory();
-
-            // 组装答题详情（题目 + 选项 + 选项内容）
             const answersDetail = selectedOptions.map((optionKey, index) => {
                 if (!optionKey) return null;
                 const question = quizData[index];
@@ -372,7 +323,6 @@ const quizData = [
                     optionText
                 };
             }).filter(Boolean);
-
             const now = new Date();
             const record = {
                 id: now.getTime(),
@@ -382,26 +332,18 @@ const quizData = [
                 resultDescription: resultData && resultData.desc ? resultData.desc : '',
                 answers: answersDetail
             };
-
-            // 最新的记录放前面
             history.unshift(record);
-
-            // 控制最多保存条数
             if (history.length > MAX_HISTORY_LENGTH) {
                 history = history.slice(0, MAX_HISTORY_LENGTH);
             }
-
             localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
         } catch (e) {
             console.error('Error saving quiz history:', e);
         }
     }
-
     function renderHistoryList() {
   if (!historyList) return;
-
   historyList.innerHTML = '';
-
   const history = getQuizHistory();
   if (!history || history.length === 0) {
     const emptyTip = document.createElement('p');
@@ -410,8 +352,6 @@ const quizData = [
     historyList.appendChild(emptyTip);
     return;
   }
-
-  // 根据动物名称猜测一个表情，默认🐾
 const emojiForAnimal = (name = '') => {
     const n = (name || '').toLowerCase();
     if (n === '狗') return '🐶';
@@ -434,73 +374,52 @@ const emojiForAnimal = (name = '') => {
     if (n === '海豚') return '🐬';
     if (n === '浣熊') return '🦝';
     if (n === '猫鼬') return '🦨';
-    
-    // 默认返回
     return '🐾';
 };
-
-  // 渲染每条记录（时间轴卡片 + 可折叠答案）
   history.forEach((record) => {
     const item = document.createElement('div');
     item.className = 'history-item';
-
-    // 头部：图标、时间、结果 Badge
     const header = document.createElement('div');
     header.className = 'history-header';
-
     const icon = document.createElement('div');
     icon.className = 'history-icon';
     icon.textContent = emojiForAnimal(record.resultAnimal);
-
     const timeSpan = document.createElement('div');
     timeSpan.className = 'history-time';
     timeSpan.textContent = record.displayTime || '';
-
     const badge = document.createElement('div');
     badge.className = 'history-result-badge';
     badge.textContent = `结果：${record.resultAnimal || '未知'}`;
-
     header.appendChild(icon);
     header.appendChild(timeSpan);
     header.appendChild(badge);
     item.appendChild(header);
-
-    // 结果描述
     if (record.resultDescription) {
       const desc = document.createElement('p');
       desc.className = 'history-desc';
       desc.textContent = record.resultDescription;
       item.appendChild(desc);
     }
-
-    // 折叠按钮
     const toggle = document.createElement('button');
     toggle.className = 'history-toggle';
     toggle.type = 'button';
     toggle.setAttribute('aria-expanded', 'false');
     toggle.innerHTML = `<span class="chev">▶</span><span>展开答题详情</span>`;
     item.appendChild(toggle);
-
-    // 答案列表（默认收起）
     const wrap = document.createElement('div');
     wrap.className = 'history-answers-wrap';
-
     const list = document.createElement('ul');
     list.className = 'history-answer-list';
-
     if (record.answers && record.answers.length) {
       record.answers.forEach((answer) => {
         const li = document.createElement('li');
         li.className = 'history-answer-item';
-
         const qDiv = document.createElement('div');
         qDiv.className = 'history-question';
         qDiv.textContent = `${answer.index}. ${answer.question || ''}`;
-
         const aDiv = document.createElement('div');
         aDiv.className = 'history-answer';
         aDiv.textContent = `你的选择：${answer.optionKey || ''}、${answer.optionText || ''}`;
-
         li.appendChild(qDiv);
         li.appendChild(aDiv);
         list.appendChild(li);
@@ -511,26 +430,17 @@ const emojiForAnimal = (name = '') => {
       li.innerHTML = `<div class="history-answer">（本条记录缺少明细）</div>`;
       list.appendChild(li);
     }
-
-    // 折叠容器（配合过渡）
     const collapsible = document.createElement('div');
     collapsible.className = 'collapse';
     collapsible.appendChild(list);
-
     wrap.appendChild(collapsible);
     item.appendChild(wrap);
-
-    // 绑定展开/收起
     const updateHeight = (el) => {
-      // 为了平滑动画：先清 0，再设为滚动高度，再在 'show' 状态下设 auto
       if (!el) return;
       el.style.height = '0px';
-      // 强制重绘以应用初始高度
-      // eslint-disable-next-line no-unused-expressions
       el.offsetHeight;
       const target = el.scrollHeight;
       el.style.height = target + 'px';
-      // 动画结束后设为 auto，保证内部可继续自适应
       el.addEventListener('transitionend', function onEnd() {
         if (el.classList.contains('show')) {
           el.style.height = 'auto';
@@ -538,29 +448,22 @@ const emojiForAnimal = (name = '') => {
         el.removeEventListener('transitionend', onEnd);
       });
     };
-
     toggle.addEventListener('click', () => {
       const expanded = toggle.getAttribute('aria-expanded') === 'true';
       toggle.setAttribute('aria-expanded', String(!expanded));
       const textNode = toggle.querySelector('span:last-child');
       const chev = toggle.querySelector('.chev');
-
       if (expanded) {
-        // 收起
         textNode && (textNode.textContent = '展开答题详情');
         chev && (chev.style.transform = 'rotate(0deg)');
-        // 从 auto 切回具体高度，触发动画收起
         if (collapsible.style.height === 'auto') {
           collapsible.style.height = collapsible.scrollHeight + 'px';
-          // 强制重绘
-          // eslint-disable-next-line no-unused-expressions
           collapsible.offsetHeight;
         }
         collapsible.classList.remove('show');
         collapsible.style.height = '0px';
         collapsible.style.opacity = '0';
       } else {
-        // 展开
         textNode && (textNode.textContent = '收起答题详情');
         chev && (chev.style.transform = 'rotate(90deg)');
         collapsible.classList.add('show');
@@ -568,36 +471,27 @@ const emojiForAnimal = (name = '') => {
         updateHeight(collapsible);
       }
     });
-
     historyList.appendChild(item);
   });
 }
-
     function showHistory() {
-        // 隐藏其他屏幕
         startScreen.classList.add('hidden');
         quizScreen.classList.add('hidden');
         resultScreen.classList.add('hidden');
         interludeScreen.classList.add('hidden');
         animalGuideScreen.classList.add('hidden');
         loadingScreen.classList.add('hidden');
-
-        // 渲染历史记录
         renderHistoryList();
         historyScreen.classList.remove('hidden');
     }
-
     function backToStartFromHistory() {
         historyScreen.classList.add('hidden');
         startScreen.classList.remove('hidden');
     }
-
     function showResult() {
         quizScreen.classList.add('hidden');
         loadingScreen.classList.remove('hidden');
-
         setTimeout(() => {
-            // 重算总分
             initScores();
             for (let i = 0; i < selectedOptions.length; i++) {
                 const option = selectedOptions[i];
@@ -606,14 +500,10 @@ const emojiForAnimal = (name = '') => {
                     for (const dim in questionScores) scores[dim] += questionScores[dim];
                 }
             }
-
-            // 归一化
             const userTotalScore = dimensionKeys.reduce((sum, key) => sum + scores[key], 0);
             const normalizedScores = {};
             if (userTotalScore === 0) dimensionKeys.forEach(key => normalizedScores[key] = 0);
             else dimensionKeys.forEach(key => normalizedScores[key] = (scores[key] / userTotalScore) * ANIMAL_ARCHETYPE_TOTAL);
-
-            // 匹配最接近的动物
             let bestMatchAnimal = '水豚';
             let minDifference = Infinity;
             Object.keys(animalArchetypes).forEach(animalName => {
@@ -625,28 +515,22 @@ const emojiForAnimal = (name = '') => {
                 });
                 if (diffSum < minDifference) { minDifference = diffSum; bestMatchAnimal = animalName; }
             });
-
             const resultData = animalArchetypes[bestMatchAnimal];
             resultAnimal.textContent = `【 ${bestMatchAnimal} 】`;
             resultDescription.textContent = resultData.desc;
             saveQuizHistory(bestMatchAnimal, resultData);
-
             loadingScreen.classList.add('hidden');
             resultScreen.classList.remove('hidden');
             isProcessing = false;
         }, 1500);
     }
-
-	// 统一 Tap：无额外锁，靠轻量阈值 + preventDefault 防幽灵点击
 	function onTap(el, handler) {
 	  if (!el) return;
 	  try { el.style.touchAction = 'manipulation'; } catch (e) {}
-	
 	  let startX = 0, startY = 0, startTime = 0, downId = null;
 	  const MOVE_TOL = 12;
 	  const TIME_TOL = 650;
 	  const hasPointer = !!window.PointerEvent;
-	
 	  if (hasPointer) {
 	    el.addEventListener('pointerdown', (e) => {
 	      if (!e.isPrimary) return;
@@ -656,7 +540,6 @@ const emojiForAnimal = (name = '') => {
 	      startTime = e.timeStamp || performance.now();
 	      try { el.setPointerCapture(downId); } catch (err) {}
 	    }, { passive: true });
-	
 	    el.addEventListener('pointerup', (e) => {
 	      if (!e.isPrimary || (downId !== null && e.pointerId !== downId)) return;
 	      const t = e.timeStamp || performance.now();
@@ -664,7 +547,6 @@ const emojiForAnimal = (name = '') => {
 	      const dx = e.clientX - startX;
 	      const dy = e.clientY - startY;
 	      const moved = (dx*dx + dy*dy) > (MOVE_TOL*MOVE_TOL);
-	
 	      if (dt <= TIME_TOL && !moved) {
 	        e.preventDefault();
 	        e.stopPropagation();
@@ -673,7 +555,6 @@ const emojiForAnimal = (name = '') => {
 	      try { el.releasePointerCapture(e.pointerId); } catch (err) {}
 	      downId = null;
 	    }, { passive: false });
-	
 	  } else {
 	    el.addEventListener('click', (e) => {
 	      e.preventDefault();
@@ -681,28 +562,21 @@ const emojiForAnimal = (name = '') => {
 	    }, { passive: false });
 	  }
 	}
-
     onTap(startBtn, startQuiz);
     onTap(restartBtn, startQuiz);
     onTap(backBtn, goBack);
     onTap(browseBtn, () => showAllAnimals('result'));
     onTap(startBrowseBtn, () => showAllAnimals('start'));
     onTap(backToResultBtn, backToResult);
-    // 新增：历史记录入口 & 返回
     onTap(historyBtn, showHistory);
     onTap(historyBackBtn, backToStartFromHistory);
     onTap(resultHistoryBtn, showHistory);
-
     document.addEventListener('DOMContentLoaded', () => {
     initScores();
     initAnimalGuide();
     document.getElementById('quiz-container').style.transform = 'perspective(1000px) rotateX(0deg)';
-
-    // iOS 字体微调（原逻辑保留）
     if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
         document.documentElement.style.fontSize = '16px';
-        
-        // 添加iOS特定的事件处理
         document.addEventListener('touchstart', function() {}, { passive: true });
     }
 });
