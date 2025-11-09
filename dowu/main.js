@@ -302,8 +302,8 @@ const quizData = [
 	      currentQuestionIndex++;
 	      quizScreen.classList.remove('fade-out');
 	      showQuestion();
-	    }, 500);
-	  }, 180);
+	    }, 600);
+	  }, 350);
 	}
 
     function goBack() {
@@ -706,5 +706,6 @@ const emojiForAnimal = (name = '') => {
         document.addEventListener('touchstart', function() {}, { passive: true });
     }
 });
+
 
 
