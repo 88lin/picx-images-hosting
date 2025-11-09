@@ -398,77 +398,173 @@ const quizData = [
     }
 
     function renderHistoryList() {
-        if (!historyList) return;
+  if (!historyList) return;
 
-        historyList.innerHTML = '';
+  historyList.innerHTML = '';
 
-        const history = getQuizHistory();
-        if (!history || history.length === 0) {
-            const emptyTip = document.createElement('p');
-            emptyTip.className = 'history-empty';
-            emptyTip.textContent = '当前暂无历史记录，完成一次测试后会自动保存到这里。';
-            historyList.appendChild(emptyTip);
-            return;
-        }
+  const history = getQuizHistory();
+  if (!history || history.length === 0) {
+    const emptyTip = document.createElement('p');
+    emptyTip.className = 'history-empty';
+    emptyTip.textContent = '当前暂无历史记录，完成一次测试后会自动保存到这里。';
+    historyList.appendChild(emptyTip);
+    return;
+  }
 
-        history.forEach((record) => {
-            const item = document.createElement('div');
-            item.className = 'history-item';
+  // 根据动物名称猜测一个表情，默认🐾
+  const emojiForAnimal = (name = '') => {
+    const n = (name || '').toLowerCase();
+    if (n.includes('虎') || n.includes('tiger')) return '🐯';
+    if (n.includes('狮') || n.includes('lion')) return '🦁';
+    if (n.includes('熊') || n.includes('bear')) return '🐻';
+    if (n.includes('狼') || n.includes('wolf')) return '🐺';
+    if (n.includes('鹰') || n.includes('eagle')) return '🦅';
+    if (n.includes('猫') || n.includes('cat')) return '🐱';
+    if (n.includes('犬') || n.includes('狗') || n.includes('dog')) return '🐶';
+    if (n.includes('狐') || n.includes('fox')) return '🦊';
+    if (n.includes('鲸') || n.includes('whale')) return '🐳';
+    if (n.includes('海豚') || n.includes('dolphin')) return '🐬';
+    if (n.includes('兔') || n.includes('rabbit')) return '🐰';
+    if (n.includes('鹿') || n.includes('deer')) return '🦌';
+    if (n.includes('马') || n.includes('horse')) return '🐴';
+    if (n.includes('象') || n.includes('elephant')) return '🐘';
+    if (n.includes('龙') || n.includes('dragon')) return '🐉';
+    return '🐾';
+  };
 
-            const header = document.createElement('div');
-            header.className = 'history-header';
+  // 渲染每条记录（时间轴卡片 + 可折叠答案）
+  history.forEach((record) => {
+    const item = document.createElement('div');
+    item.className = 'history-item';
 
-            const timeSpan = document.createElement('span');
-            timeSpan.className = 'history-time';
-            timeSpan.textContent = record.displayTime || '';
+    // 头部：图标、时间、结果 Badge
+    const header = document.createElement('div');
+    header.className = 'history-header';
 
-            const resultSpan = document.createElement('span');
-            resultSpan.className = 'history-result';
-            resultSpan.textContent = `结果：【 ${record.resultAnimal || '未知'} 】`;
+    const icon = document.createElement('div');
+    icon.className = 'history-icon';
+    icon.textContent = emojiForAnimal(record.resultAnimal);
 
-            header.appendChild(timeSpan);
-            header.appendChild(resultSpan);
-            item.appendChild(header);
+    const timeSpan = document.createElement('div');
+    timeSpan.className = 'history-time';
+    timeSpan.textContent = record.displayTime || '';
 
-            if (record.resultDescription) {
-                const desc = document.createElement('p');
-                desc.className = 'history-desc';
-                desc.textContent = record.resultDescription;
-                item.appendChild(desc);
-            }
+    const badge = document.createElement('div');
+    badge.className = 'history-result-badge';
+    badge.textContent = `结果：${record.resultAnimal || '未知'}`;
 
-            if (record.answers && record.answers.length) {
-                const answersTitle = document.createElement('div');
-                answersTitle.className = 'history-answers-title';
-                answersTitle.textContent = '答题记录：';
-                item.appendChild(answersTitle);
+    header.appendChild(icon);
+    header.appendChild(timeSpan);
+    header.appendChild(badge);
+    item.appendChild(header);
 
-                const ul = document.createElement('ul');
-                ul.className = 'history-answer-list';
-
-                record.answers.forEach((answer) => {
-                    const li = document.createElement('li');
-                    li.className = 'history-answer-item';
-
-                    const qDiv = document.createElement('div');
-                    qDiv.className = 'history-question';
-                    qDiv.textContent = `${answer.index}. ${answer.question || ''}`;
-
-                    const aDiv = document.createElement('div');
-                    aDiv.className = 'history-answer';
-                    aDiv.textContent = `你的选择：${answer.optionKey || ''}、${answer.optionText || ''}`;
-
-                    li.appendChild(qDiv);
-                    li.appendChild(aDiv);
-                    ul.appendChild(li);
-                });
-
-                item.appendChild(ul);
-            }
-
-            historyList.appendChild(item);
-        });
+    // 结果描述
+    if (record.resultDescription) {
+      const desc = document.createElement('p');
+      desc.className = 'history-desc';
+      desc.textContent = record.resultDescription;
+      item.appendChild(desc);
     }
+
+    // 折叠按钮
+    const toggle = document.createElement('button');
+    toggle.className = 'history-toggle';
+    toggle.type = 'button';
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.innerHTML = `<span class="chev">▶</span><span>展开答题详情</span>`;
+    item.appendChild(toggle);
+
+    // 答案列表（默认收起）
+    const wrap = document.createElement('div');
+    wrap.className = 'history-answers-wrap';
+
+    const list = document.createElement('ul');
+    list.className = 'history-answer-list';
+
+    if (record.answers && record.answers.length) {
+      record.answers.forEach((answer) => {
+        const li = document.createElement('li');
+        li.className = 'history-answer-item';
+
+        const qDiv = document.createElement('div');
+        qDiv.className = 'history-question';
+        qDiv.textContent = `${answer.index}. ${answer.question || ''}`;
+
+        const aDiv = document.createElement('div');
+        aDiv.className = 'history-answer';
+        aDiv.textContent = `你的选择：${answer.optionKey || ''}、${answer.optionText || ''}`;
+
+        li.appendChild(qDiv);
+        li.appendChild(aDiv);
+        list.appendChild(li);
+      });
+    } else {
+      const li = document.createElement('li');
+      li.className = 'history-answer-item';
+      li.innerHTML = `<div class="history-answer">（本条记录缺少明细）</div>`;
+      list.appendChild(li);
+    }
+
+    // 折叠容器（配合过渡）
+    const collapsible = document.createElement('div');
+    collapsible.className = 'collapse';
+    collapsible.appendChild(list);
+
+    wrap.appendChild(collapsible);
+    item.appendChild(wrap);
+
+    // 绑定展开/收起
+    const updateHeight = (el) => {
+      // 为了平滑动画：先清 0，再设为滚动高度，再在 'show' 状态下设 auto
+      if (!el) return;
+      el.style.height = '0px';
+      // 强制重绘以应用初始高度
+      // eslint-disable-next-line no-unused-expressions
+      el.offsetHeight;
+      const target = el.scrollHeight;
+      el.style.height = target + 'px';
+      // 动画结束后设为 auto，保证内部可继续自适应
+      el.addEventListener('transitionend', function onEnd() {
+        if (el.classList.contains('show')) {
+          el.style.height = 'auto';
+        }
+        el.removeEventListener('transitionend', onEnd);
+      });
+    };
+
+    toggle.addEventListener('click', () => {
+      const expanded = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', String(!expanded));
+      const textNode = toggle.querySelector('span:last-child');
+      const chev = toggle.querySelector('.chev');
+
+      if (expanded) {
+        // 收起
+        textNode && (textNode.textContent = '展开答题详情');
+        chev && (chev.style.transform = 'rotate(0deg)');
+        // 从 auto 切回具体高度，触发动画收起
+        if (collapsible.style.height === 'auto') {
+          collapsible.style.height = collapsible.scrollHeight + 'px';
+          // 强制重绘
+          // eslint-disable-next-line no-unused-expressions
+          collapsible.offsetHeight;
+        }
+        collapsible.classList.remove('show');
+        collapsible.style.height = '0px';
+        collapsible.style.opacity = '0';
+      } else {
+        // 展开
+        textNode && (textNode.textContent = '收起答题详情');
+        chev && (chev.style.transform = 'rotate(90deg)');
+        collapsible.classList.add('show');
+        collapsible.style.opacity = '1';
+        updateHeight(collapsible);
+      }
+    });
+
+    historyList.appendChild(item);
+  });
+}
 
     function showHistory() {
         // 隐藏其他屏幕
