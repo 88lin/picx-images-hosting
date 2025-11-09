@@ -317,3 +317,99 @@ p { color: var(--secondary-text); line-height: 1.8; margin-bottom: 30px; font-si
 #option-list.pointer-guard {
   pointer-events: none !important;
 }
+
+/* 历史记录区域样式 */
+.history-tip {
+    margin-top: 8px;
+    font-size: 0.9em;
+    color: var(--secondary-text);
+    line-height: 1.6;
+}
+
+.history-list {
+    margin-top: 20px;
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+/* 单条历史记录卡片 */
+.history-item {
+    background-color: rgba(247, 250, 252, 0.9);
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+}
+
+/* 头部：时间 + 结果 */
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 0.9em;
+    color: var(--secondary-text);
+}
+
+.history-time {
+    opacity: 0.85;
+}
+
+.history-result {
+    font-weight: 600;
+    color: var(--accent-color);
+    white-space: nowrap;
+}
+
+/* 结果描述 */
+.history-desc {
+    font-size: 0.95em;
+    line-height: 1.6;
+    color: var(--primary-text);
+    margin-bottom: 6px;
+}
+
+/* 答题列表标题 */
+.history-answers-title {
+    margin-top: 6px;
+    font-size: 0.9em;
+    color: var(--secondary-text);
+}
+
+/* 答题列表 */
+.history-answer-list {
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 0;
+}
+
+.history-answer-item {
+    padding: 6px 0;
+    border-top: 1px dashed rgba(226, 232, 240, 0.9);
+}
+
+.history-answer-item:first-child {
+    border-top: none;
+}
+
+.history-question {
+    font-size: 0.9em;
+    color: var(--primary-text);
+}
+
+.history-answer {
+    font-size: 0.85em;
+    color: var(--secondary-text);
+    margin-top: 2px;
+}
+
+/* 空状态 */
+.history-empty {
+    margin-top: 20px;
+    font-size: 0.95em;
+    color: var(--secondary-text);
+    text-align: center;
+}
