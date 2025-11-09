@@ -406,7 +406,7 @@ const quizData = [
   if (!history || history.length === 0) {
     const emptyTip = document.createElement('p');
     emptyTip.className = 'history-empty';
-    emptyTip.textContent = '当前暂无历史记录，完成一次测试后会自动保存到这里。';
+    emptyTip.textContent = '暂无历史记录，请先完成一次测试';
     historyList.appendChild(emptyTip);
     return;
   }
@@ -699,3 +699,4 @@ const quizData = [
         document.addEventListener('touchstart', function() {}, { passive: true });
     }
 });
+
