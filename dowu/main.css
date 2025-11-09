@@ -318,98 +318,173 @@ p { color: var(--secondary-text); line-height: 1.8; margin-bottom: 30px; font-si
   pointer-events: none !important;
 }
 
-/* 历史记录区域样式 */
-.history-tip {
-    margin-top: 8px;
-    font-size: 0.9em;
-    color: var(--secondary-text);
-    line-height: 1.6;
-}
-
 .history-list {
-    margin-top: 20px;
-    max-height: 420px;
-    overflow-y: auto;
-    padding-right: 4px;
+  margin-top: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 6px;
+  scroll-behavior: smooth;
 }
 
-/* 单条历史记录卡片 */
 .history-item {
-    background-color: rgba(247, 250, 252, 0.9);
-    border-radius: 20px;
-    border: 1px solid var(--border-color);
-    padding: 16px 18px;
-    margin-bottom: 16px;
-    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+  position: relative;
+  background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.95));
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 18px;
+  padding: 16px 18px 14px;
+  margin: 0 0 16px 12px;                 /* 为左侧时间轴留出空间 */
+  box-shadow: 0 6px 22px rgba(15, 23, 42, 0.06);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
 }
 
-/* 头部：时间 + 结果 */
+.history-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.10);
+  border-color: rgba(99, 102, 241, 0.25); /* 略带品牌色高亮 */
+}
+
+/* 左侧时间轴与节点 */
+.history-list::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 0;
+  bottom: 8px;
+  width: 2px;
+  background: linear-gradient(180deg, rgba(99,102,241,.15), rgba(99,102,241,0));
+  border-radius: 2px;
+}
+.history-item::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 18px;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border: 2px solid rgba(99,102,241,.35);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px #fff inset;
+}
+
+/* 头部：时间 + 结果徽章 + 图标 */
 .history-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 8px;
-    margin-bottom: 6px;
-    font-size: 0.9em;
-    color: var(--secondary-text);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px 12px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.history-icon {
+  font-size: 22px;
+  line-height: 1;
+  filter: saturate(1.1);
 }
 
 .history-time {
-    opacity: 0.85;
+  font-size: .9em;
+  color: var(--secondary-text, #64748b);
+  opacity: .9;
 }
 
-.history-result {
-    font-weight: 600;
-    color: var(--accent-color);
-    white-space: nowrap;
+.history-result-badge {
+  justify-self: end;
+  font-size: .75rem;
+  line-height: 1;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(99,102,241,.10);
+  color: #4f46e5; /* 与站内强调色保持一致，如需可改为 var(--accent-color) */
+  border: 1px solid rgba(99,102,241,.25);
+  font-weight: 600;
+  letter-spacing: .2px;
+  white-space: nowrap;
 }
 
 /* 结果描述 */
 .history-desc {
-    font-size: 0.95em;
-    line-height: 1.6;
-    color: var(--primary-text);
-    margin-bottom: 6px;
+  font-size: .95em;
+  line-height: 1.65;
+  color: var(--primary-text, #0f172a);
+  margin: 2px 0 6px;
 }
 
-/* 答题列表标题 */
-.history-answers-title {
-    margin-top: 6px;
-    font-size: 0.9em;
-    color: var(--secondary-text);
+/* 折叠区：答题详情 */
+.history-answers-wrap {
+  margin-top: 8px;
+  border-top: 1px dashed rgba(226, 232, 240, 0.9);
+  padding-top: 10px;
 }
 
-/* 答题列表 */
+.history-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .85rem;
+  padding: 8px 10px;
+  border-radius: 18px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  background: #fff;
+  cursor: pointer;
+  user-select: none;
+  transition: background .2s ease, border-color .2s ease, transform .15s ease;
+}
+.history-toggle:hover {
+  background: rgba(99,102,241,.06);
+  border-color: rgba(99,102,241,.25);
+}
+.history-toggle:active {
+  transform: translateY(1px);
+}
+.history-toggle[aria-expanded="true"] .chev {
+  transform: rotate(90deg);
+}
+
+.chev {
+  display: inline-block;
+  transition: transform .2s ease;
+}
+
+/* 答案列表（可折叠） */
 .history-answer-list {
-    list-style: none;
-    padding: 0;
-    margin: 4px 0 0;
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
 }
 
 .history-answer-item {
-    padding: 6px 0;
-    border-top: 1px dashed rgba(226, 232, 240, 0.9);
+  padding: 8px 0;
+  border-top: 1px dashed rgba(226, 232, 240, 0.8);
 }
-
-.history-answer-item:first-child {
-    border-top: none;
-}
+.history-answer-item:first-child { border-top: none; }
 
 .history-question {
-    font-size: 0.9em;
-    color: var(--primary-text);
+  font-size: .92em;
+  color: var(--primary-text, #0f172a);
+}
+.history-answer {
+  font-size: .85em;
+  color: var(--secondary-text, #64748b);
+  margin-top: 2px;
 }
 
-.history-answer {
-    font-size: 0.85em;
-    color: var(--secondary-text);
-    margin-top: 2px;
+/* 折叠动画 */
+.collapse {
+  height: 0;
+  overflow: hidden;
+  opacity: .0;
+  transition: height .25s ease, opacity .25s ease;
+}
+.collapse.show {
+  height: auto;        /* 通过 JS 动态控制高度 */
+  opacity: 1;
 }
 
 /* 空状态 */
 .history-empty {
-    margin-top: 20px;
-    font-size: 0.95em;
-    color: var(--secondary-text);
-    text-align: center;
+  margin-top: 28px;
+  font-size: .95em;
+  color: var(--secondary-text, #64748b);
+  text-align: center;
 }
