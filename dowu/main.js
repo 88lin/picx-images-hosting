@@ -412,25 +412,32 @@ const quizData = [
   }
 
   // 根据动物名称猜测一个表情，默认🐾
-  const emojiForAnimal = (name = '') => {
+const emojiForAnimal = (name = '') => {
     const n = (name || '').toLowerCase();
-    if (n.includes('虎') || n.includes('tiger')) return '🐯';
-    if (n.includes('狮') || n.includes('lion')) return '🦁';
-    if (n.includes('熊') || n.includes('bear')) return '🐻';
-    if (n.includes('狼') || n.includes('wolf')) return '🐺';
-    if (n.includes('鹰') || n.includes('eagle')) return '🦅';
-    if (n.includes('猫') || n.includes('cat')) return '🐱';
-    if (n.includes('犬') || n.includes('狗') || n.includes('dog')) return '🐶';
-    if (n.includes('狐') || n.includes('fox')) return '🦊';
-    if (n.includes('鲸') || n.includes('whale')) return '🐳';
-    if (n.includes('海豚') || n.includes('dolphin')) return '🐬';
-    if (n.includes('兔') || n.includes('rabbit')) return '🐰';
-    if (n.includes('鹿') || n.includes('deer')) return '🦌';
-    if (n.includes('马') || n.includes('horse')) return '🐴';
-    if (n.includes('象') || n.includes('elephant')) return '🐘';
-    if (n.includes('龙') || n.includes('dragon')) return '🐉';
+    if (n === '狗') return '🐶';
+    if (n === '猫') return '🐱';
+    if (n === '狼') return '🐺';
+    if (n === '狐') return '🦊';
+    if (n === '狮') return '🦁';
+    if (n === '熊') return '🐻';
+    if (n === '兔') return '🐰';
+    if (n === '仓鼠') return '🐹';
+    if (n === '天鹅') return '🦢';
+    if (n === '鹿') return '🦌';
+    if (n === '鹰') return '🦅';
+    if (n === '乌鸦') return '🐦‍⬛';
+    if (n === '水豚') return '🦫';
+    if (n === '鲸') return '🐋';
+    if (n === '鹦鹉') return '🦜';
+    if (n === '章鱼') return '🐙';
+    if (n === '鲨鱼') return '🦈';
+    if (n === '海豚') return '🐬';
+    if (n === '浣熊') return '🦝';
+    if (n === '猫鼬') return '🦨';
+    
+    // 默认返回
     return '🐾';
-  };
+};
 
   // 渲染每条记录（时间轴卡片 + 可折叠答案）
   history.forEach((record) => {
@@ -699,4 +706,5 @@ const quizData = [
         document.addEventListener('touchstart', function() {}, { passive: true });
     }
 });
+
 
