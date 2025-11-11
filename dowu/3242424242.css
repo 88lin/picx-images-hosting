@@ -50,41 +50,23 @@ body {
 }
 #start-screen .notice-bar {
     width: 100%;
-    box-sizing: border-box;
-    margin-bottom: 16px;
-    padding: 14px 16px;
-    border-radius: 16px;
-    background: linear-gradient(135deg, var(--card-bg-light) 0%, #f8fafc 50%, #ffffff 100%);
-    border: 1px solid var(--border-color);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-    display: flex;
-    align-items: center;
-    text-align: center;
-    gap: 8px;
-    color: var(--secondary-text);
-    font-size: 16px;
-    line-height: 1.5;
-    word-break: break-word;
-}
-#start-screen .notice-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    background: #22c55e;
-    box-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
-    flex: 0 0 8px;
-}
-#start-screen .notice-bar a {
-    color: #0078ff;
-    text-decoration: none;
-    font-weight: 500;
-}
-#start-screen .notice-bar a:hover {
-    text-decoration: underline;
-}
-#start-screen h1, #start-screen h2, #start-screen .start-description { text-align: center; }
-#start-screen p {
-    text-align: center;
+        initScores();
+        select  lockOptions(true);
+  isProcessing = false;
+  const currentQuestion = quizData[currentQuestionIndex];
+  questionTitle.innerHTML = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+  questionCounter.textContent = `${currentQuestionIndex + 1}/${quizData.length}`;
+  backBtn.style.visibility = currentQuestionIndex > 0 ? 'visible' : 'hidden';
+  optionList.innerHTML = '';
+  ['A','B','C','D'].forEach(key => {
+    if (currentQuestion.options[key]) {
+      const li = document.createElement('li');
+      li.className = 'option-item';
+      if (selectedOptions[currentQuestionIndex] === key) li.classList.add('selected');
+      li.innerHTML = `<span class="option-prefix">${key}</span><span class="option-text">${currentQuestion.options[key]}</span>`;
+      onTap(li, () => selectOption(er-guard');
+            setTimeout(() => {
+                optionList.classList.remove
     max-width: 80%;
     margin-left: auto;
     margin-right: auto;
@@ -174,21 +156,7 @@ p { color: var(--secondary-text); line-height: 1.8; margin-bottom: 30px; font-si
 }
 .start-button:hover, .restart-button:hover, .browse-button:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(107,70,193,.3); }
 .start-button:hover::after, .restart-button:hover::after, .browse-button:hover::after { left:120%; }
-.button-group { display:flex; justify-content:center; gap:15px; margin-top:30px; }
-.option-list { list-style:none; padding:0; margin:0 0 20px 0; flex-grow:1; }
-.option-item {
-    background-color: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    margin-bottom: 16px;
-    padding: 20px 25px;
-    cursor: pointer;
-    transition: all .3s cubic-bezier(.4,0,.2,1);
-    display: flex; align-items: flex-start; position: relative; overflow: hidden;
-    will-change: transform, background-color;
-    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
-    touch-action: manipulation;
-}
+.butto
 .option-item::before { content:''; position:absolute; top:0; left:0; width:0; height:100%; background-color: rgba(107,70,193,.05); transition: width .4s ease; z-index:0; }
 .option-item:hover { background-color: var(--hover-bg); border-color: var(--accent-color); transform: translateX(6px); box-shadow: 0 4px 12px rgba(0,0,0,.05); }
 .option-item:hover::before { width:100%; }
@@ -229,6 +197,20 @@ p { color: var(--secondary-text); line-height: 1.8; margin-bottom: 30px; font-si
 .option-text   { color: var(--primary-text); line-height:1.7; position:relative; z-index:1; }
 .start-button:active, .restart-button:active, .browse-button:active {
     transform: translateY(0); box-shadow: 0 4px 12px rgba(107,70,193,.20); filter: saturate(1.05);
+}n-group { display:flex; justify-content:center; gap:15px; margin-top:30px; }
+.option-list { list-style:none; padding:0; margin:0 0 20px 0; flex-grow:1; }
+.option-item {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    margin-bottom: 16px;
+    padding: 20px 25px;
+    cursor: pointer;
+    transition: all .3s cubic-bezier(.4,0,.2,1);
+    display: flex; align-items: flex-start; position: relative; overflow: hidden;
+    will-change: transform, background-color;
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+    touch-action: manipulation;
 }
 #progress-bar-container { width:100%; background-color: rgba(226,232,240,.5); height:8px; position:relative; overflow:hidden; border-radius:4px; margin-bottom:30px; }
 #progress-bar { width:0%; height:100%; background: linear-gradient(90deg, var(--accent-color), var(--accent-light)); transition: width .6s cubic-bezier(.4,0,.2,1); position:relative; }
@@ -298,7 +280,21 @@ p { color: var(--secondary-text); line-height: 1.8; margin-bottom: 30px; font-si
     background-color: rgba(247, 250, 252, .9);
     border-radius: 16px;
     border: 1px solid rgba(226, 232, 240, .9);
-    padding: 20px;
+    padding: 20px;n-group { display:flex; justify-content:center; gap:15px; margin-top:30px; }
+.option-list { list-style:none; padding:0; margin:0 0 20px 0; flex-grow:1; }
+.option-item {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    margin-bottom: 16px;
+    padding: 20px 25px;
+    cursor: pointer;
+    transition: all .3s cubic-bezier(.4,0,.2,1);
+    display: flex; align-items: flex-start; position: relative; overflow: hidden;
+    will-change: transform, background-color;
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+    touch-action: manipulation;
+}
     margin-bottom: 20px;
     transition: transform .25s ease, border-color .25s ease, background-color .25s ease;
     box-shadow: none;
@@ -339,28 +335,24 @@ p { color: var(--secondary-text); line-height: 1.8; margin-bottom: 30px; font-si
 #result-screen h3 { font-size:2.2em; color: var(--accent-color); margin-bottom:35px; text-align:center; font-weight:700; text-shadow:0 0 15px rgba(107,70,193,.2); animation: pulse 3s infinite; }
 @keyframes pulse { 0%{transform:scale(1);} 50%{transform:scale(1.05);} 100%{transform:scale(1);} }
 #result-screen p {
-    text-align: left; max-width: 90%; margin: 0 auto 40px;
-    line-height: 1.9; font-size: 1.1em; padding: 25px;
-    background-color: rgba(247,250,252,.8); border-radius: 16px; border: 1px solid rgba(226,232,240,.8);
-    transition: all .5s ease;
-}
-#result-screen p:hover { border-color: rgba(107,70,193,.3); box-shadow: 0 0 20px rgba(107,70,193,.08); }
-.hidden { display:none; }
-.screen-footer { text-align:center; font-size:.9em; color: var(--secondary-text); margin-top:40px; opacity:.7; }
-.loader { width:48px; height:48px; border:3px solid var(--accent-color); border-bottom-color:transparent; border-radius:50%; display:inline-block; box-sizing:border-box; animation: rotation 1s linear infinite; margin:20px auto; }
-@keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg);} }
-#animal-guide { max-height: 600px; overflow-y: auto; padding-right: 15px; -webkit-overflow-scrolling: touch; }
-.animal-card { background-color: rgba(247, 250, 252, .8); border-radius: 16px; border: 1px solid rgba(226,232,240,.8); padding:20px; margin-bottom:20px; transition: all .3s ease; }
-.animal-card {
-    background-color: rgba(247, 250, 252, .9);
-    border-radius: 16px;
-    border: 1px solid rgba(226, 232, 240, .9);
-    padding: 20px;
-    margin-bottom: 20px;
-    transition: transform .25s ease, border-color .25s ease, background-color .25s ease;
+     .25s ease, background-color .25s ease;
     box-shadow: none;
 }
 .animal-card:hover {
-    transform: translateY(-3px);
-    border-color: rgba(107, 70, 193, .25);
+    transform: translateY(-3n-group { display:flex; justify-content:center; gap:15px; margin-top:30px; }
+.option-list { list-style:none; padding:0; margin:0 0 20px 0; flex-grow:1; }
+.option-item {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    margin-bottom: 16px;
+    padding: 20px 25px;
+    cursor: pointer;
+    transition: all .3s cubic-bezier(.4,0,.2,1);
+    display: flex; align-items: flex-start; position: relative; overflow: hidden;
+    will-change: transform, background-color;
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+    touch-action: manipulation;
+} 70, 193, .25);
     b
+
