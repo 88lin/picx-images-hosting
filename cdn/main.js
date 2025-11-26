@@ -631,11 +631,9 @@ const emojiForAnimal = (name = '') => {
     } catch (e) {
     }
   }
-
   if (document.querySelector('.np-overlay')) {
     return;
   }
-
   function createSVGIcon(name,attrs){
     if (name === 'shield'){
       return `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
@@ -656,18 +654,15 @@ const emojiForAnimal = (name = '') => {
     }
     return '';
   }
-
   function buildModal(){
     const overlay = document.createElement('div');
     overlay.className = 'np-overlay np-hidden';
     overlay.setAttribute('aria-hidden','true');
-
     const modal = document.createElement('div');
     modal.className = 'np-modal';
     modal.setAttribute('role','dialog');
     modal.setAttribute('aria-modal','true');
     modal.setAttribute('aria-label','版权声明');
-
     modal.innerHTML = `
       <div style="text-align:center;">
         <div class="np-icon-circle" aria-hidden="true">${createSVGIcon('shield')}</div>
@@ -680,8 +675,7 @@ const emojiForAnimal = (name = '') => {
         <div aria-hidden="true">${createSVGIcon('alert')}</div>
         <p>
           <strong style="color:#b91c1c">重要提醒：</strong>
-          若您在任何平台购买到本站链接，无论商家标注何种理由，请立即<span style="font-weight:700">申请退款</span>并投诉，我们将依法追究违法店铺的法律责任！同时欢迎您支持并宣传本站，共同**不法商家借机牟利的行为
-        </p>
+          若您在任何平台购买到本站链接，无论商家标注何种理由，请立即<span style="font-weight:700">申请退款</span>并投诉，我们将依法追究违法店铺的法律责任！同时欢迎您支持并宣传本站，共同抵制不法商家借机牟利的行为
       </div>
       <div class="np-actions">
         <button type="button" class="np-btn np-btn-report" id="np-report-btn" aria-label="举报倒卖信息">
@@ -694,20 +688,16 @@ const emojiForAnimal = (name = '') => {
         </button>
       </div>
     `;
-
     overlay.appendChild(modal);
     return overlay;
   }
-
   function trapFocus(modalRoot){
     const focusableSelector =
       'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
     const focusables = modalRoot.querySelectorAll(focusableSelector);
     if (!focusables.length) return () => {};
-
     const first = focusables[0];
     const last = focusables[focusables.length - 1];
-
     function keyHandler(e){
       if (e.key === 'Tab') {
         if (e.shiftKey && document.activeElement === first) {
@@ -719,49 +709,37 @@ const emojiForAnimal = (name = '') => {
         }
       } 
     }
-
     document.addEventListener('keydown', keyHandler);
-
     return function cleanup(){
       document.removeEventListener('keydown', keyHandler);
     };
   }
-
   function showModalOnce(){
     if (safeStorageGet(STORAGE_KEY) === 'true') return;
-
     setTimeout(() => {
       if (safeStorageGet(STORAGE_KEY) === 'true') return;
-
       const overlay = buildModal();
       document.body.appendChild(overlay);
       document.body.classList.add('np-modal-open');
-
       requestAnimationFrame(()=> {
         overlay.classList.remove('np-hidden');
       });
-
       const cleanupTrap = trapFocus(overlay);
-
       const confirmBtn = overlay.querySelector('#np-confirm-btn');
       if (confirmBtn) confirmBtn.focus();
-
       const reportBtn = overlay.querySelector('#np-report-btn');
       reportBtn && reportBtn.addEventListener('click', ()=> {
         window.open(REPORT_URL, '_blank', 'noopener');
       });
-
       confirmBtn && confirmBtn.addEventListener('click', ()=> {
         safeStorageSet(STORAGE_KEY, 'true');
         overlay.classList.add('np-hidden');
-
         setTimeout(()=> {
           cleanupTrap && cleanupTrap();
           if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
           document.body.classList.remove('np-modal-open');
         }, 260);
       });
-
       const observer = new MutationObserver(()=> {
         if (!document.body.contains(overlay)) {
           cleanupTrap && cleanupTrap();
@@ -771,7 +749,6 @@ const emojiForAnimal = (name = '') => {
       observer.observe(document.body, { childList: true, subtree: true });
     }, 300);
   }
-
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', showModalOnce);
   } else {
