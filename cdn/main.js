@@ -676,6 +676,7 @@ const emojiForAnimal = (name = '') => {
         <p>
           <strong style="color:#b91c1c">重要提醒：</strong>
           若您在任何平台购买到本站链接，无论商家标注何种理由，请立即<span style="font-weight:700">申请退款</span>并投诉，我们将依法追究违法店铺的法律责任！同时欢迎您支持并宣传本站，共同抵制不法商家借机牟利的行为
+        </p>
       </div>
       <div class="np-actions">
         <button type="button" class="np-btn np-btn-report" id="np-report-btn" aria-label="举报倒卖信息">
