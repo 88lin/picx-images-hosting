@@ -7,7 +7,7 @@ export default defineBuilderConfig(() => ({
     repo: 'picx-images-hosting',
     branch: 'master',
     path: '',
-    useRawUrl: false,
+    useRawUrl: true,
     cdnUrl: 'https://jsd.akass.cn/gh/88lin/picx-images-hosting@master',
   },
 }))
