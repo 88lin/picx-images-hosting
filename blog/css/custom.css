@@ -44,11 +44,11 @@
 
 /*设置鼠标样式*/
 body {
-    cursor: url(https://jsd.akass.cn/gh/88lin/picx-images-hosting@master/Normal.9rjs0snhjl.svg),
+    cursor: url(https://cdn.jsdmirror.com/gh/88lin/picx-images-hosting@master/Normal.9rjs0snhjl.svg),
         default;
 }
 a,img {
-    cursor: url(https://jsd.akass.cn/gh/88lin/picx-images-hosting@master/Link.2rviiwb4pe.svg),
+    cursor: url(https://cdn.jsdmirror.com/gh/88lin/picx-images-hosting@master/Link.2rviiwb4pe.svg),
         pointer;
 }
 
