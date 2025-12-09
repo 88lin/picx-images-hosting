@@ -180,7 +180,7 @@ if (authSubmit) {
                 window.location.href = 'test.html?auth=' + encodeURIComponent(code);
             }
         } else {
-            authError.textContent = '授权码错误，请仔细核对是否输入正确';
+            authError.textContent = '授权码错误，请核对授权码是否为今日';
         }
     };
 }
