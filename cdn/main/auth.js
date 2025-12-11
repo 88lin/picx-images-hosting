@@ -65,7 +65,7 @@ if (startTalentTestBtn) {
 }
 if (startMentalAgeTestBtn) {
     startMentalAgeTestBtn.onclick = function() {
-        window.open('https://knowyourself.com.cn/scales/pat', '_blank');
+        window.open('https://knowyourself.zeabur.app/scales/pat', '_blank');
     };
 }
 if (startFruitPlasticityTestBtn) {
