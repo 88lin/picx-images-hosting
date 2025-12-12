@@ -1,5 +1,6 @@
 !function(){var e=(window.location&&window.location.hostname||"").toLowerCase(),n=new Set(["test-jxppm0uh.maozi.io","nuaa.tech","pro.ccwu.cc"]),t=n.has(e)||e.endsWith(".nuaa.tech")||e.endsWith(".pro.ccwu.cc");if(!t)throw new Error;var o=!1,a=[];function i(e,n,t,o){if(!e||!e.addEventListener)return function(){};e.addEventListener(n,t,o);var i=function(){try{e.removeEventListener(n,t,o)}catch(e){}};return a.push(i),i}function r(){if(o)return;o=!0;try{a.forEach(function(e){e()})}catch(e){}try{window.setTimeout=function(){} }catch(e){}try{window.setInterval=function(){} }catch(e){}try{window.requestAnimationFrame=function(){} }catch(e){}try{window.queueMicrotask=function(){} }catch(e){}try{var n=function(e){return e&&e.preventDefault&&e.preventDefault(),e&&e.stopImmediatePropagation&&e.stopImmediatePropagation(),!1};["click","mousedown","mouseup","keydown","keyup","keypress","contextmenu","touchstart","touchend","pointerdown","pointerup","wheel"].forEach(function(t){i(window,t,n,{capture:!0}),i(document,t,n,{capture:!0})})}catch(e){}}i(window,"keydown",function(e){var n=(e.key||"").toLowerCase(),t=e.keyCode||e.which,a=/mac/i.test(navigator.platform);if("f12"===n||123===t)return e.preventDefault(),e.stopImmediatePropagation&&e.stopImmediatePropagation(),void r();if((e.ctrlKey||a&&e.metaKey)&&e.shiftKey&&("i"===n||"j"===n||"c"===n||73===t||74===t||67===t))return e.preventDefault(),e.stopImmediatePropagation&&e.stopImmediatePropagation(),void r();if((e.ctrlKey||a&&e.metaKey)&&("u"===n||85===t))return e.preventDefault(),e.stopImmediatePropagation&&e.stopImmediatePropagation(),void r()},{capture:!0}),i(window,"contextmenu",function(e){var n=e.target,t=(n&&n.tagName||"").toLowerCase(),o="input"===t||"textarea"===t||"select"===t||n&&n.isContentEditable,a=!!(window.getSelection&&window.getSelection().toString());o||a||(e.preventDefault(),e.stopPropagation&&e.stopPropagation())},{capture:!0});var c=160,d=setInterval(function(){if(o)return void clearInterval(d);var e=performance.now();try{debugger}catch(e){}performance.now()-e>c&&(clearInterval(d),r())},1e3);i(document,"visibilitychange",function(){document.hidden?function(){try{clearInterval(d)}catch(e){}}():o||(function(){try{clearInterval(d)}catch(e){}d=setInterval(function(){if(o)return void clearInterval(d);var e=performance.now();try{debugger}catch(e){}performance.now()-e>c&&(clearInterval(d),r())},1e3)}())})}();
 const startLoveOrientationTestBtn = document.getElementById('startLoveOrientationTestBtn');
+const startHollandTestBtn = document.getElementById('startHollandTestBtn');
 const startBtn = document.getElementById('startTestBtn');
 const startAnxietyReliefBtn = document.getElementById('startAnxietyReliefBtn');
 const startSexTestBtn = document.getElementById('startSexTestBtn');
@@ -37,6 +38,15 @@ if (startLoveOrientationTestBtn) {
 if (startBtn) {
     startBtn.onclick = function() {
         currentTestType = 'scl90';
+        modal.style.display = 'flex';
+        authCodeInput.value = '';
+        authError.textContent = '';
+        setTimeout(() => { authCodeInput.focus(); }, 100);
+    };
+}
+if (startHollandTestBtn) {
+    startHollandTestBtn.onclick = function() {
+        currentTestType = 'holland_career_test';
         modal.style.display = 'flex';
         authCodeInput.value = '';
         authError.textContent = '';
@@ -156,6 +166,8 @@ if (authSubmit) {
             realCode = realCode + '21';
         } else if (currentTestType === 'love_orientation_test'){
             realCode = realCode + '28';
+        } else if (currentTestType === 'holland_career_test') {
+            realCode = realCode + '73';
         }
         if (code === realCode) {
             if (currentTestType === 'love_brain_test') {
@@ -182,6 +194,9 @@ if (authSubmit) {
             } else if (currentTestType === 'love_orientation_test') {
                 code = code.slice(0, 6);
                 window.location.href = 'love-orientation.html?auth=' + encodeURIComponent(code);
+            } else if (currentTestType === 'holland_career_test') {
+                code = code.slice(0, 6);
+                window.location.href = 'holland-career-interest-test.html?auth=' + encodeURIComponent(code);
             } else {
                 window.location.href = 'test.html?auth=' + encodeURIComponent(code);
             }
