@@ -201,7 +201,7 @@ if (authSubmit) {
                 window.location.href = 'test.html?auth=' + encodeURIComponent(code);
             }
         } else {
-            authError.textContent = '授权码错误，请核对授权码是否为今日';
+            authError.textContent = '授权码错误，请核对授权码与测试类型是否匹配';
         }
     };
 }
