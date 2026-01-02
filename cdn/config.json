@@ -1,0 +1,22 @@
+{
+  "auth": {
+    "expiryMinutes": 2880,
+    "maxAttemptsPerDay": 20,
+    "lockMinutesAfterFail": 60,
+    "enableDailyLimit": true
+  },
+  "platforms": [
+    {
+      "name": "前往咸鱼获取",
+      "logo": "",
+      "url": "https://m.tb.cn/h.7UUSLiG?tk=HhLAfyBpCR0"
+    }
+  ],
+  "navigation": {
+    "xiaohongshuUrl": "https://m.tb.cn/h.7UUSLiG?tk=HhLAfyBpCR0"
+  },
+  "app": {
+    "name": "动物塑测试",
+    "version": "2.0.0"
+  }
+}
