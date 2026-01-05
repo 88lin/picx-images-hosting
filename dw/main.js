@@ -617,7 +617,7 @@ const emojiForAnimal = (name = '') => {
 });
 (function(){
   const STORAGE_KEY = 'np_nonprofit_confirmed_v1'; 
-  const REPORT_URL = 'https://bx282zvgdvv.feishu.cn/share/base/form/shrcntcJL58vkZJut2iIAHbjSif';
+  const REPORT_URL = 'https://site.nocode.host';
   const XHS_URL = 'https://xhslink.com/m/A3LHqn6y9ni';
   const XY_URL  = 'https://m.tb.cn/h.SzFOcuO?tk=Zks9fKoJL9s';
   function safeStorageGet(key) {
@@ -779,3 +779,4 @@ const emojiForAnimal = (name = '') => {
     showModalOnce();
   }
 })();
+
