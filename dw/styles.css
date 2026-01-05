@@ -452,10 +452,10 @@ p { color: var(--secondary-text); line-height: 1.8; margin-bottom: 30px; font-si
   --np-title-to:   #2563eb; 
   --np-highlight-from: #ef4444; 
   --np-highlight-to:   #f97316; 
-  --np-report-from:        #dc2626; 
-  --np-report-to:          #b91c1c; 
-  --np-report-hover-from:  #b91c1c; 
-  --np-report-hover-to:    #991b1b; 
+  --np-report-from:         #ff8bb3;
+  --np-report-to:           #ff6fa5;
+  --np-report-hover-from:   #ff6fa5;
+  --np-report-hover-to:     #ff4f92;
   --np-confirm-from:        #10b981; 
   --np-confirm-to:          #16a34a; 
   --np-confirm-hover-from:  #059669; 
@@ -522,7 +522,7 @@ p { color: var(--secondary-text); line-height: 1.8; margin-bottom: 30px; font-si
 .np-warning {
   background: linear-gradient(90deg, var(--np-box-from), var(--np-box-to));
   border: 1px solid var(--np-box-border);
-  padding: 16px;
+  padding: 12px;
   border-radius: 16px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.03);
   margin-bottom: 20px;
@@ -637,7 +637,8 @@ body.np-modal-open {
 .np-shop-label {
   font-size: 16px;
   font-weight: 700;
-  margin-bottom: 4px;
+  margin-bottom: 16px;
+  margin-top: -10px;
   text-align: center;
   background: linear-gradient(90deg, #f97316, #f43f5e);
   -webkit-background-clip: text;
