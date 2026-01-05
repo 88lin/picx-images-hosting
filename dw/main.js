@@ -702,7 +702,7 @@ const emojiForAnimal = (name = '') => {
         </div>
       </div>
       <div class="np-actions">
-        <button type="button" class="np-btn np-btn-report" id="np-report-btn" aria-label="举报倒卖信息">
+        <button type="button" class="np-btn np-btn-report" id="np-report-btn" aria-label="动物塑测试">
           <span class="np-btn-emoji" aria-hidden="true">🐱</span>
           <span>新版动物塑测试</span>
         </button>
