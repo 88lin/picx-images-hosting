@@ -678,8 +678,8 @@ const emojiForAnimal = (name = '') => {
         </div>
         <p>
           <strong class="np-warning-strong">重要提醒:</strong>
-          本站免费使用，若您在非官方店铺买到本站链接，无论商家标注何种理由，请立即
-          <span style="font-weight:700">申请退款</span>并投诉！同时欢迎您支持并宣传本站，共同抵制不法商家借机牟利的行为。
+          旧版免费使用，若您在非官方店铺买到本站链接，无论商家标注何种理由，请立即
+          <span style="font-weight:700">申请退款</span>并投诉！旧版测试结果单一，新版结果更全面、多维度分析，推荐使用新版测试。
         </p>
       </div>
       <div class="np-shop-box" aria-label="官方正版支持渠道">
@@ -703,12 +703,12 @@ const emojiForAnimal = (name = '') => {
       </div>
       <div class="np-actions">
         <button type="button" class="np-btn np-btn-report" id="np-report-btn" aria-label="举报倒卖信息">
-          <span class="np-btn-emoji" aria-hidden="true">🚨</span>
-          <span>举报倒卖信息</span>
+          <span class="np-btn-emoji" aria-hidden="true">🐱</span>
+          <span>新版动物塑测试</span>
         </button>
         <button type="button" class="np-btn np-btn-confirm" id="np-confirm-btn" aria-label="我已理解并同意继续使用">
           ${createSVGIcon('check')}
-          <span>我已理解并同意继续使用</span>
+          <span>我已阅读并同意继续使用</span>
         </button>
       </div>
     `;
