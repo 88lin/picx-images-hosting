@@ -1,6 +1,6 @@
 {
   "auth": {
-    "expiryMinutes": 2880,
+    "expiryMinutes": 2160,
     "maxAttemptsPerDay": 12,
     "lockMinutesAfterFail": 60,
     "enableDailyLimit": true
