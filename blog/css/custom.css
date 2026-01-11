@@ -92,14 +92,19 @@ a,img {
   height: 7px;
   border-radius: 8px;
   width: 5rem;
-  background: #eaecf2;
-  border: 1px solid #e3e8f7;
-  overflow: hidden;
   margin: auto;
+  background: rgba(241, 244, 250, 0.88);
+  border: 1px solid rgba(210, 220, 240, 0.85);
+  overflow: hidden;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 6px 18px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 .pace-inactive .pace-progress {
   opacity: 0;
-  transition: 0.3s ease-in;
+  transition: 0.25s ease-in;
 }
 .pace .pace-progress {
   box-sizing: border-box;
@@ -110,9 +115,21 @@ a,img {
   right: 100%;
   height: 100%;
   width: 100%;
-  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-  animation: gradient 1.5s ease infinite;
-  background-size: 200%;
+  background: linear-gradient(
+    90deg,
+    #ff7a59,
+    #ff4d8d,
+    #3b82f6,
+    #22c55e
+  );
+  background-size: 220% 100%;
+  animation: paceGradient 1.6s ease infinite;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35) inset;
+}
+@keyframes paceGradient {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 .pace.pace-inactive {
   opacity: 0;
@@ -272,14 +289,37 @@ box-shadow: 0px 0px 0px 6px rgb(74, 157, 236, 0.2);
 }
 /* 复选框颜色 */
 .hover\:border-indigo-600:hover {
-  border-color: #b0c4de;
-  box-shadow: 0 0 6px #b0c4de, 0 0 8px #b0c4de;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  border-color: rgba(58, 134, 255, 0.6);
+  box-shadow:
+    0 0 0 1px rgba(58, 134, 255, 0.6),
+    0 8px 24px rgba(58, 134, 255, 0.1);
+  transition: border-color 0.25s cubic-bezier(.2,.8,.2,1), 
+              box-shadow 0.25s cubic-bezier(.2,.8,.2,1);
 }
 .hover\:border-blue-600:hover {
-  border-color: rgba(255, 104, 23, 0.5);
-  box-shadow: 0 0 10px rgba(255, 104, 23, 0.7), 0 0 20px rgba(255, 104, 23, 0.5);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  border-color: rgba(160, 210, 255, 0.65);
+  box-shadow:
+    inset 0 0 0 999px rgba(160, 210, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.20),
+    0 0 0 6px rgba(140, 200, 255, 0.22),
+    0 12px 30px rgba(0, 0, 0, 0.12);
+  transition:
+    border-color 0.22s cubic-bezier(.2,.8,.2,1),
+    box-shadow 0.22s cubic-bezier(.2,.8,.2,1);
+}
+.dark .hover\:border-indigo-600:hover {
+  border-color: rgba(120, 170, 255, 0.75);
+  box-shadow:
+    0 0 0 1px rgba(120, 170, 255, 0.45),
+    0 10px 26px rgba(0, 0, 0, 0.45);
+}
+.dark .hover\:border-blue-600:hover {
+  border-color: rgba(170, 215, 255, 0.70);
+  box-shadow:
+    inset 0 0 0 999px rgba(170, 215, 255, 0.035),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    0 0 0 6px rgba(140, 200, 255, 0.20),
+    0 16px 40px rgba(0, 0, 0, 0.55);
 }
 /* SVG 樱花图标旋转控制 */
 @keyframes rotate {
