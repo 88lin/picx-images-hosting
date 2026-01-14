@@ -1,6 +1,6 @@
 {
   "auth": {
-    "expiryMinutes": 2160,
+    "expiryMinutes": 2880,
     "maxAttemptsPerDay": 12,
     "lockMinutesAfterFail": 60,
     "enableDailyLimit": true
@@ -9,7 +9,7 @@
     {
       "name": "前往小红书获取",
       "logo": "",
-      "url": "https://xhslink.com/m/3DOHNXYDx9n"
+      "url": ""
     }
   ],
   "navigation": {
