@@ -423,7 +423,7 @@ const resultState = {
         if (contrasts.length > 0) {
           const contrastsSection = document.createElement('div');
           contrastsSection.className = 'analysis-section';
-          contrastsSection.innerHTML = `<h4 class="analysis-subtitle">反差特征解读</h4>`;
+          contrastsSection.innerHTML = `<h4 class="analysis-subtitle">基于你的动物原型分析</h4>`;
           contrasts.forEach(contrast => {
             const contrastItem = document.createElement('div');
             contrastItem.className = 'contrast-item';
@@ -486,7 +486,7 @@ const resultState = {
         const highest = sortedDimensions[0];
         const lowest = sortedDimensions[sortedDimensions.length - 1];
         if (highest[1] - lowest[1] > 30) {
-          contrasts.push(`你在${dimensionNames[highest[0]]}方面表现突出（得分：${Math.round(highest[1])}），但在${dimensionNames[lowest[0]]}方面相对薄弱（得分：${Math.round(lowest[1])}）。这种强烈的反差正是你个性中最独特的部分，它既赋予你特殊的优势，也可能是你需要关注的成长领域。`);
+          contrasts.push(`你在${dimensionNames[highest[0]]}方面表现突出（得分：${Math.round(highest[1])}），但在${dimensionNames[lowest[0]]}方面相对薄弱（得分：${Math.round(lowest[1])}）。这正是你个性中最独特的部分，它既赋予你特殊的优势，也可能是你需要关注的成长领域。`);
         }
         dimensionList.forEach(([dim, score]) => {
           if (score > 80) {
