@@ -423,7 +423,7 @@ const resultState = {
         if (contrasts.length > 0) {
           const contrastsSection = document.createElement('div');
           contrastsSection.className = 'analysis-section';
-          contrastsSection.innerHTML = `<h4 class="analysis-subtitle">基于你的动物原型分析</h4>`;
+          contrastsSection.innerHTML = `<h4 class="analysis-subtitle">动物原型分析</h4>`;
           contrasts.forEach(contrast => {
             const contrastItem = document.createElement('div');
             contrastItem.className = 'contrast-item';
@@ -642,23 +642,196 @@ const resultState = {
           }
         };
         const archetypeContent = document.querySelector('.archetype-content');
+        const tScores = (resultState.animalResult && resultState.animalResult.tScores) || {};
+        const get = (k) => (Number.isFinite(tScores[k]) ? tScores[k] : 50);
+        const score = {
+          DOM: get('DOM'),
+          STR: get('STR'),
+          COM: get('COM'),
+          SOL: get('SOL'),
+          AGI: get('AGI'),
+          SEC: get('SEC'),
+          AES: get('AES')
+        };
+        const level = (v) => (v >= 70 ? 'high' : v <= 40 ? 'low' : 'mid');
+        const L = {
+          DOM: level(score.DOM),
+          STR: level(score.STR),
+          COM: level(score.COM),
+          SOL: level(score.SOL),
+          AGI: level(score.AGI),
+          SEC: level(score.SEC),
+          AES: level(score.AES)
+        };
+        const dimLabel = {
+          DOM: '支配性',
+          STR: '力量感',
+          COM: '服从性',
+          SOL: '社交性',
+          AGI: '灵活性',
+          SEC: '安全感',
+          AES: '审美性'
+        };
+        const sorted = Object.entries(score).sort((a, b) => b[1] - a[1]);
+        const top1 = sorted[0];
+        const top2 = sorted[1];
+        const low1 = sorted[sorted.length - 1];
+        const low2 = sorted[sorted.length - 2];
+        function workEnvText() {
+          let text = '你的环境匹配重点在工作节奏与边界清晰度：目标与职责明确、信息反馈及时、协作规则稳定时，你更容易把精力放在解决问题本身，而不是反复猜测与补信息。';
+
+          if (L.SEC === 'high') {
+            text = '你更适合规则清晰与节奏可预期的环境：职责边界明确、信息透明、反馈稳定，会显著降低你的焦虑成本，让你把注意力放在质量与连续交付上。临时变更频繁、职责模糊或沟通随意的团队，容易让你在不必要的风险感里消耗。';
+          } else if (L.SEC === 'low' && L.AGI === 'high') {
+            text = '你更适合变化密度更高的环境：允许试错、快速迭代、对新问题保持开放。相比固定流程，你更能在探索与调整中找到效率。但仍需要最基本的目标对齐，避免把精力浪费在无效变动上。';
+          }
+
+          if (L.SOL === 'high') text += '在沟通密度较高、跨角色协作频繁的团队里，你更容易进入状态。';
+          if (L.SOL === 'low') text += '你需要被保护的专注时间与低干扰节奏，避免持续会议化。';
+          if (L.DOM === 'high') text += '当你能参与关键决策或拥有一定推进空间时，表现更稳定。';
+          if (L.COM === 'high') text += '明确的规则与标准能放大你的优势，你会更愿意把事情做稳做细。';
+
+          return text;
+        }
+
+        function careerPathText() {
+          let text = '更稳妥的路径是把优势维度转成可持续的工作方式：让别人能清晰预期你擅长什么、在什么情境下最可靠，并用持续的结果去验证。这样你的成长不是靠运气，而是靠可重复的能力结构。';
+          if (score.DOM - score.COM >= 20) {
+            text = '你更适合走“负责范围逐步扩大”的路径：先在小范围承担推进与决策，把目标拆解、节奏管理、资源协调做出稳定口碑，再扩展到带项目或带团队。关键不在头衔，而在能否把复杂事推进到闭环。';
+          } else if (score.COM - score.DOM >= 20 && L.SEC !== 'low') {
+            text = '你更适合走“稳定交付与体系化”的路径：在运营、项目支持、质量、交付、合规等场景，把流程、细节与风险管理做精做稳。随着经验累积，可升级为流程负责人或体系建设者，用可靠性与可控性建立影响力。';
+          } else if (L.AGI === 'high') {
+            text = '你更适合走“多场景解题能力”的路径：在产品、增长、策略、咨询、创新项目等情境中，把快速学习与跨团队协作变成优势。关键是定期复盘，沉淀你的判断标准与决策依据，避免只是在忙。';
+          }
+
+          if (L.AES === 'high') text += '若工作强调体验、品质或表达标准，你的投入度通常更高，也更容易做出差异化。';
+          return text;
+        }
+       function thinkingText() {
+          const agi = Math.round(score.AGI);
+          const str = Math.round(score.STR);
+          let base = `你的思维方式更像是一套动态的“认知策略”，而非静态的能力评分：灵活性（${agi}）决定了你的视野宽度，能看见多少条路，力量感（${str}）决定你能在一条路上走多远。真正的效率，源于在两者间找到动态平衡。`;
+          if (L.AGI === 'high' && L.STR === 'low') {
+            return base + `你擅长在初期快速发散思维，能敏锐地识别出多条潜在路径。但在长期推进上，你更依赖外部的约束力或清晰的里程碑。对你而言，把每个想法落到“要验证什么、验证标准”上，比继续想更多方案更重要。`;
+          }
+          if (L.STR === 'high' && L.AGI === 'low') {
+            return base + `你更习惯选定方向后持续深耕，强大的抗压性和耐力是你的优势。但你的盲点在于容易形成路径依赖。一个对你非常有帮助的习惯，是在关键节点刻意问自己：如果这条路行不通，我的第二选择是什么？`;
+          }
+          if (L.AGI === 'high' && L.STR === 'high') {
+            return base + `你同时具备快速建模和持续推进的能力，既能想得快，也能做得深。这种组合非常稀缺。你需要留意的是：速度越快，越要把假设、边界和决策理由写清楚，否则容易在沟通中被误解。`;
+          }
+          if (L.AGI === 'low' && L.STR === 'low') {
+            return base + `你倾向于在信息充足时才做决断，这是一种审慎的策略，避免了盲目试错，但也可能带来较高的启动门槛。打破停滞的最好方式不是追求“完美计划”，而是寻找一个“最小可行性行动”来启动反馈循环。`;
+          }
+          if (L.AGI === 'high' && L.STR === 'mid') {
+            return base + `你习惯先探索可能性，再逐步收敛。只要给你一个清晰的验证目标，你的效率会明显提升。`;
+          }
+          if (L.STR === 'high' && L.AGI === 'mid') {
+            return base + `你在推进中具备稳定输出能力，同时也能在必要时调整方向。提前区分“不能变的原则”和“可以变的手段”，会让你走得更远。`;
+          }
+          return base + `你整体处于相对均衡的状态：既不因过早锁死方向而错失机会，也不因无限发散而消耗精力。为不同类型的决策设定不同节奏规则，是你进一步提升判断力的关键。`;
+        }
+        function emotionText() {
+          const sec = Math.round(score.SEC);
+          const sol = Math.round(score.SOL);
+          let text = `在你的情感模式中，安全感影响你对不确定性的敏感程度，而社交性则塑造了你处理情绪时的"方向性偏好"——是寻求外部验证，还是先进行内部整合`;
+          if (L.STR === 'high') {
+            text += '同时，你的力量感较强，这意味着即便情绪被触发，你通常也能维持表面的稳定，不太容易当场失控。';
+          } else if (L.COM === 'high') {
+            text += '同时，你较强的配合倾向，往往让你在情绪出现时先顾全关系，而不是立刻表达自己的感受。';
+          } else if (L.DOM === 'high') {
+            text += '同时，你在情绪被触发时，更容易直接表达立场，而不是选择退让或回避。';
+          } else if (L.AGI === 'high') {
+            text += '同时，你的思维灵活性较高，情绪出现后容易在不同解释之间来回切换，既有助于理解，也可能带来额外消耗。';
+          } else if (L.AES === 'high') {
+            text += '同时，你对氛围与感受较为敏感，情绪往往会被环境细节放大。';
+          }
+          if (L.SEC === 'high' && L.SOL === 'low') {
+            text += `当面临信息模糊或边界不清时，你容易陷入内心的反复推演。你的优势是谨慎细致，但代价是压力容易内化。对你来说，把担忧转成可确认的问题（信息、节点、边界），往往比单纯安抚更有效。`;
+          } else if (L.SEC === 'high' && L.SOL === 'high') {
+            text += `你对环境变化高度敏感，同时也极度重视人际反馈的一致性。稳定而清晰的回应能快速修复你的情绪，而模糊的承诺或冷处理则极易引发你的内耗。`;
+          } else if (L.SEC === 'low' && L.SOL === 'high') {
+            text += `你对不确定性有较高的耐受度，习惯通过互动和交流来消化压力。需要注意的是，别因为“还能扛”而忽视早期风险信号。`;
+          } else if (L.SEC === 'low' && L.SOL === 'low') {
+            text += `你更习惯独立消化情绪，对环境变化有较强的“钝感力”和防御力，不易被击穿。但也别把自己封闭起来。偶尔找个信任的朋友吐吐槽，也是给心灵通通风。`;
+          } else {
+            text += `你整体处在相对平衡的区间，情绪既不会轻易外溢，也不容易长期堆积。关键在于把感受及时转化为具体的确认、对齐或复盘行动。`;
+          }
+          return text;
+        }
+
+        function growthText() {
+          const a = low1[0];
+          const b = low2[0];
+          const adviceMap = {
+            DOM: '在需要表态的场合，尽量把立场说清楚，避免因为过度回避冲突而丢失机会。',
+            STR: '遇到困难时，先把目标拆小，优先保证可持续推进，避免因为一次挫折否定整体。',
+            COM: '在规则不清或方向摇摆时，先争取澄清而不是硬扛；明确标准能减少无效返工。',
+            SOL: '重要信息尽量早沟通、早对齐，把“默契”换成“明确”，会显著降低误会成本。',
+            AGI: '当环境变化时，先确认变化是否影响核心目标，再决定是否调整，避免被噪音带节奏。',
+            SEC: '面对不确定性，区分可控与不可控：把可控部分做成清单与预案，情绪会更稳定。',
+            AES: '把品质追求落到关键指标上：哪些是必须做到的，哪些可以接受折中，减少无谓消耗。'
+          };
+          const lowA = Math.round(low1[1]);
+          const lowB = Math.round(low2[1]);
+          if (lowA >= 45 && lowB >= 45) {
+            return `你的各项维度发展相对均衡，并不存在明显短板。对你而言，更有效的成长方式不是补弱，而是选择一个高频场景（比如决策、沟通或执行），为它建立一套更稳定的应对规则。`;
+          }
+          return `你的成长建议优先看低分维度带来的“盲区风险”。当前相对较低的是${dimLabel[a]}（${lowA}）与${dimLabel[b]}（${lowB}）。建议你重点实践两条规则：① ${adviceMap[a]} ② ${adviceMap[b]}把注意力放在关键场景的改进，而不是追求面面俱到。`;
+        }
+
         const data = archetypeData[animalName] || {
           mythology: '这个动物在神话传说中有着丰富的象征意义，代表着人类对自然和生命的理解与想象。',
           famousPeople: '许多历史和公众人物展现出与这种动物相似的性格特质，他们的故事激励着我们理解这种性格类型的潜力。',
           ethology: '从动物行为学角度看，这种动物的生存策略和行为模式为我们理解相关性格特质提供了有趣的视角。'
         };
         archetypeContent.innerHTML = `
-          <div class="archetype-section">
-            <h4 class="archetype-subtitle">神话与文化象征</h4>
-            <p class="archetype-description">${data.mythology}</p>
+          <div class='analysis-section'>
+            <h4 class='analysis-subtitle'>职业建议</h4>
+
+            <div class='contrast-item'>
+              <p class='contrast-title'>适合的工作环境</p>
+              <p class='contrast-description'>${workEnvText()}</p>
+            </div>
+
+            <div class='contrast-item'>
+              <p class='contrast-title'>职业发展路径</p>
+              <p class='contrast-description'>${careerPathText()}</p>
+            </div>
           </div>
+
+          <div class='analysis-section'>
+            <h4 class='analysis-subtitle'>模式分析</h4>
+            
+            <div class='contrast-item'>
+              <p class='contrast-title'>情感模式分析</p>
+              <p class='contrast-description'>${emotionText()}</p>
+            </div>
+
+            <div class='contrast-item'>
+              <p class='contrast-title'>思维模式分析</p>
+              <p class='contrast-description'>${thinkingText()}</p>
+            </div>
+            
+            <div class='contrast-item'>
+              <p class='contrast-title'>成长建议</p>
+              <p class='contrast-description'>${growthText()}</p>
+            </div>
+          </div>
+
+          <div class='archetype-section'>
+            <h4 class='archetype-subtitle'>动物行为学解读</h4>
+            <p class='archetype-description'>${data.animalBehavior || data.ethology}</p>
+          </div>
+
+          <div class='archetype-section'>
+            <h4 class='archetype-subtitle'>神话与文化象征</h4>
+            <p class='archetype-description'>${data.mythology}</p>
+          </div>
+          
           <div class="archetype-section">
             <h4 class="archetype-subtitle">著名人物对照</h4>
             <p class="archetype-description">${data.famousPeople}</p>
-          </div>
-          <div class="archetype-section">
-            <h4 class="archetype-subtitle">动物行为学解读</h4>
-            <p class="archetype-description">${data.animalBehavior || data.ethology}</p>
           </div>
         `;
       }
