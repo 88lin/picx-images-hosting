@@ -616,10 +616,10 @@ const emojiForAnimal = (name = '') => {
     }
 });
 (function(){
-  const STORAGE_KEY = 'np_nonprofit_confirmed_v1'; 
+  const STORAGE_KEY = 'np_nonprofit_confirmed_v1';
   const REPORT_URL = 'https://site.nocode.host';
-  const XHS_URL = 'https://xhslink.com/m/A3LHqn6y9ni';
-  const XY_URL  = 'https://m.tb.cn/h.SzFOcuO?tk=Zks9fKoJL9s';
+  const XHS_URL = 'https://home.nuaa.tech/gzh';
+  const XY_URL  = 'https://m.tb.cn/h.7F8kqj8?tk=leu7UPkoMnz';
   function safeStorageGet(key) {
     try {
       return window.sessionStorage.getItem(key);
@@ -688,9 +688,9 @@ const emojiForAnimal = (name = '') => {
           <a href="${XHS_URL}"
              target="_blank" rel="noopener"
              class="np-btn np-btn-shop np-btn-xhs"
-             aria-label="打开小红书官方账号">
-            <img src="https://cdn.jsdmirror.com/gh/88lin/picx-images-hosting@master/xiaohongshu.b9cpfgij9.svg" alt="" class="np-btn-icon" />
-            <span>小红书官方账号</span>
+             aria-label="打开茉灵智库公众号">
+            <img src="https://cdn.jsdmirror.com/gh/88lin/picx-images-hosting@master/wechat_logo_icon_229288.svg" alt="" class="np-btn-icon" />
+            <span>公众号茉灵智库</span>
           </a>
           <a href="${XY_URL}"
              target="_blank" rel="noopener"
@@ -779,4 +779,3 @@ const emojiForAnimal = (name = '') => {
     showModalOnce();
   }
 })();
-
