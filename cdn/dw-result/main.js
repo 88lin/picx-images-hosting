@@ -883,7 +883,10 @@ const resultState = {
               pointBackgroundColor: 'rgba(138, 43, 226, 1)',
               pointBorderColor: '#fff',
               pointHoverBackgroundColor: '#fff',
-              pointHoverBorderColor: 'rgba(138, 43, 226, 1)'
+              pointHoverBorderColor: 'rgba(138, 43, 226, 1)',
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              pointHitRadius: 12
             }]
           },
           options: {
@@ -934,6 +937,8 @@ const resultState = {
                 cornerRadius: 8,
                 padding: 12, 
                 displayColors: false,
+                mode: 'point',
+                intersect: true,
                 titleFont: {
                   size: 14,
                   weight: 'bold'
@@ -950,8 +955,8 @@ const resultState = {
               }
             },
             interaction: {
-              intersect: false,
-              mode: 'index'
+              intersect: true,
+              mode: 'point'
             }
           }
         });
