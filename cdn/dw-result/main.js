@@ -886,7 +886,7 @@ const resultState = {
               pointHoverBorderColor: 'rgba(138, 43, 226, 1)',
               pointRadius: 3,
               pointHoverRadius: 5,
-              pointHitRadius: 12
+              pointHitRadius: 6
             }]
           },
           options: {
