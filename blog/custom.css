@@ -250,9 +250,6 @@ box-shadow: 0px 0px 0px 6px rgb(74, 157, 236, 0.2);
 .font-bold.ml-2 {
   font-size: 18px;
 }
-#memos > ul > li > div > div.memos__text > pre > code {
-  color: #000000;
-}
 /* 卡片遮罩背景颜色修改 */
 .bg-black {
   box-shadow: 
@@ -367,4 +364,8 @@ box-shadow: 0px 0px 0px 6px rgb(74, 157, 236, 0.2);
 .notion a:not(.notion-page-link):not(.notion-collection-card):not(.notion-hash-link):not(.notion-bookmark):not(.blog-link):focus::after {
     width: 100%;
     left: 50%;
+}
+
+.notion-table-of-contents-item:hover {
+  background-color: #ebf4ff !important;
 }
