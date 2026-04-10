@@ -508,6 +508,19 @@
       'IMFW': `${CDN_BASE}/IMFW.png`
     };
 
+    const preloadedTypeImages = new Set();
+
+    function preloadTypeImages() {
+      Object.values(TYPE_IMAGES).forEach((src) => {
+        if (!src || preloadedTypeImages.has(src)) return;
+        const image = new Image();
+        image.src = src;
+        preloadedTypeImages.add(src);
+      });
+    }
+
+    preloadTypeImages();
+
     const NORMAL_TYPES = [
   {
     "code": "CTRL",
