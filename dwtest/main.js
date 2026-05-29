@@ -618,8 +618,8 @@ const emojiForAnimal = (name = '') => {
 (function(){
   const STORAGE_KEY = 'np_nonprofit_confirmed_v1';
   const REPORT_URL = 'https://site.nocode.host';
-  const XHS_URL = 'https://home.nuaa.tech/gzh';
-  const XY_URL  = 'https://m.tb.cn/h.7F8kqj8?tk=leu7UPkoMnz';
+  const XHS_URL = 'https://go.88lin.eu.org/gzh';
+  const XY_URL  = 'https://site.nocode.host';
   function safeStorageGet(key) {
     try {
       return window.sessionStorage.getItem(key);
@@ -669,7 +669,7 @@ const emojiForAnimal = (name = '') => {
       <div class="np-header">
         <h2 class="np-title">版权声明</h2>
         <div class="np-main-text">
-          <span class="np-highlight">禁止商用，违者将依法追究责任！</span>
+          <span class="np-highlight">本站禁止商用！</span>
         </div>
       </div>
       <div class="np-warning">
@@ -695,9 +695,9 @@ const emojiForAnimal = (name = '') => {
           <a href="${XY_URL}"
              target="_blank" rel="noopener"
              class="np-btn np-btn-shop np-btn-xy"
-             aria-label="打开闲鱼官方账号">
-            <img src="https://cdn.jsdmirror.com/gh/88lin/picx-images-hosting@master/xianyu.5xb33ahtcj.svg" alt="" class="np-btn-icon" />
-            <span>闲鱼官方账号</span>
+             aria-label="热门测试合集">
+            <img src="https://cdn.jsdmirror.com/gh/glincker/thesvg@main/public/icons/angular/default.svg" alt="" class="np-btn-icon" />
+            <span>热门测试合集</span>
           </a>
         </div>
       </div>
