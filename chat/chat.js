@@ -1641,7 +1641,6 @@
                             switch (n) {
                                 case "identity":
                                     s = r.id, c = r.name,
-                                        // function (t) { t ? t += "🤞" : t = "异次元", i(".ctrm-title-domain").text(t) }(r.domain),
                                         function (t) {
                                             // 提取标题中 '-' 符号前的内容
                                             var titlePart = document.title.split(/[-|]/)[0].trim();
@@ -1707,36 +1706,11 @@
                 return (r = "hours" === e ? "" + n.getHours() : "" + n.getMinutes()) === r[0] && (r = "0" + r), r
             }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             function H(t) {
                 // 调用消息处理函数
                 F(t);
-                // ---------
 
                 // 使用正则表达式进行替换
-                // t.msg = t.msg.replace(/(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp|svg|bmp|apng|ico|tiff|avif|heic|tga|jxr))/gi, '<a data-fancybox="gallery" data-src="$1"><img src="$1" alt="$1" style="max-width: 100%;"></a>');
-                // t.msg = t.msg.replace(/(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp|svg|bmp|apng|ico|tiff|avif|heic|tga|jxr))|(https?:\/\/.*\.tutu\.to\/.*\/[^"\s]+)/gi, '<a data-fancybox="gallery" data-src="$1$2"><img src="$1$2" alt="$1$2" style="max-width: 100%;"></a>');
-
                 t.msg = t.msg.replace(
                     /\[url=([^\]]+)\](?:\[img\][^\]]*\[\/img\]) ?\[\/url\]|(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp|svg|bmp|apng|ico|tiff|avif|heic|tga|jxr))|(https?:\/\/.*\.tutu\.to\/.*\/[^"\s]+)/gi,
                     '<a data-fancybox="gallery" data-src="$1$2$3"><img src="$1$2$3" alt="$1$2$3" style="max-width: 100%;" referrerpolicy="no-referrer"></a>'
@@ -1770,8 +1744,6 @@
                         '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="calc(100% + 20px)" style="width: calc(100% + 20px); margin-left: -10px; margin-top: 15px;" height="86" src="//music.163.com/outchain/player?type=0&id=$2&auto=0&height=66"></iframe>' +
                         '<a href="$1" target="_blank" style="display: inline-block;padding: 6px 14px;margin-top: 15px;border: none;border-radius: 25px;background-color: #ff4141;color: white;text-align: center;text-decoration: none;font-weight: bold;transition: background-color 0.3s, transform 0.2s;font-size: 14px;">跳转到网易云音乐列表</a> <a><img style="position:absolute;bottom: -9px;right: 0px;width: 66%;pointer-events:none;z-index:999;" src="https://cdn.h5ds.com/space/files/600972551685382144/20240307/689876818574024704.webp" alt="Image" referrerpolicy="no-referrer"></a>' +
                         '</div>');
-
-
                 t.msg = t.msg.replace(/【(.*?)】/g, function (match, p1) {
                     if (/^2\d{5}_202824_\d{1,3}$/.test(p1)) {
                         // 卡片门icon
@@ -1798,7 +1770,6 @@
                         return `<a><img src="https://cdn.jsdmirror.com/gh/btwoa/Fluent-Emoji-3D/${p1}.gif" alt="${p1}" style="max-width: 3rem;"></a>`;
                     }
                 });
-
 
                 // v: 这里是文字转语音的代码
                 t.msg = t.msg.replace(/\/?v:([^<]*)?(?:<a[^>]*>[^<]*<\/a>)?/, function (match, $1) {
@@ -1912,11 +1883,6 @@ img.playing {
                 document.head.appendChild(style);
 
                 // end: 这里是文字转语音的代码
-
-
-
-
-
                 t.msg = t.msg.replace(/(https?:\/\/[^\s<>"]+)(?![^<>]*>.*<\/a>)/g, function (match, url) {
                     const currentHostname = window.location.hostname; // 获取当前页面的域名
                     const hostname = new URL(url).hostname; // 获取链接的域名
@@ -2451,42 +2417,6 @@ img.playing {
                 // }
             }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             function z() {
                 var t = Date.now();
                 e || H({ time: t, id: 111111111211, name: "SYSTEM", msg: "您已掉线，点'😜'重连..." }), O([]), clearInterval(a)
@@ -2528,9 +2458,7 @@ img.playing {
 <!--<script async src="js/pup.js" data-url="https://tutu.to/upload" data-auto-insert="direct-links"></script>-->
 <script async src="https://cdn.h5ds.com/space/files/600972551685382144/20250608/856129445817171968.js" data-url="https://tutu.to/upload" data-auto-insert="direct-links"></script>
 
-
 <!-- css -->
-<!--<link rel="stylesheet" href="js/OwO.min.css">-->
 <link rel="stylesheet" href="https://cdn.h5ds.com/space/files/600972551685382144/20250722/871856997280043008.css">
 <!-- Fancybox CSS -->
 <link rel="stylesheet" href="https://cdnjs.snrat.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" />
