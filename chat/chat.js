@@ -1933,7 +1933,7 @@ img.playing {
                     const isSameDomain = hostname === currentHostname;
 
                     // 白名单域名列表
-                    const safeDomains = ['z-l.top', 'xiaolongmr.github.io', 'kuhehe.top', 'bilibili.com', 'kuhehe.vip', 'n.kuhehe.top'];
+                    const safeDomains = ['http://localhost:3000', 'bilibili.com', '88lin.github.io', '*.88lin.eu.org', 'jasnode.github.io'];
 
                     // 检查是否是安全域名或其二级域名
                     const isSafeDomain = safeDomains.some(domain => {
@@ -2774,7 +2774,7 @@ var OwO_demo = new OwO({
         UPLOAD_TRIGGER_SELECTOR: "#cfbed",
         MARKDOWN_TEMPLATE: "{url}", // 插入原始链接
         AUTO_COPY_URL: true,
-        ALLOWED_HOSTS: ['http://localhost:3000', 'bilibili.com', '88lin.github.io', '*.88lin.eu.org', 'pro.gleeze.com'],
+        ALLOWED_HOSTS: ['http://localhost:3000', 'bilibili.com', '88lin.github.io', '*.88lin.eu.org', 'jasnode.github.io'],
         MAX_FILE_SIZE: 5 * 1024 * 1024,
         USE_BASE64_PREVIEW: true, // true：使用 base64，false：使用上传后的图片 URL
     };
@@ -3061,7 +3061,7 @@ window.uploadToTelegram = function (file) {
                 returnFormat: "full",
                 uploadFolder: "dh",
             },
-            ALLOWED_HOSTS: ['http://localhost:3000', 'bilibili.com', '88lin.github.io', '*.88lin.eu.org', 'pro.gleeze.com'],
+            ALLOWED_HOSTS: ['http://localhost:3000', 'bilibili.com', '88lin.github.io', '*.88lin.eu.org', 'jasnode.github.io'],
             MAX_FILE_SIZE: 5 * 1024 * 1024,
         };
         const currentHost = location.hostname;
