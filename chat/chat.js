@@ -115,9 +115,9 @@
                             // 遍历表情包中的每个表情
                             for (var _i = 0; _i < opackage.length; _i++) { // 遍历当前表情包中的所有表情
                                 if (this.odata[this.packages[i]].type === 'image-zl') { // 如果当前表情包的类型是 'image'
-                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '">' + '<img data-original="' + 'https://emoticons.z-l.top/' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '.png" src="" icon="' + opackage[_i].text + '"></li>';
+                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '">' + '<img data-original="' + 'https://emoticons.z-l.top/' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '.png" src="" icon="' + opackage[_i].text + '" referrerpolicy="no-referrer"></li>';
                                 } else if (this.odata[this.packages[i]].type === 'image') { // 如果当前表情包的类型是 'image'
-                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + opackage[_i].text + '">' + '<img data-original="' + 'https://cdn.jsdmirror.com/gh/btwoa/Fluent-Emoji-3D/' + opackage[_i].text + '.gif" src="" icon="' + opackage[_i].text + '"></li>';
+                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + opackage[_i].text + '">' + '<img data-original="' + 'https://cdn.jsdmirror.com/gh/btwoa/Fluent-Emoji-3D/' + opackage[_i].text + '.gif" src="" icon="' + opackage[_i].text + '" referrerpolicy="no-referrer"></li>';
                                     // 追加一个新的 <li> 元素到 html 变量中，表示一个图片表情项
                                     // - class="OwO-item" 设置表情项的类名
                                     // - title="' + opackage[_i].text + '" 设置表情项的标题（悬停时显示的提示）
@@ -127,17 +127,17 @@
                                     //   - src="" 图片初始 src 为空，懒加载时会动态加载
                                     //   - icon="' + opackage[_i].text + '" 设置自定义属性 icon，用于存储表情的文字表示
                                 } else if (this.odata[this.packages[i]].type === 'cat') { // 如果当前表情包的类型是 'image'
-                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + opackage[_i].icon + '">' + '<img data-original="' + 'https://npm.elemecdn.com/blobcat@1.0.0' + "/" + opackage[_i].icon + '.png" src="" icon="' + opackage[_i].text + '"></li>';
+                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + opackage[_i].icon + '">' + '<img data-original="' + 'https://npm.elemecdn.com/blobcat@1.0.0' + "/" + opackage[_i].icon + '.png" src="" icon="' + opackage[_i].text + '" referrerpolicy="no-referrer"></li>';
                                 } else if (this.odata[this.packages[i]].type === 'bb_') { // 如果当前表情包的类型是 'image'
-                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + opackage[_i].icon + '">' + '<img data-original="' + 'https://unpkg.com/@waline/emojis@1.1.0/bilibili/bb_' + opackage[_i].icon + '.png" src="" icon="' + opackage[_i].text + '"></li>';
+                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + opackage[_i].icon + '">' + '<img data-original="' + 'https://unpkg.com/@waline/emojis@1.1.0/bilibili/bb_' + opackage[_i].icon + '.png" src="" icon="' + opackage[_i].text + '" referrerpolicy="no-referrer"></li>';
                                 } else if (this.odata[this.packages[i]].type === 'tuzki') { // 如果当前表情包的类型是 'image'
-                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + opackage[_i].icon + '">' + '<img data-original="' + 'https://tools.kalvinbg.cn/static/image/emotion/tuzki/' + opackage[_i].icon + '.gif" src="" icon="' + opackage[_i].text + '" style="min-height:4rem"></li>';
+                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + opackage[_i].icon + '">' + '<img data-original="' + 'https://tools.kalvinbg.cn/static/image/emotion/tuzki/' + opackage[_i].icon + '.gif" src="" icon="' + opackage[_i].text + '" style="min-height:4rem" referrerpolicy="no-referrer"></li>';
                                 } else if (this.odata[this.packages[i]].type === 'quicker') { // 新增Quicker表情包类型
-                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="quicker/' + opackage[_i].icon + '">' + '<img data-original="https://files.getquicker.net/_sitefiles/_guides/52593d69-c99a-4367-8b98-08d9a65be47e/2022/07/04/' + opackage[_i].icon + '.png" src="" icon="' + opackage[_i].text + '"></li>';
+                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="quicker/' + opackage[_i].icon + '">' + '<img data-original="https://files.getquicker.net/_sitefiles/_guides/52593d69-c99a-4367-8b98-08d9a65be47e/2022/07/04/' + opackage[_i].icon + '.png" src="" icon="' + opackage[_i].text + '" referrerpolicy="no-referrer"></li>';
                                 } else if (this.odata[this.packages[i]].type === 'quicker-gif') { // 新增Quicker-GIF表情包类型
-                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + opackage[_i].icon + '">' + '<img data-original="https://files.getquicker.net/_sitefiles/_guides/52593d69-c99a-4367-8b98-08d9a65be47e/2022/07/06/' + opackage[_i].icon + '.gif" src="" icon="' + opackage[_i].text + '"></li>';
+                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + opackage[_i].icon + '">' + '<img data-original="https://files.getquicker.net/_sitefiles/_guides/52593d69-c99a-4367-8b98-08d9a65be47e/2022/07/06/' + opackage[_i].icon + '.gif" src="" icon="' + opackage[_i].text + '" referrerpolicy="no-referrer"></li>';
                                 } else if (this.odata[this.packages[i]].type === 'ka_pian_men') { // 新增卡片门表情包类型
-                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + opackage[_i].icon + '">' + '<img data-original="https://files.getquicker.net/_sitefiles/_guides/52593d69-c99a-4367-8b98-08d9a65be47e/2022/03/27/' + opackage[_i].icon + '.gif" src="" icon="' + opackage[_i].text + '"></li>';
+                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + opackage[_i].icon + '">' + '<img data-original="https://files.getquicker.net/_sitefiles/_guides/52593d69-c99a-4367-8b98-08d9a65be47e/2022/03/27/' + opackage[_i].icon + '.gif" src="" icon="' + opackage[_i].text + '" referrerpolicy="no-referrer"></li>';
                                 } else {
                                     html += '\n <li class="OwO-item" title="' + opackage[_i].text + '">' + opackage[_i].icon + '</li>';
                                     // 追加一个新的 <li> 元素到 html 变量中，表示一个文字表情项
@@ -1739,28 +1739,28 @@
 
                 t.msg = t.msg.replace(
                     /\[url=([^\]]+)\](?:\[img\][^\]]*\[\/img\]) ?\[\/url\]|(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp|svg|bmp|apng|ico|tiff|avif|heic|tga|jxr))|(https?:\/\/.*\.tutu\.to\/.*\/[^"\s]+)/gi,
-                    '<a data-fancybox="gallery" data-src="$1$2$3"><img src="$1$2$3" alt="$1$2$3" style="max-width: 100%;"></a>'
+                    '<a data-fancybox="gallery" data-src="$1$2$3"><img src="$1$2$3" alt="$1$2$3" style="max-width: 100%;" referrerpolicy="no-referrer"></a>'
                 );
 
                 t.msg = t.msg.replace("@" + c, '<span class="ctrm-b">@' + c + "</span>");
 
-                t.msg = t.msg.replace(/我们还是说点其他的吧！|我们换个话题吧|这真是个好问题，让我想一想再告诉你吧/, '我是笨蛋,不是chatgpt');
+                t.msg = t.msg.replace(/我们还是说点其他的吧！|我们换个话题吧|这真是个好问题，让我想一想再告诉你吧/, '我是笨蛋机器人小尬,不是聪明的ChatGpt也不是机智的豆包,你的提问太难了');
 
-                t.msg = t.msg.replace(/违禁词汇/, '不可以说脏话哦');
+                t.msg = t.msg.replace(/违禁词汇/, '不可以说脏话哦，小尬会截图告诉警察叔叔的。');
 
-                t.msg = t.msg.replace(/一个中国|台湾/, '<a data-fancybox="gallery" data-src="https://pic1.zhimg.com/v2-e93e8719fc6cbdb6dd9cbdb501e68fd8_720w.jpg"><img src="https://pic1.zhimg.com/v2-e93e8719fc6cbdb6dd9cbdb501e68fd8_720w.jpg" alt="祖国统一势不可挡" style="max-width: 100%;"></a>');
+                t.msg = t.msg.replace(/一个中国|台湾/, '<a data-fancybox="gallery" data-src="https://pic1.zhimg.com/v2-e93e8719fc6cbdb6dd9cbdb501e68fd8_720w.jpg"><img src="https://pic1.zhimg.com/v2-e93e8719fc6cbdb6dd9cbdb501e68fd8_720w.jpg" alt="祖国统一势不可挡" style="max-width: 100%;" referrerpolicy="no-referrer"></a>');
 
-                t.msg = t.msg.replace(/\/?日报|\/?简报|60s/, '<a data-fancybox="gallery" target="_blank" href="https://v2.alapi.cn/api/zaobao?token=1dtLvZ3LbvQL5ggc&format=image"><img src="https://v2.alapi.cn/api/zaobao?token=1dtLvZ3LbvQL5ggc&format=image" alt="每天60s读懂世界" style="max-width: 10rem;"></a>');
+                t.msg = t.msg.replace(/\/?日报|\/?简报|60s/, '<a data-fancybox="gallery" target="_blank" href="https://v2.alapi.cn/api/zaobao?token=1dtLvZ3LbvQL5ggc&format=image"><img src="https://v2.alapi.cn/api/zaobao?token=1dtLvZ3LbvQL5ggc&format=image" alt="每天60s读懂世界" style="max-width: 10rem;" referrerpolicy="no-referrer"></a>');
 
-                t.msg = t.msg.replace("龙哥威武", '<img src="https://api.cenguigui.cn/api/jp/?msg=龙哥我爱你" alt="Image" style="max-width: 100%;">');
+                t.msg = t.msg.replace("龙哥威武", '<img src="https://api.cenguigui.cn/api/jp/?msg=龙哥我爱你" alt="Image" style="max-width: 100%;" referrerpolicy="no-referrer">');
 
-                t.msg = t.msg.replace("摸鱼", '<a data-fancybox="gallery" data-src="https://api.vvhan.com/api/moyu"><img src="https://api.vvhan.com/api/moyu" alt="🐟" style="max-width: 10rem;"></a>');
+                t.msg = t.msg.replace("摸鱼", '<a data-fancybox="gallery" data-src="https://api.vvhan.com/api/moyu"><img src="https://api.vvhan.com/api/moyu" alt="🐟" style="max-width: 10rem;" referrerpolicy="no-referrer"></a>');
 
-                t.msg = t.msg.replace(/\/?jp (.+)/, '<img src="https://api.cenguigui.cn/api/jp/?msg=$1" alt="Image" style="max-width: 100%;">');
+                t.msg = t.msg.replace(/\/?jp (.+)/, '<img src="https://api.cenguigui.cn/api/jp/?msg=$1" alt="Image" style="max-width: 100%;" referrerpolicy="no-referrer">');
 
-                t.msg = t.msg.replace(/(https:\/\/(?:www\.iqiyi\.com\/v_[^?]+|v\.qq\.com\/x\/cover\/[^?]+|v\.youku\.com\/v_show\/id_[^?]+))(\?.*)?/g, '<iframe src="https://jx.xmflv.cc/?url=$1" id="player" width="100%" scrolling="no" allowfullscreen="true" allowtransparency="true" marginheight="0" marginwidth="0" frameborder="0"></iframe><a href="https://jx.xmflv.cc/?url=$1" target="_blank">点我全屏,</a>仅供学习使用<img src="https://npm.elemecdn.com/blobcat@1.0.0/ablobcatheart.png" alt="Image" style="max-width: 2rem;">');
+                t.msg = t.msg.replace(/(https:\/\/(?:www\.iqiyi\.com\/v_[^?]+|v\.qq\.com\/x\/cover\/[^?]+|v\.youku\.com\/v_show\/id_[^?]+))(\?.*)?/g, '<iframe src="https://jx.xmflv.cc/?url=$1" id="player" width="100%" scrolling="no" allowfullscreen="true" allowtransparency="true" marginheight="0" marginwidth="0" frameborder="0"></iframe><a href="https://jx.xmflv.cc/?url=$1" target="_blank">点我全屏,</a>仅供学习使用<img src="https://npm.elemecdn.com/blobcat@1.0.0/ablobcatheart.png" alt="Image" style="max-width: 2rem;" referrerpolicy="no-referrer">');
 
-                t.msg = t.msg.replace(/(https?:\/\/.*\.(?:mp4|avi|m3u8))/gi, '<iframe src="https://www.yemu.xyz/?url=$1" id="player" width="100%" scrolling="no" allowfullscreen="true" allowtransparency="true" marginheight="0" marginwidth="0" frameborder="0"></iframe><a href="https://www.yemu.xyz/?url=$1" target="_blank">点我试试,</a>仅供学习使用<img src="https://npm.elemecdn.com/blobcat@1.0.0/ablobcatheart.png" alt="Image" style="max-width: 2rem;">');
+                t.msg = t.msg.replace(/(https?:\/\/.*\.(?:mp4|avi|m3u8))/gi, '<iframe src="https://www.yemu.xyz/?url=$1" id="player" width="100%" scrolling="no" allowfullscreen="true" allowtransparency="true" marginheight="0" marginwidth="0" frameborder="0"></iframe><a href="https://www.yemu.xyz/?url=$1" target="_blank">点我试试,</a>仅供学习使用<img src="https://npm.elemecdn.com/blobcat@1.0.0/ablobcatheart.png" alt="Image" style="max-width: 2rem;" referrerpolicy="no-referrer">');
 
                 t.msg = t.msg.replace(/(https:\/\/music\.163\.com\/#\/song\?id=(\d+))/g,
                     '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="calc(100% + 20px)" style="width: calc(100% + 20px); margin-left: -10px" height="86" src="//music.163.com/outchain/player?type=2&id=$2&auto=0&height=66"></iframe>')
@@ -1768,7 +1768,7 @@
                         '<div style="font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif; background-color: #ffffff; border-radius: 12px; padding: 18px; margin: 15px 0; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); display: flex; flex-direction: column; align-items: center;">' +
                         '<p style="margin: 0; color: #555; font-size: 14px; font-weight: 500; text-align: center;"><b>该链接为歌曲列表，点击播放即可</b></p><p style="margin: 0; color: #555; font-size: 12px; font-weight: 500; text-align: center;">这里不显示歌曲列表，只会按照歌曲顺序依次播放</p>' +
                         '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="calc(100% + 20px)" style="width: calc(100% + 20px); margin-left: -10px; margin-top: 15px;" height="86" src="//music.163.com/outchain/player?type=0&id=$2&auto=0&height=66"></iframe>' +
-                        '<a href="$1" target="_blank" style="display: inline-block;padding: 6px 14px;margin-top: 15px;border: none;border-radius: 25px;background-color: #ff4141;color: white;text-align: center;text-decoration: none;font-weight: bold;transition: background-color 0.3s, transform 0.2s;font-size: 14px;">跳转到网易云音乐列表</a> <a><img style="position:absolute;bottom: -9px;right: 0px;width: 66%;pointer-events:none;z-index:999;" src="https://cdn.h5ds.com/space/files/600972551685382144/20240307/689876818574024704.webp" alt="Image"></a>' +
+                        '<a href="$1" target="_blank" style="display: inline-block;padding: 6px 14px;margin-top: 15px;border: none;border-radius: 25px;background-color: #ff4141;color: white;text-align: center;text-decoration: none;font-weight: bold;transition: background-color 0.3s, transform 0.2s;font-size: 14px;">跳转到网易云音乐列表</a> <a><img style="position:absolute;bottom: -9px;right: 0px;width: 66%;pointer-events:none;z-index:999;" src="https://cdn.h5ds.com/space/files/600972551685382144/20240307/689876818574024704.webp" alt="Image" referrerpolicy="no-referrer"></a>' +
                         '</div>');
 
 
@@ -1933,7 +1933,7 @@ img.playing {
                     const isSameDomain = hostname === currentHostname;
 
                     // 白名单域名列表
-                    const safeDomains = ['http://localhost:3000', 'bilibili.com', '88lin.github.io', '*.88lin.eu.org', 'pro.gleeze.com'];
+                    const safeDomains = ['z-l.top', 'xiaolongmr.github.io', 'kuhehe.top', 'bilibili.com', 'kuhehe.vip', 'n.kuhehe.top'];
 
                     // 检查是否是安全域名或其二级域名
                     const isSafeDomain = safeDomains.some(domain => {
@@ -2530,8 +2530,8 @@ img.playing {
 
 
 <!-- css -->
- <link rel="stylesheet" href="js/OwO.min.css">
-<!--  <link rel="stylesheet" href="https://cdn.h5ds.com/space/files/600972551685382144/20250608/856129974096932864.css"> -->
+<!--<link rel="stylesheet" href="js/OwO.min.css">-->
+<link rel="stylesheet" href="https://cdn.h5ds.com/space/files/600972551685382144/20250722/871856997280043008.css">
 <!-- Fancybox CSS -->
 <link rel="stylesheet" href="https://cdnjs.snrat.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" />
 <!-- 引入 Fancybox JS -->
@@ -2541,7 +2541,7 @@ var OwO_demo = new OwO({
     logo: '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15.182 15.182a4.5 4.5 0 0 1-6.364 0M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z"/></svg>表情包',
     container: document.getElementsByClassName('OwO')[0],
     target: document.getElementsByClassName('OwO-textarea')[0],
-    api: 'js/owo.json',
+    api: 'https://dh.z-l.top/assets/js/owo.json',
     position: 'up',
     width: '100%',
     maxHeight: '250px'
@@ -2678,7 +2678,7 @@ var OwO_demo = new OwO({
                 <span class="ctrm-title-domain"></span>
                 <span>の</span>
                 <strong style="color:#bc37e79e;">匿名</strong>聊天室
-                <img width="19px" src="https://pic.zhaotu.me/2023/08/15/5b228fae-e2cf-4800-b18c-fd0ea33bad807106fba581761f87.gif" alt="">
+                <img width="19px" src="https://img.z-l.top/file/dh/heart.gif" alt="">
                 <span class="ctrm-title-countwrap" style="display: none;">(在线<span class="ctrm-title-count">0</span>人)</span>
                 &nbsp;&nbsp;
                 <span class="ctrm-title-url">
@@ -2691,7 +2691,8 @@ var OwO_demo = new OwO({
         <div class="ctrm-panel">
             <div class="ctrm-bottom" style="display: none;">⇩</div>
             <div class="ctrm-dialog"></div>
-            <button data-chevereto-pup-trigger data-target="#editor" class="sb pc" title="上传图片仅支持电脑端"><svg class="flex-shrink-0 size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0z"/></svg>图床上传</button>
+            <button class="sb" id="file" title="选择文件"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M9.035 15.956a1.29 1.29 0 0 0 1.821-.004l6.911-6.911a3.15 3.15 0 0 0 0-4.457l-.034-.034a3.15 3.15 0 0 0-4.456 0l-7.235 7.234a5.031 5.031 0 0 0 7.115 7.115l6.577-6.577a1.035 1.035 0 0 1 1.463 1.464l-6.576 6.577A7.1 7.1 0 0 1 4.579 10.32l7.235-7.234a5.22 5.22 0 0 1 7.382 0l.034.034a5.22 5.22 0 0 1 0 7.383l-6.91 6.91a3.36 3.36 0 0 1-4.741.012l-.006-.005-.012-.011a3.346 3.346 0 0 1 0-4.732L12.76 7.48a1.035 1.035 0 0 1 1.464 1.463l-5.198 5.198a1.277 1.277 0 0 0 0 1.805z" clip-rule="evenodd"/></svg></button>
+            <button data-chevereto-pup-trigger data-target="#editor" class="sb ThirdPartyImageHost" title="上传图片仅支持电脑端,使用的第三方服务"><svg class="flex-shrink-0 size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0z"/></svg>图床上传</button>
             <button  class="sb" id="cfbed" title="上传图片"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M19.11 9.827c.26 0 .451-.192.488-.445.23-1.406.43-2.127.865-2.575.433-.447 1.131-.654 2.49-.89a.503.503 0 0 0 .446-.502.5.5 0 0 0-.447-.503c-1.358-.237-2.056-.445-2.49-.892-.433-.447-.634-1.168-.864-2.571-.037-.256-.227-.449-.488-.449-.257 0-.45.193-.49.447-.23 1.405-.432 2.126-.865 2.573s-1.13.655-2.486.892a.5.5 0 0 0-.451.503c0 .273.203.47.447.503 1.36.235 2.057.438 2.49.882.433.445.635 1.167.864 2.583.04.252.235.444.491.444M3.853 3.207h9.058v1.961H3.853v9.867l1.488-1.327a2.8 2.8 0 0 1 3.704-.037l1.011.867 3.428-2.886a2.8 2.8 0 0 1 3.621-.001l2.957 2.483v-2.346h1.907v7.601c0 1.084-.854 1.962-1.907 1.962H3.852c-1.052 0-1.906-.878-1.906-1.962V5.17c0-1.084.854-1.962 1.907-1.962m16.209 13.46l-4.163-3.497a.93.93 0 0 0-1.207 0l-4.038 3.399a.93.93 0 0 1-1.214-.006l-1.615-1.385a.933.933 0 0 0-1.235.012l-2.737 2.44v1.76h16.209zm-9.535-7.625c0 1.084-.854 1.962-1.907 1.962s-1.907-.878-1.907-1.962c0-1.083.854-1.961 1.907-1.961s1.907.878 1.907 1.961" clip-rule="evenodd"/></svg>上传图片</button>
             <!-- 表情包 -->
             <div class="OwO"></div>
@@ -2793,7 +2794,7 @@ var OwO_demo = new OwO({
         .ctrm-textarea::after {
             content: '释放上传图片';
             position: absolute;
-            top: 27px;
+            top: 0px;
             left: 0;
             width: 100%;
             height: 100%;
@@ -2836,7 +2837,7 @@ var OwO_demo = new OwO({
         .image-preview-overlay {
           z-index: 10;
           position: absolute;
-          top: -70px;
+          top: -80px;
           left: 6px;
           border-radius: 6px;
           box-shadow: 0 2px 8px rgb(227 216 218);
