@@ -1,6 +1,3 @@
-
-
-
 ! function o(a, s, c) {
     function l(e, t) {
         if (!s[e]) {
@@ -120,7 +117,7 @@
                                 if (this.odata[this.packages[i]].type === 'image-zl') { // 如果当前表情包的类型是 'image'
                                     html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '">' + '<img data-original="' + 'https://emoticons.z-l.top/' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '.png" src="" icon="' + opackage[_i].text + '"></li>';
                                 } else if (this.odata[this.packages[i]].type === 'image') { // 如果当前表情包的类型是 'image'
-                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + opackage[_i].text + '">' + '<img data-original="' + 'https://gcore.jsdelivr.net/gh/btwoa/Fluent-Emoji-3D/' + opackage[_i].text + '.gif" src="" icon="' + opackage[_i].text + '"></li>';
+                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + opackage[_i].text + '">' + '<img data-original="' + 'https://cdn.jsdmirror.com/gh/btwoa/Fluent-Emoji-3D/' + opackage[_i].text + '.gif" src="" icon="' + opackage[_i].text + '"></li>';
                                     // 追加一个新的 <li> 元素到 html 变量中，表示一个图片表情项
                                     // - class="OwO-item" 设置表情项的类名
                                     // - title="' + opackage[_i].text + '" 设置表情项的标题（悬停时显示的提示）
@@ -1798,7 +1795,7 @@
                         return `<a><img src="https://emoticons.z-l.top/${p1}.png" alt="${p1}" style="max-width: 3rem;"></a>`;
                     }
                     else {
-                        return `<a><img src="https://gcore.jsdelivr.net/gh/btwoa/Fluent-Emoji-3D/${p1}.gif" alt="${p1}" style="max-width: 3rem;"></a>`;
+                        return `<a><img src="https://cdn.jsdmirror.com/gh/btwoa/Fluent-Emoji-3D/${p1}.gif" alt="${p1}" style="max-width: 3rem;"></a>`;
                     }
                 });
 
@@ -1954,7 +1951,7 @@ img.playing {
                     const tooltipMessage = isSameDomain
                         ? '<div class="tag-link-tips" style="border-bottom: 1px solid #009244; padding-bottom: 4px; font-size: .7rem; color: #009244; font-weight: 400; pointer-events: none;">站内链接，可放心访问</div>'
                         : isSafeDomain
-                            ? '<div class="tag-link-tips" style="border-bottom: 1px solid #009244; padding-bottom: 4px; font-size: .7rem; color: #009244; font-weight: 400; pointer-events: none;">链接域名在白名单中，可放心访问<img src="https://gcore.jsdelivr.net/gh/btwoa/Fluent-Emoji-3D/%E6%8B%89%E7%82%AE%E5%BD%A9%E5%B8%A6.gif" icon="反手食指向左指" style="height: 1.5rem; display: inline;"></div>'
+                            ? '<div class="tag-link-tips" style="border-bottom: 1px solid #009244; padding-bottom: 4px; font-size: .7rem; color: #009244; font-weight: 400; pointer-events: none;">链接域名在白名单中，可放心访问<img src="https://cdn.jsdmirror.com/gh/btwoa/Fluent-Emoji-3D/%E6%8B%89%E7%82%AE%E5%BD%A9%E5%B8%A6.gif" icon="反手食指向左指" style="height: 1.5rem; display: inline;"></div>'
                             : '<div class="tag-link-tips" style="border-bottom: 1px solid #9f9f9f; padding-bottom: 4px; font-size: .6rem; color: #4b4b4b; font-weight: 400; pointer-events: none;">引用站外地址，不保证链接的可用性和安全性</div>';
 
                     // 先返回包含占位内容的链接卡片，后续通过唯一标识更新标题
@@ -2536,9 +2533,9 @@ img.playing {
  <link rel="stylesheet" href="js/OwO.min.css">
 <!--  <link rel="stylesheet" href="https://cdn.h5ds.com/space/files/600972551685382144/20250608/856129974096932864.css"> -->
 <!-- Fancybox CSS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" />
+<link rel="stylesheet" href="https://cdnjs.snrat.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" />
 <!-- 引入 Fancybox JS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+<script src="https://cdnjs.snrat.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js"></script>
 <script>
 var OwO_demo = new OwO({
     logo: '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15.182 15.182a4.5 4.5 0 0 1-6.364 0M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z"/></svg>表情包',
@@ -3432,4 +3429,3 @@ function preloadAllVoiceAudios() {
 // DOM更新后自动预加载
 setTimeout(preloadAllVoiceAudios, 300);
 // 也可在新消息插入后调用
-
