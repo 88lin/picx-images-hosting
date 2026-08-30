@@ -82,6 +82,11 @@
                         if (xhr.readyState === 4) { // 请求完成
                             if (xhr.status >= 200 && xhr.status < 300 || xhr.status === 304) {
                                 _this.odata = JSON.parse(xhr.responseText); // 解析 JSON 数据
+                                Object.keys(_this.odata).forEach(function (key) {
+                                    if (key === "颜文字" || key.indexOf("小黄豆") !== -1) {
+                                        delete _this.odata[key];
+                                    }
+                                });
 
                                 _this.init(option); // 初始化 OwO
                             } else {
@@ -1642,12 +1647,6 @@
                                 case "identity":
                                     s = r.id, c = r.name,
                                         function (t) {
-                                            // 提取标题中 '-' 符号前的内容
-                                            var titlePart = document.title.split(/[-|]/)[0].trim();
-                                            t ? t += "🤞" : t = titlePart;
-                                            i(".ctrm-title-domain").text(t);
-                                        }(), // 使用提取的标题部分
-                                        function (t) {
                                             if (!t || 0 === t.length) return;
                                             t.forEach(function (t) { H(t) })
                                         }(r.history),
@@ -1724,15 +1723,11 @@
 
                 t.msg = t.msg.replace(/一个中国|台湾/, '<a data-fancybox="gallery" data-src="https://pic1.zhimg.com/v2-e93e8719fc6cbdb6dd9cbdb501e68fd8_720w.jpg"><img src="https://pic1.zhimg.com/v2-e93e8719fc6cbdb6dd9cbdb501e68fd8_720w.jpg" alt="祖国统一势不可挡" style="max-width: 100%;" referrerpolicy="no-referrer"></a>');
 
-                t.msg = t.msg.replace(/\/?日报|\/?简报|60s/, '<a data-fancybox="gallery" target="_blank" href="https://v2.alapi.cn/api/zaobao?token=1dtLvZ3LbvQL5ggc&format=image"><img src="https://v2.alapi.cn/api/zaobao?token=1dtLvZ3LbvQL5ggc&format=image" alt="每天60s读懂世界" style="max-width: 10rem;" referrerpolicy="no-referrer"></a>');
-
                 t.msg = t.msg.replace("龙哥威武", '<img src="https://api.cenguigui.cn/api/jp/?msg=龙哥我爱你" alt="Image" style="max-width: 100%;" referrerpolicy="no-referrer">');
 
                 t.msg = t.msg.replace("摸鱼", '<a data-fancybox="gallery" data-src="https://api.vvhan.com/api/moyu"><img src="https://api.vvhan.com/api/moyu" alt="🐟" style="max-width: 10rem;" referrerpolicy="no-referrer"></a>');
 
                 t.msg = t.msg.replace(/\/?jp (.+)/, '<img src="https://api.cenguigui.cn/api/jp/?msg=$1" alt="Image" style="max-width: 100%;" referrerpolicy="no-referrer">');
-
-                t.msg = t.msg.replace(/(https:\/\/(?:www\.iqiyi\.com\/v_[^?]+|v\.qq\.com\/x\/cover\/[^?]+|v\.youku\.com\/v_show\/id_[^?]+))(\?.*)?/g, '<iframe src="https://jx.xmflv.cc/?url=$1" id="player" width="100%" scrolling="no" allowfullscreen="true" allowtransparency="true" marginheight="0" marginwidth="0" frameborder="0"></iframe><a href="https://jx.xmflv.cc/?url=$1" target="_blank">点我全屏,</a>仅供学习使用<img src="https://npm.elemecdn.com/blobcat@1.0.0/ablobcatheart.png" alt="Image" style="max-width: 2rem;" referrerpolicy="no-referrer">');
 
                 t.msg = t.msg.replace(/(https?:\/\/.*\.(?:mp4|avi|m3u8))/gi, '<iframe src="https://www.yemu.xyz/?url=$1" id="player" width="100%" scrolling="no" allowfullscreen="true" allowtransparency="true" marginheight="0" marginwidth="0" frameborder="0"></iframe><a href="https://www.yemu.xyz/?url=$1" target="_blank">点我试试,</a>仅供学习使用<img src="https://npm.elemecdn.com/blobcat@1.0.0/ablobcatheart.png" alt="Image" style="max-width: 2rem;" referrerpolicy="no-referrer">');
 
@@ -1888,7 +1883,7 @@ img.playing {
                     const hostname = new URL(url).hostname; // 获取链接的域名
 
                     // 黑名单域名列表,将需要不转为url卡片的域名填这里
-                    const blacklist = ['dict.youdao.com', 'npm.elemecdn.com', 'api.cenguigui.cn', 't.tutu.to', 'img.z-l.top'];
+                    const blacklist = ['dict.youdao.com', 'npm.elemecdn.com', 'api.cenguigui.cn', 't.tutu.to', 'img.z-l.top', 'imgdd.com', 'tucdn.wpon.cn', 'share-text.org'];
 
                     // 检查是否在黑名单中
                     if (blacklist.includes(hostname)) {
@@ -1908,10 +1903,6 @@ img.playing {
                     });
 
                     var faviconUrl = 'https://ico.cxr.cool/' + encodeURIComponent(hostname) + '.ico';
-                    let descApiUrl = `https://cn.apihz.cn/api/wangzhan/getdata.php?id=88888888&key=88888888&type=1&url=` + url;
-
-                    // 生成唯一标识，用于关联后续要更新标题的元素
-                    const uniqueKey = `link_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
                     // 根据域名判断显示提示信息
                     const tooltipMessage = isSameDomain
@@ -1920,50 +1911,19 @@ img.playing {
                             ? '<div class="tag-link-tips" style="border-bottom: 1px solid #009244; padding-bottom: 4px; font-size: .7rem; color: #009244; font-weight: 400; pointer-events: none;">链接域名在白名单中，可放心访问<img src="https://cdn.jsdmirror.com/gh/btwoa/Fluent-Emoji-3D/%E6%8B%89%E7%82%AE%E5%BD%A9%E5%B8%A6.gif" icon="反手食指向左指" style="height: 1.5rem; display: inline;"></div>'
                             : '<div class="tag-link-tips" style="border-bottom: 1px solid #9f9f9f; padding-bottom: 4px; font-size: .6rem; color: #4b4b4b; font-weight: 400; pointer-events: none;">引用站外地址，不保证链接的可用性和安全性</div>';
 
-                    // 先返回包含占位内容的链接卡片，后续通过唯一标识更新标题
-                    const linkCard = '<a class="tag-Link" target="_blank" href="' + url + '" rel="external nofollow" title="即将进入' + hostname + '，访问小张博客 z-l.top 可留言将域名添加至白名单" style="background: hsl(205deg, 16%, 77%); border-radius: 8px !important; display: flex; border: 1px solid #a1a1a1; flex-direction: column; padding: .3rem 0.9rem .6rem; border-width: 1px !important;">' +
-                        tooltipMessage + // 插入提示信息
+                    const linkCard = '<a class="tag-Link" target="_blank" href="' + url + '" rel="external nofollow" title="即将进入' + hostname + '" style="background: hsl(205deg, 16%, 77%); border-radius: 8px !important; display: flex; border: 1px solid #a1a1a1; flex-direction: column; padding: .3rem 0.9rem .6rem; border-width: 1px !important;">' +
+                        tooltipMessage +
                         '<div class="tag-link-bottom" style="display: flex; margin-top: .5rem; align-items: center; justify-content: space-around; pointer-events: none;">' +
                         '<div class="tag-link-left" style="width: 30px; min-width: 30px; height: 30px; background-size: cover !important; border-radius: 22px; background: #d3d3d3; pointer-events: none; display: flex;">' +
                         '<img loading="lazy" onerror="this.src=\'https://blog.z-l.top/img/favicon.png\'" style="padding: 0; margin: auto; font-size: 24px; width: 30px; border-radius: 16px; color: darkred;" src="' + faviconUrl + '" alt="Favicon" class="tag-link-favicon">' +
                         '</div>' +
                         '<div class="tag-link-right" style="margin-left: 1rem; pointer-events: none;width: calc(100% - 5.5rem);">' +
-                        // 用data-unique-key存储唯一标识，方便后续查找
-                        '<div class="siteDesc" data-unique-key="' + uniqueKey + '" style="font-size: 0.9rem; line-height: 1.2; font-weight: 700; pointer-events: none; color: #494949; word-break: break-all; text-overflow: ellipsis; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;">' + hostname + '</div>' +
+                        '<div class="siteDesc" style="font-size: 0.9rem; line-height: 1.2; font-weight: 700; pointer-events: none; color: #494949; word-break: break-all; text-overflow: ellipsis; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;">' + hostname + '</div>' +
                         '<div style="font-size: .7rem; color: #7f7f7f; font-weight: 400; margin-top: 8px; pointer-events: none; line-height: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + url + '</div>' +
                         '</div>' +
                         '<i class="icon-arrow-right-s-line" style="margin-left: auto; filter: opacity(0.5); font-size: 1.5rem; padding-left: .5rem; pointer-events: none;">🔗</i>' +
                         '</div>' +
                         '</a>';
-
-                    // 发起fetch请求获取标题并更新对应元素
-                    fetch(descApiUrl)
-                        .then(response => response.json())
-                        .then(data => {
-                            // 先判断接口是否返回成功状态
-                            if (data.code === 200) {
-                                const title = data.title;
-                                // 根据唯一标识找到对应的siteDesc元素
-                                const targetSiteDesc = document.querySelector(`.siteDesc[data-unique-key="${uniqueKey}"]`);
-                                if (targetSiteDesc) {
-                                    targetSiteDesc.innerHTML = title || '无描述信息';
-                                }
-                            } else {
-                                // 接口返回失败（如参数错误、频次限制）
-                                console.error('接口返回错误:', data);
-                                const targetSiteDesc = document.querySelector(`.siteDesc[data-unique-key="${uniqueKey}"]`);
-                                if (targetSiteDesc) {
-                                    targetSiteDesc.innerHTML = '无描述信息';
-                                }
-                            }
-                        })
-                        .catch(error => {
-                            console.error('获取描述失败:', error);
-                            const targetSiteDesc = document.querySelector(`.siteDesc[data-unique-key="${uniqueKey}"]`);
-                            if (targetSiteDesc) {
-                                targetSiteDesc.innerHTML = '无描述信息';
-                            }
-                        });
 
                     return linkCard;
                 });
@@ -2603,15 +2563,10 @@ var OwO_demo = new OwO({
     <div class="ctrm-container">
         <div class="ctrm-title">
             <span class="ctrm-title-span">
-                <span class="ctrm-title-domain"></span>
-                <span>の</span>
+                <span>茉灵智库 の</span>
                 <strong style="color:#bc37e79e;">匿名</strong>聊天室
                 <img width="19px" src="https://img.z-l.top/file/dh/heart.gif" alt="">
                 <span class="ctrm-title-countwrap" style="display: none;">(在线<span class="ctrm-title-count">0</span>人)</span>
-                &nbsp;&nbsp;
-                <span class="ctrm-title-url">
-                    <a target="_blank" rel="noopener" href="https://news.topurl.cn/">每日新闻早读</a>
-                </span>
             </span>
             <div class="ctrm-title-close" title="下拉">▼</div>
             <div class="ctrm-title-reconn" title="点我刷新">😜</div>
@@ -2620,7 +2575,13 @@ var OwO_demo = new OwO({
             <div class="ctrm-bottom" style="display: none;">⇩</div>
             <div class="ctrm-dialog"></div>
             <button class="sb" id="file" title="选择文件"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M9.035 15.956a1.29 1.29 0 0 0 1.821-.004l6.911-6.911a3.15 3.15 0 0 0 0-4.457l-.034-.034a3.15 3.15 0 0 0-4.456 0l-7.235 7.234a5.031 5.031 0 0 0 7.115 7.115l6.577-6.577a1.035 1.035 0 0 1 1.463 1.464l-6.576 6.577A7.1 7.1 0 0 1 4.579 10.32l7.235-7.234a5.22 5.22 0 0 1 7.382 0l.034.034a5.22 5.22 0 0 1 0 7.383l-6.91 6.91a3.36 3.36 0 0 1-4.741.012l-.006-.005-.012-.011a3.346 3.346 0 0 1 0-4.732L12.76 7.48a1.035 1.035 0 0 1 1.464 1.463l-5.198 5.198a1.277 1.277 0 0 0 0 1.805z" clip-rule="evenodd"/></svg></button>
-            <button data-chevereto-pup-trigger data-target="#editor" class="sb ThirdPartyImageHost" title="上传图片仅支持电脑端,使用的第三方服务"><svg class="flex-shrink-0 size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0z"/></svg>图床上传</button>
+             <button data-chevereto-pup-trigger data-target="#editor" class="sb ThirdPartyImageHost" title="上传图片仅支持电脑端,使用的第三方服务"><svg class="flex-shrink-0 size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0z"/></svg>图床上传</button>
+              <div class="img-host-dropdown" style="display:none;position:fixed;background:#fff;border:1px solid #ddd;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.15);z-index:9999;min-width:120px;">
+                 <div data-img-host="tutu" style="padding:8px 16px;cursor:pointer;font-size:13px;white-space:nowrap;">tutu.to</div>
+                 <div data-img-host="imgdd" style="padding:8px 16px;cursor:pointer;font-size:13px;white-space:nowrap;">imgdd</div>
+                 <div data-img-host="tucdn" style="padding:8px 16px;cursor:pointer;font-size:13px;white-space:nowrap;">tucdn</div>
+                 <div data-img-host="share-text" style="padding:8px 16px;cursor:pointer;font-size:13px;white-space:nowrap;">share</div>
+             </div>
             <button  class="sb" id="cfbed" title="上传图片"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M19.11 9.827c.26 0 .451-.192.488-.445.23-1.406.43-2.127.865-2.575.433-.447 1.131-.654 2.49-.89a.503.503 0 0 0 .446-.502.5.5 0 0 0-.447-.503c-1.358-.237-2.056-.445-2.49-.892-.433-.447-.634-1.168-.864-2.571-.037-.256-.227-.449-.488-.449-.257 0-.45.193-.49.447-.23 1.405-.432 2.126-.865 2.573s-1.13.655-2.486.892a.5.5 0 0 0-.451.503c0 .273.203.47.447.503 1.36.235 2.057.438 2.49.882.433.445.635 1.167.864 2.583.04.252.235.444.491.444M3.853 3.207h9.058v1.961H3.853v9.867l1.488-1.327a2.8 2.8 0 0 1 3.704-.037l1.011.867 3.428-2.886a2.8 2.8 0 0 1 3.621-.001l2.957 2.483v-2.346h1.907v7.601c0 1.084-.854 1.962-1.907 1.962H3.852c-1.052 0-1.906-.878-1.906-1.962V5.17c0-1.084.854-1.962 1.907-1.962m16.209 13.46l-4.163-3.497a.93.93 0 0 0-1.207 0l-4.038 3.399a.93.93 0 0 1-1.214-.006l-1.615-1.385a.933.933 0 0 0-1.235.012l-2.737 2.44v1.76h16.209zm-9.535-7.625c0 1.084-.854 1.962-1.907 1.962s-1.907-.878-1.907-1.962c0-1.083.854-1.961 1.907-1.961s1.907.878 1.907 1.961" clip-rule="evenodd"/></svg>上传图片</button>
             <!-- 表情包 -->
             <div class="OwO"></div>
@@ -2860,18 +2821,13 @@ var OwO_demo = new OwO({
     // 上传图片
     async function uploadImage(blob, targetElement) {
         if (!isAllowed) {
-            const warningDiv = document.createElement("div");
-            warningDiv.classList.add("upload-warning");
-            warningDiv.innerHTML = `当前域名 ${currentHost} 不在白名单，<a href="https://blog.z-l.top/posts/chat.html" target="_blank">点我</a>去留言添加 `;
-            document.body.appendChild(warningDiv);
-            warningDiv.style.display = "block";
-            setTimeout(() => warningDiv.remove(), 5000);
+            showNotification(`当前域名 ${currentHost} 不在白名单`, "error");
             return;
         }
 
         showImagePreview(blob);
 
-        const filename = `image-${Date.now()}`; //后加jpg可限制格式
+        const filename = `image-${Date.now()}`;
         const formData = new FormData();
         formData.append("file", blob, filename);
 
@@ -3034,6 +2990,53 @@ window.uploadToTelegram = function (file) {
         xhr.send(formData);
     });
 };
+
+
+// ========== 自定义图床上传（hover 下拉选图床） ==========
+(function () {
+    const HOSTS = {
+        "tutu":       "https://tutu.to/upload",
+        "imgdd":      "https://imgdd.com",
+        "tucdn":      "https://tucdn.wpon.cn",
+        "share-text": "https://share-text.org/zh/image-to-url",
+    };
+
+    const pupBtn = document.querySelector("[data-chevereto-pup-trigger]");
+    const dropdown = document.querySelector(".img-host-dropdown");
+    if (!pupBtn || !dropdown) return;
+
+    let hoverTimer = null;
+    pupBtn.addEventListener("mouseenter", () => {
+        clearTimeout(hoverTimer);
+        const rect = pupBtn.getBoundingClientRect();
+        dropdown.style.display = "block";
+        dropdown.style.left = rect.left + "px";
+        dropdown.style.bottom = (window.innerHeight - rect.top + 4) + "px";
+    });
+    pupBtn.addEventListener("mouseleave", () => {
+        hoverTimer = setTimeout(() => dropdown.style.display = "none", 200);
+    });
+    dropdown.addEventListener("mouseenter", () => clearTimeout(hoverTimer));
+    dropdown.addEventListener("mouseleave", () => {
+        hoverTimer = setTimeout(() => dropdown.style.display = "none", 200);
+    });
+
+    dropdown.querySelectorAll("[data-img-host]").forEach(item => {
+        item.addEventListener("mouseenter", () => item.style.background = "#f0f0f0");
+        item.addEventListener("mouseleave", () => item.style.background = "");
+        item.addEventListener("click", () => {
+            dropdown.style.display = "none";
+            const hostKey = item.getAttribute("data-img-host");
+            const url = HOSTS[hostKey];
+            if (!url) return;
+            if (hostKey === "tutu") {
+                pupBtn.click();
+            } else {
+                window.open(url, "_blank", "width=720,height=690");
+            }
+        });
+    });
+})();
 
 
 // 语音功能实现
