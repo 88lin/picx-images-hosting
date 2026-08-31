@@ -2751,6 +2751,17 @@ var OwO_demo = new OwO({
    标题栏本身已经是粉的了，再闪一格粉根本看不出来；蜜色一跳就注意到。 */
 #ctrm_ .ctrm-title.glow { background: #fbe6c4 !important; }
 
+/* 标题加粗。写在 .ctrm-title-span 上而不是 .ctrm-title 上：▼ 和 😜 那两颗按钮是
+   .ctrm-title 的直接子元素、不在这个 span 里面，加粗它们只会让两个符号变糊。
+   直接给 700 而不是 600 —— 中文字体多半只有 Regular / Bold 两档，600 要么被合成
+   成假粗要么直接掉回 400，不同机器上不一样。
+   宽度是安全的：中日韩字形是等宽的，加粗不改变字符的前进宽度，只有里面那几个
+   空格和括号会差一点点。
+   strong 显式钉成 700：它的 UA 默认值是 font-weight:bolder，继承 700 之后会算到
+   900，而中文字体没有 900，又要走合成。"匿名"靠粉色区分就够了，不靠更粗。 */
+#ctrm_ .ctrm-title-span { font-weight: 700; }
+#ctrm_ .ctrm-title-span strong { font-weight: 700; }
+
 #ctrm_ .ctrm-title-close,
 #ctrm_ .ctrm-title-reconn {
     background: #fff;
