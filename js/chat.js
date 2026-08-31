@@ -2750,17 +2750,8 @@ var OwO_demo = new OwO({
 /* 有新消息时的闪烁底色。原来是青→粉渐变。这里必须换成暖色而不是更深的粉 ——
    标题栏本身已经是粉的了，再闪一格粉根本看不出来；蜜色一跳就注意到。 */
 #ctrm_ .ctrm-title.glow { background: #fbe6c4 !important; }
-
-/* 标题加粗。写在 .ctrm-title-span 上而不是 .ctrm-title 上：▼ 和 😜 那两颗按钮是
-   .ctrm-title 的直接子元素、不在这个 span 里面，加粗它们只会让两个符号变糊。
-   直接给 700 而不是 600 —— 中文字体多半只有 Regular / Bold 两档，600 要么被合成
-   成假粗要么直接掉回 400，不同机器上不一样。
-   宽度是安全的：中日韩字形是等宽的，加粗不改变字符的前进宽度，只有里面那几个
-   空格和括号会差一点点。
-   strong 显式钉成 700：它的 UA 默认值是 font-weight:bolder，继承 700 之后会算到
-   900，而中文字体没有 900，又要走合成。"匿名"靠粉色区分就够了，不靠更粗。 */
-#ctrm_ .ctrm-title-span { font-weight: 700; }
-#ctrm_ .ctrm-title-span strong { font-weight: 700; }
+#ctrm_ .ctrm-title-span { font-weight: 600; }
+#ctrm_ .ctrm-title-span strong { font-weight: 600; }
 
 #ctrm_ .ctrm-title-close,
 #ctrm_ .ctrm-title-reconn {
@@ -2771,6 +2762,297 @@ var OwO_demo = new OwO({
 }
 #ctrm_ .ctrm-title-close:hover,
 #ctrm_ .ctrm-title-reconn:hover { background: var(--cx-tint); border-color: var(--cx-brand); }
+
+/* ---------- 折叠态：右下角的悬浮光球 ---------- */
+/* 原来的折叠只是把整个容器往下推（bottom:-36.8vw），留顶上那条标题栏躺在屏幕底边，
+   宽度还有 25vw —— 横着占掉四分之一个屏。这里把折叠态整个换成一颗光球。
+   观感移植自 react-ai-orb（MIT）：一层主渐变打底，上面叠四层各自以不同速度做
+   rotate3d 的径向渐变，用 soft-light / color-dodge / color 混起来，再加一圈白色
+   内高光和两颗会呼吸的白色光斑。原版是 6 个兄弟 div + 4 个 SVG blob，这边能用的
+   只有 .ctrm-title 那一小棵树，所以压成 7 个"元素 / 伪元素"：
+     .ctrm-title                球体（主渐变 + 外发光）
+     .ctrm-title::before        shape-a
+     .ctrm-title::after         shape-b   soft-light
+     .ctrm-title-span           glass     白色内圈高光（静止）
+     .ctrm-title-span>span:first-child  纯容器，不画东西
+       ::before                 shape-c   color-dodge
+       ::after                  shape-d   color
+     .ctrm-title-span strong    裁剪筐，收住光斑的 blur
+       ::before                 光斑 A    hard-light
+       ::after                  光斑 B    plus-lighter
+     .ctrm-title-countwrap      人数角标（照旧）
+   四条硬约束，以后改的时候别踩：
+   ① mix-blend-mode 只跟"最近那个层叠上下文"里已经画好的东西混。所以球体上写了
+      isolation:isolate（把混合关在球里，别去跟宿主页面的底色混），而中间两层容器
+      —— .ctrm-title-span 和它里面那个 span —— 绝对不能带 transform / opacity /
+      filter / z-index / mix-blend-mode：一带就生成层叠上下文，里面几层就只能跟容器
+      自己混，颜色立刻塌成一片死渐变。glass 那层原版写的是 opacity:.8，这里必须
+      改成把 .8 乘进 rgba 里，就是这个原因。
+   ② 球体不能 overflow:hidden —— 人数角标要露在球外面。原版是靠父级裁剪来收住光斑
+      那 15px blur 的，这里改成让 strong 当裁剪筐。会转的那四层都是 87.8% 大小、
+      偏移最多 10%，转起来也超不出球面，所以不裁也不漏。
+   ③ 原版所有 px（blur 2/1/15、阴影 4/6/5/10/1/7）都是照它默认的 82px 球调的，这颗
+      只有 42~58px，所以全部折算成 --cx-ball 的比例，缩放时观感才不变。
+   ④ 转 + 变色是两条动画：转的动的是 transform，变色动的是 filter。原版在 shape-b/c/d
+      上写的 filter:blur(...) 会被 hueShift 那条动画整条顶掉（同一个属性，动画优先），
+      所以那几层实际上是不带模糊的 —— 这里照它的实际观感写，没把 blur 补回去。
+   展开态一个字节都没动：下面每条选择器都带 .ctrm-close。点击展开也完全走原来那套 ——
+   JS 把展开的点击绑在 .ctrm-title 上，而球本身就是 .ctrm-title。 */
+#ctrm_.ctrm-close {
+    /* 全站唯一一个"聊天窗关着也一直挂在页面上"的元素，所以不跟着视口无限长大：
+       1280 的屏上 42px，1920 上 58px，再宽也停在 58px。 */
+    --cx-ball: clamp(42px, 3.2vw, 58px);
+    bottom: clamp(14px, 1.1vw, 22px);
+    right: clamp(14px, 1.1vw, 22px);
+    /* 光球的调色板和参数：换配色只动这一段。
+       17 个色位跟 react-ai-orb 的 palette 一一对应。 */
+    --cx-orb-bg-start: rgb(236, 133, 255);
+    --cx-orb-bg-end: rgb(49, 138, 255);
+    --cx-orb-sh1: rgba(166, 35, 248, 0);
+    --cx-orb-sh2: rgba(121, 19, 255, 0.5);
+    --cx-orb-sh3: rgba(255, 255, 255, 0.9);
+    --cx-orb-sh4: rgb(253, 164, 250);
+    --cx-orb-a-start: rgb(133, 210, 255);
+    --cx-orb-a-end: rgba(115, 49, 255, 0);
+    --cx-orb-b-start: rgb(254, 245, 254);
+    --cx-orb-b-mid: rgb(253, 109, 255);
+    --cx-orb-b-end: rgba(203, 56, 255, 0);
+    --cx-orb-c-start: rgba(254, 254, 254, 0);
+    --cx-orb-c-mid: rgba(254, 111, 255, 0);
+    --cx-orb-c-end: #7006fe;
+    --cx-orb-d-start: rgba(254, 254, 254, 0);
+    --cx-orb-d-mid: rgba(142, 111, 255, 0);
+    --cx-orb-d-end: #00eeff;
+    --cx-orb-rot: 2s;
+    --cx-orb-hue: 2s;
+    --cx-orb-hue-deg: 120deg;
+    --cx-orb-main-hue: none;
+    --cx-orb-shine-a: 0.9;
+    --cx-orb-shine-b: 0.3;
+    --cx-orb-glow: 1;
+}
+#ctrm_.ctrm-close .ctrm-container {
+    width: var(--cx-ball);
+    height: var(--cx-ball);
+    max-height: none;
+    /* 让人数角标能挂到球外面去。容器本来是 overflow:hidden，
+       但折叠态里 .ctrm-panel 和 .ctrm-online 都已经 display:none，没别的东西会漏。 */
+    overflow: visible;
+}
+#ctrm_.ctrm-close .ctrm-panel,
+#ctrm_.ctrm-close .ctrm-online { display: none; }
+/* 防御性的一条：▼ / 😜 正常是 JS 在折叠时 hide() 掉的，万一以后初始化顺序变成先挂
+   .ctrm-close 再走那段逻辑，别让这两个按钮糊在球里。展开时 JS 是先摘掉 .ctrm-close
+   再 show()，所以这条不会挡住它们。 */
+#ctrm_.ctrm-close .ctrm-title-close,
+#ctrm_.ctrm-close .ctrm-title-reconn { display: none; }
+/* 标题里那颗心在球上没有意义（它是站点装饰，不是"聊天"这个语义），收掉。 */
+#ctrm_.ctrm-close .ctrm-title-span img { display: none; }
+
+/* ---- 球体本身 = .ctrm-title ---- */
+#ctrm_.ctrm-close .ctrm-title {
+    height: 100%;
+    border-radius: 50%;
+    background-color: transparent;
+    background-image: radial-gradient(circle at 50% 30%, var(--cx-orb-bg-start) 0, var(--cx-orb-bg-end) 70%);
+    box-shadow:
+        var(--cx-orb-sh1) 0 calc(var(--cx-ball) * .049 * var(--cx-orb-glow)) calc(var(--cx-ball) * .073 * var(--cx-orb-glow)) 0,
+        var(--cx-orb-sh2) 0 calc(var(--cx-ball) * .061 * var(--cx-orb-glow)) calc(var(--cx-ball) * .122 * var(--cx-orb-glow)) 0,
+        var(--cx-orb-sh3) 0 0 calc(var(--cx-ball) * .012) 0 inset,
+        var(--cx-orb-sh4) 0 calc(var(--cx-ball) * .012) calc(var(--cx-ball) * .085) 0 inset;
+    isolation: isolate;
+    animation: var(--cx-orb-main-hue);
+    transition: transform .18s;
+}
+#ctrm_.ctrm-close .ctrm-title:hover { transform: scale(1.06); }
+/* 来新消息时 JS 给 .ctrm-title 加 .glow，300ms 后摘掉（见上面 showNewMessageGlow）。
+   CDN 和主题里那两条 .glow 都是 background + !important，会把整颗球拍成一块死色，
+   所以这条 (1,3,0) 压过它们、把球留住。
+   只闪一圈白光是不够的：宿主页面大多是白底，白圈等于没闪。所以给三重提示 ——
+   贴边一圈白（深色底上看得见）+ 一大片调色板紫色的外扩光晕（白底上看得见）+ 一次
+   放大回弹（什么底色上都看得见）。三样都只活 300ms。 */
+#ctrm_.ctrm-close .ctrm-title.glow {
+    background-color: transparent !important;
+    background-image: radial-gradient(circle at 50% 30%, var(--cx-orb-bg-start) 0, var(--cx-orb-bg-end) 70%) !important;
+    box-shadow:
+        0 0 0 calc(var(--cx-ball) * .05) rgba(255, 255, 255, .9),
+        0 0 calc(var(--cx-ball) * .34) calc(var(--cx-ball) * .06) var(--cx-orb-sh2),
+        var(--cx-orb-sh3) 0 0 calc(var(--cx-ball) * .012) 0 inset,
+        var(--cx-orb-sh4) 0 calc(var(--cx-ball) * .012) calc(var(--cx-ball) * .085) 0 inset;
+    /* 逗号后面那半截把球体自己的变色动画接回来：Multi Color 那种整颗球一起变色的
+       配置靠它，普通配置下它是 none，写着也不碍事。 */
+    animation: cxOrbPing .3s ease-out, var(--cx-orb-main-hue);
+}
+/* ---- shape-a：不带混合模式、不带模糊，就是一层会转的浅色球面 ---- */
+#ctrm_.ctrm-close .ctrm-title::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0;
+    width: 87.8%; height: 87.8%;
+    border-radius: 50%;
+    background-image: radial-gradient(circle at 50% 90%, var(--cx-orb-a-start) 0, var(--cx-orb-a-end) 70%);
+    transform-style: preserve-3d;
+    animation: cxOrbSpin var(--cx-orb-rot) linear infinite,
+               cxOrbHue var(--cx-orb-hue) linear infinite;
+}
+/* ---- shape-b：soft-light，偏右下一点，转得比 a 慢 1.5 倍 ---- */
+#ctrm_.ctrm-close .ctrm-title::after {
+    content: "";
+    position: absolute;
+    left: 10%; top: 5%;
+    width: 87.8%; height: 87.8%;
+    border-radius: 50%;
+    background-image: radial-gradient(circle at 33% 12%, var(--cx-orb-b-start) 0, var(--cx-orb-b-mid) 26%, var(--cx-orb-b-end) 63%);
+    mix-blend-mode: soft-light;
+    transform-style: preserve-3d;
+    animation: cxOrbSpin calc(var(--cx-orb-rot) * 1.5) linear infinite,
+               cxOrbHue calc(var(--cx-orb-hue) * 1.5) linear infinite;
+}
+/* ---- glass：白色内圈高光，静止，不参与混合。挂在 .ctrm-title-span 上。
+   这个元素是 87.8% 大小、居中，所以不能用 transform 居中（见上面约束①），
+   只能算成 left/top 的百分比：(82-72)/2/82 = 6.1%。
+   原版的 opacity:.8 也是同一个原因，直接乘进了下面两条 rgba 的 alpha 里
+   （.5 × .8 = .4）。 ---- */
+#ctrm_.ctrm-close .ctrm-title-span {
+    left: 6.1%; top: 6.1%;
+    right: auto; bottom: auto;
+    margin: 0;
+    width: 87.8%; height: 87.8%;
+    border-radius: 50%;
+    box-shadow: inset 0 calc(var(--cx-ball) * -.012) calc(var(--cx-ball) * .073) calc(var(--cx-ball) * .012) rgba(255, 255, 255, .4),
+                inset 0 calc(var(--cx-ball) * .037) calc(var(--cx-ball) * .049) 0 rgba(255, 255, 255, .4);
+    /* 标题那一串字要在球里收掉，可"聊天室"三个字是裸文本节点，没有标签可以选中 ——
+       只能 font-size:0 连锅端，再单独把要留的那个元素的字号加回来。"(在线"和"人)"
+       同理也是裸文本，于是角标里干干净净只剩一个数字。 */
+    font-size: 0;
+    line-height: 0;
+}
+/* ---- 里面那个 span 只当容器，一笔都不画：它一旦有 transform / opacity / filter /
+   混合模式就会生成层叠上下文，下面 shape-c / shape-d 就混不到球体本身了。
+   必须写 :first-child —— 人数角标 .ctrm-title-countwrap 本身也是 .ctrm-title-span
+   的一个 span 子元素，不加就会被这条一起撑成满圈，角标那块白底直接把整颗球盖成白饼。 ---- */
+#ctrm_.ctrm-close .ctrm-title-span > span:first-child {
+    position: absolute;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+}
+/* shape-c / shape-d：原版是相对球体 (5%,5%)，这里的参照系是上面那个 87.8% 的框，
+   所以要减掉框自己的 6.1% 偏移：(5% - 6.1%) × 82/72 ≈ -1.25%。 */
+#ctrm_.ctrm-close .ctrm-title-span > span:first-child::before,
+#ctrm_.ctrm-close .ctrm-title-span > span:first-child::after {
+    content: "";
+    position: absolute;
+    left: -1.25%; top: -1.25%;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    transform-style: preserve-3d;
+}
+#ctrm_.ctrm-close .ctrm-title-span > span:first-child::before {
+    background-image: radial-gradient(circle at 31% 12%, var(--cx-orb-c-start) 0, var(--cx-orb-c-mid) 31%, var(--cx-orb-c-end) 77%);
+    mix-blend-mode: color-dodge;
+    opacity: .65;
+    animation: cxOrbSpin calc(var(--cx-orb-rot) * 2) linear infinite,
+               cxOrbHue calc(var(--cx-orb-hue) * 2) linear infinite;
+}
+#ctrm_.ctrm-close .ctrm-title-span > span:first-child::after {
+    background-image: radial-gradient(circle at 12% 80%, var(--cx-orb-d-start) 0, var(--cx-orb-d-mid) 31%, var(--cx-orb-d-end) 77%);
+    mix-blend-mode: color;
+    opacity: .55;
+    animation: cxOrbSpin calc(var(--cx-orb-rot) * 2.5) linear infinite,
+               cxOrbHue calc(var(--cx-orb-hue) * 2.5) linear infinite;
+}
+/* ---- strong 当裁剪筐：两颗光斑带着 blur，不收一下会糊到球外面去。
+   它要撑回整颗球那么大（82/72 = 113.9%，左上各退 5/72 = 6.94%）。 ---- */
+#ctrm_.ctrm-close .ctrm-title-span strong {
+    display: block;
+    position: absolute;
+    left: -6.94%; top: -6.94%;
+    width: 113.9%; height: 113.9%;
+    border-radius: 50%;
+    overflow: hidden;
+}
+/* ---- 两颗白色光斑。原版是两个 SVG blob（不规则形状）+ blur(15px) + scale 呼吸；
+   这边没法加 SVG，改用一个"窄而高"的椭圆渐变，模糊完就是原版那道斜着的高光条。
+   核心不能太白：原版那两团 blob 面积很小，换成满框的圆渐变会把整颗球洗成白饼，
+   所以横向只给 26%、核心 alpha 压到 .8。
+   filter 在 transform 之前生效，所以 scale(.4) 会把 blur 一起缩掉，这点跟原版一致。 ---- */
+#ctrm_.ctrm-close .ctrm-title-span strong::before,
+#ctrm_.ctrm-close .ctrm-title-span strong::after {
+    content: "";
+    position: absolute;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    background-image: radial-gradient(ellipse 26% 52% at 44% 40%, rgba(255, 255, 255, .8) 0, rgba(255, 255, 255, .45) 34%, rgba(255, 255, 255, 0) 72%);
+    filter: blur(calc(var(--cx-ball) * .183));
+}
+#ctrm_.ctrm-close .ctrm-title-span strong::before {
+    mix-blend-mode: hard-light;
+    opacity: var(--cx-orb-shine-a);
+    transform: scale(.4);
+    animation: cxOrbShineA 3.5s linear infinite;
+}
+#ctrm_.ctrm-close .ctrm-title-span strong::after {
+    left: 15%;
+    mix-blend-mode: plus-lighter;
+    opacity: var(--cx-orb-shine-b);
+    transform: scale(.6);
+    animation: cxOrbShineB 5s ease-in-out infinite;
+}
+/* ---- 人数角标。定位参照是 .ctrm-title-span，它现在是 87.8% 大小、往右下偏了 6.1%，
+   所以负偏移要把这 6.1% 一起补回来：-.04 - .061 ≈ -.101（按球径算，跟框多大无关）。
+   垂直居中走 line-height 而不是 flex：这个元素的 display 是 jQuery 的 show()/hide()
+   在管的，别去跟它抢。 ---- */
+#ctrm_.ctrm-close .ctrm-title-countwrap {
+    position: absolute;
+    top: calc(var(--cx-ball) * -.101);
+    right: calc(var(--cx-ball) * -.101);
+    min-width: calc(var(--cx-ball) * .4);
+    height: calc(var(--cx-ball) * .4);
+    line-height: calc(var(--cx-ball) * .4);
+    padding: 0 calc(var(--cx-ball) * .07);
+    box-sizing: border-box;
+    border-radius: var(--cx-pill);
+    background: #fff;
+    color: var(--cx-brand-ink);
+    font-weight: 700;
+    text-align: center;
+    box-shadow: 0 1px 4px rgba(47, 36, 41, .16);
+}
+#ctrm_.ctrm-close .ctrm-title-count { font-size: calc(var(--cx-ball) * .24); }
+/* ---- 移动端：球给大一点好点，位置也让开一点边。
+   这条必须显式写 width/height —— CDN 那边 #ctrm_.ctrm-close.ctrm-mobile .ctrm-container
+   是 (1,3,0)，比上面那条 (1,2,0) 高一级，不重写的话宽度会被它的 65vw 拽回去。 ---- */
+#ctrm_.ctrm-close.ctrm-mobile {
+    --cx-ball: clamp(48px, 13vw, 64px);
+    bottom: clamp(14px, 3.5vw, 24px);
+    right: clamp(14px, 3.5vw, 24px);
+}
+#ctrm_.ctrm-close.ctrm-mobile .ctrm-container {
+    width: var(--cx-ball);
+    height: var(--cx-ball);
+}
+/* ---- 系统里关了动效的人，就别让球一直转。停下来颜色一层不少，只是不动了。 ---- */
+@media (prefers-reduced-motion: reduce) {
+    #ctrm_.ctrm-close .ctrm-title,
+    /* .glow 那条是 (1,3,0)，比 .ctrm-title 高一级，这里必须单独再写一遍才压得住，
+       不然新消息那下放大回弹照样会跑。白圈和光晕不受影响，提示还在。 */
+    #ctrm_.ctrm-close .ctrm-title.glow,
+    #ctrm_.ctrm-close .ctrm-title::before,
+    #ctrm_.ctrm-close .ctrm-title::after,
+    #ctrm_.ctrm-close .ctrm-title-span > span:first-child::before,
+    #ctrm_.ctrm-close .ctrm-title-span > span:first-child::after,
+    #ctrm_.ctrm-close .ctrm-title-span strong::before,
+    #ctrm_.ctrm-close .ctrm-title-span strong::after { animation: none; }
+}
+/* ---- 光球用到的四条动画。转的动 transform，变色的动 filter，两条并行互不干扰；
+   光斑那两条只是缩放呼吸。名字全部带 cxOrb 前缀，跟 CDN 里的 blink / ctrm-spin 不撞。 ---- */
+@keyframes cxOrbSpin { 0% { transform: rotate3d(1, 1, 1, 0deg) } 100% { transform: rotate3d(1, 1, 1, 1turn) } }
+@keyframes cxOrbHue { 0% { filter: hue-rotate(0deg) } 50% { filter: hue-rotate(var(--cx-orb-hue-deg)) } 100% { filter: hue-rotate(0deg) } }
+@keyframes cxOrbShineA { 0% { transform: scale(.4) } 50% { transform: scale(.1) } 100% { transform: scale(.4) } }
+@keyframes cxOrbShineB { 0% { transform: scale(.6) } 50% { transform: scale(.1) } 100% { transform: scale(.6) } }
+/* 新消息那一下的放大回弹。只在 .glow 存在的 300ms 里跑一遍。 */
+@keyframes cxOrbPing { 0% { transform: scale(1) } 45% { transform: scale(1.16) } 100% { transform: scale(1) } }
 
 /* ---------- 消息区 ---------- */
 /* .ctrm-panel / .ctrm-online 的底色一个都不动，保持原来的近白和浅灰。 */
