@@ -1671,10 +1671,14 @@
                 el.setAttribute("role", "status");
                 el.textContent = msg;
                 el.style.cssText = "position:fixed;left:50%;bottom:88px;transform:translateX(-50%);" +
-                    "max-width:78vw;padding:8px 16px;border-radius:6px;font-size:14px;line-height:1.4;" +
+                    "max-width:78vw;padding:8px 16px;border-radius:16px;font-size:14px;line-height:1.4;" +
                     "color:#fff;z-index:100000;pointer-events:none;white-space:pre-wrap;text-align:center;" +
-                    "box-shadow:0 4px 12px rgba(0,0,0,.18);background:" +
-                    ("error" === type ? "#f56c6c" : "success" === type ? "#67c23a" : "#409eff");
+                    // 阴影比原来轻一半多（原来是 rgba(0,0,0,.18)）。提示条是浮在页面上的，
+                    // 需要一点分离，但不需要一坨黑。
+                    "box-shadow:0 4px 18px rgba(47,36,41,.16);background:" +
+                    // 红和绿是语义色，故意不进配色表：主色本身是粉的，报错要是也用粉系
+                    // 就分不出"出错了"还是"普通提示"。info 才跟着主色走。
+                    ("error" === type ? "#b8362b" : "success" === type ? "#2f7a4f" : "var(--cx-brand-ink)");
                 document.body.appendChild(el);
                 setTimeout(function () { el.parentNode && el.parentNode.removeChild(el) }, 2600)
             }
@@ -1704,9 +1708,12 @@
 .ctrm-voice-bubble {
   display: flex;
   align-items: center;
-  background: #f5f7fa;
+  background: #fdf8f9;
   border-radius: 18px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  /* 原来是 box-shadow: 0 2px 8px rgba(0,0,0,.04) —— 这块东西本来就长在气泡里，
+     不是浮层，投影没有意义。换成 inset 描一圈发丝线：既能跟气泡底色分开，
+     又不像真 border 那样把盒子撑大（这里没写 box-sizing:border-box）。 */
+  box-shadow: inset 0 0 0 1px rgba(47,36,41,.10);
   padding: 6px 16px 6px 10px;
   min-height: 38px;
   margin: 6px 0;
@@ -1716,9 +1723,9 @@
   cursor: pointer;
   transition: background 0.2s;
 }
-.ctrm-voice-bubble.playing { background: #e6f7ff; }
+.ctrm-voice-bubble.playing { background: var(--cx-tint); }
 .ctrm-voice-play {
-  background: #67c23a;
+  background: var(--cx-brand);
   border: none;
   border-radius: 50%;
   width: 32px;
@@ -1730,7 +1737,7 @@
   transition: background 0.2s;
   padding: 0;
 }
-.ctrm-voice-bubble.playing .ctrm-voice-play { background: #409eff; }
+.ctrm-voice-bubble.playing .ctrm-voice-play { background: var(--cx-brand-deep); }
 .ctrm-voice-play .icon-play { display: block; }
 .ctrm-voice-play .icon-pause { display: none; }
 .ctrm-voice-bubble.playing .icon-play { display: none; }
@@ -1738,7 +1745,7 @@
 .ctrm-voice-progress {
   flex: 1;
   height: 4px;
-  background: #e0e0e0;
+  background: rgba(47,36,41,.12);
   border-radius: 2px;
   margin: 0 8px;
   position: relative;
@@ -1746,14 +1753,14 @@
   max-width: 120px;
 }
 .ctrm-voice-bar {
-  background: #67c23a;
+  background: var(--cx-brand);
   height: 100%;
   border-radius: 2px;
   width: 0;
   transition: width 0.2s;
 }
 .ctrm-voice-time {
-  color: #888;
+  color: var(--cx-ink-3);
   font-size: 13px;
   min-width: 36px;
   text-align: right;
@@ -1907,6 +1914,7 @@ img.playing {
                 reconnectDelay = 1e3,
                 heartbeatTimer = null,
                 offlineNoticed = !1,
+                stalledTicks = 0,
                 unloading = !1;
 
             // 上行心跳复用已有的 update 帧：服务端本来就在收这个类型（排行榜就是它驱动的），
@@ -1924,6 +1932,16 @@ img.playing {
                 var wait = Math.min(reconnectDelay, 3e4);
                 reconnectDelay = Math.min(2 * reconnectDelay, 3e4),
                     reconnectTimer = setTimeout(function () { reconnectTimer = null, _() }, wait + Math.floor(1e3 * Math.random()))
+            }
+
+            // 立刻重连，不走退避。只在拿到明确外部信号时用（回到前台、网络恢复、页面从
+            // back/forward cache 恢复）—— 这些时候干等最多 30s 的退避，用户看到的就是
+            // "还卡在掉线"。
+            function ctrmReconnectNow(reason) {
+                if (unloading) return;
+                console.warn("[ctrm] 立即重连：" + reason),
+                    reconnectDelay = 1e3, stalledTicks = 0,
+                    clearTimeout(reconnectTimer), reconnectTimer = null, _()
             }
 
             function _() {
@@ -1955,6 +1973,11 @@ img.playing {
                                     s = r.id, c = r.name,
                                         function (t) {
                                             if (!t || 0 === t.length) return;
+                                            // 自动重连后服务端会重新下发整份 history。原先这里直接 append，
+                                            // 于是每自动重连一次，整份聊天记录就在下面重复一遍
+                                            // （W() 手动重连有 remove，ctrmScheduleReconnect() 那条路没有）。
+                                            // 只在确实要重画 history 时才清，服务端不带 history 时不会误删。
+                                            b.find(".ctrm-dialog-item").remove();
                                             t.forEach(function (t) { H(t) })
                                         }(r.history),
                                         function t(e) {
@@ -1988,7 +2011,17 @@ img.playing {
             }
 
             // 看门狗：readyState 不是 OPEN 就提示并排重连。原先只调 z()，从不重连。
-            function q() { n && 1 !== n.readyState && (z(), ctrmScheduleReconnect()) }
+            // 另外再查一次发送缓冲：半开连接（笔记本睡眠、NAT 超时、换网）上 readyState
+            // 会一直停在 OPEN，onclose 要等操作系统 TCP 重传彻底放弃才来，可能十几分钟。
+            // 心跳帧只有几十字节，连着 4 个 15s 周期都排不出去，这条连接就是死的。
+            // 这个判据不依赖服务端回不回话，安静的房间也不会误判。
+            function q() {
+                if (!n) return;
+                if (1 !== n.readyState) return z(), void ctrmScheduleReconnect();
+                if (0 < n.bufferedAmount) {
+                    if (4 <= ++stalledTicks) return stalledTicks = 0, z(), void ctrmReconnectNow("发送缓冲 60s 不清零，连接已半开")
+                } else stalledTicks = 0
+            }
 
             function O(t) {
                 F(d = t), C.empty(), d.forEach(function (t) {
@@ -2011,6 +2044,64 @@ img.playing {
                 var n = new Date(t),
                     r = void 0;
                 return (r = "hours" === e ? "" + n.getHours() : "" + n.getMinutes()) === r[0] && (r = "0" + r), r
+            }
+
+            // 消息列表裁剪。原先 .ctrm-dialog-item 只有 W()（手动重连）会清，挂两三个
+            // 小时就是几千个节点 + 全部图片/iframe/语音都留在内存里；手机上标签页会被
+            // 系统回收，用户看到的和掉线一模一样 —— 同样要点刷新。
+            // 稳态保留 300 条；攒到 350 才裁一次，不然每来一条消息都要动一次 DOM。
+            var CTRM_MSG_KEEP = 300,
+                CTRM_MSG_TRIM_AT = 350,
+                // 用户滚上去看历史时先不裁，但不能真的无上限，到这个数照裁
+                CTRM_MSG_HARD_CAP = 600;
+
+            // 摘掉一批消息之前的收尾：返回它们持有的 blob: 地址，交给下面去放。
+            function ctrmDetachVoices(scope) {
+                var srcs = [];
+                scope.find("audio").each(function () {
+                    // 正在播的那条被裁掉了：脱离文档的 <audio> 还会继续出声，
+                    // 而气泡已经没了，用户没有任何办法让它停下来
+                    if (window._voicePlaying === this) {
+                        try { this.pause() } catch (err) { }
+                        window._voicePlaying = null
+                    }
+                    var src = this.getAttribute("src");
+                    src && 0 === src.indexOf("blob:") && srcs.push(src)
+                });
+                return srcs
+            }
+
+            // 自己录的语音，那份 blob 被 window._myVoiceBlobs 攥着，消息裁掉了它还在占内存。
+            // 放掉是安全的：真要重画历史，H() 查不到本地副本就退回用服务器上的地址，照样能播。
+            // 必须等节点已经从列表里摘掉之后再查引用 —— 同一个 blob 可能被多条消息引用。
+            function ctrmReleaseVoiceBlobs(srcs) {
+                var map = window._myVoiceBlobs;
+                if (!map || !srcs.length) return;
+                srcs.forEach(function (src) {
+                    if (b.find('audio[src="' + src + '"]').length) return;
+                    Object.keys(map).forEach(function (k) { map[k] === src && delete map[k] });
+                    try { URL.revokeObjectURL(src) } catch (err) { }
+                })
+            }
+
+            function ctrmTrimHistory() {
+                var el = b && b[0];
+                if (!el || el.children.length <= CTRM_MSG_TRIM_AT) return;
+                var items = b.children(".ctrm-dialog-item"),
+                    drop = items.length - CTRM_MSG_KEEP;
+                if (0 >= drop) return;
+                // o 为假说明用户滚上去在看历史（滚动处理器在维护它），这时裁掉的正是
+                // 他在看的那一段，先攒着
+                if (!o && items.length <= CTRM_MSG_HARD_CAP) return;
+                var dropped = items.slice(0, drop),
+                    scrollBefore = el.scrollTop,
+                    heightBefore = el.scrollHeight,
+                    blobs = ctrmDetachVoices(dropped);
+                dropped.remove();
+                ctrmReleaseVoiceBlobs(blobs);
+                // 裁掉的都在视口上方。钉底时 H() 随后的 I() 会重新贴底，不用管；
+                // 否则要按删掉的高度回补 scrollTop，不然用户正在读的那段会整体往上蹦。
+                o || (el.scrollTop = Math.max(0, scrollBefore - (heightBefore - el.scrollHeight)))
             }
 
             function H(t) {
@@ -2059,10 +2150,10 @@ img.playing {
                 t.msg = t.msg.replace(/(https:\/\/music\.163\.com\/#\/song\?id=(\d+))/g,
                     '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="calc(100% + 20px)" style="width: calc(100% + 20px); margin-left: -10px" height="86" src="//music.163.com/outchain/player?type=2&id=$2&auto=0&height=66"></iframe>')
                     .replace(/(https:\/\/music\.163\.com\/#\/playlist\?id=(\d+))/g,
-                        '<div style="font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif; background-color: #ffffff; border-radius: 12px; padding: 18px; margin: 15px 0; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); display: flex; flex-direction: column; align-items: center;">' +
-                        '<p style="margin: 0; color: #555; font-size: 14px; font-weight: 500; text-align: center;"><b>该链接为歌曲列表，点击播放即可</b></p><p style="margin: 0; color: #555; font-size: 12px; font-weight: 500; text-align: center;">这里不显示歌曲列表，只会按照歌曲顺序依次播放</p>' +
+                        '<div style="font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif; background-color: #ffffff; border-radius: 14px; padding: 18px; margin: 15px 0; box-shadow: 0 1px 4px rgba(47,36,41,.05), inset 0 0 0 1px rgba(47,36,41,.10); display: flex; flex-direction: column; align-items: center;">' +
+                        '<p style="margin: 0; color: var(--cx-ink-2); font-size: 14px; font-weight: 500; text-align: center;"><b>该链接为歌曲列表，点击播放即可</b></p><p style="margin: 0; color: var(--cx-ink-3); font-size: 12px; font-weight: 500; text-align: center;">这里不显示歌曲列表，只会按照歌曲顺序依次播放</p>' +
                         '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="calc(100% + 20px)" style="width: calc(100% + 20px); margin-left: -10px; margin-top: 15px;" height="86" src="//music.163.com/outchain/player?type=0&id=$2&auto=0&height=66"></iframe>' +
-                        '<a href="$1" target="_blank" style="display: inline-block;padding: 6px 14px;margin-top: 15px;border: none;border-radius: 25px;background-color: #ff4141;color: white;text-align: center;text-decoration: none;font-weight: bold;transition: background-color 0.3s, transform 0.2s;font-size: 14px;">跳转到网易云音乐列表</a> <a><img style="position:absolute;bottom: -9px;right: 0px;width: 66%;pointer-events:none;z-index:999;" src="https://cdn.h5ds.com/space/files/600972551685382144/20240307/689876818574024704.webp" alt="Image" referrerpolicy="no-referrer"></a>' +
+                        '<a class="ctrm-163-btn" href="$1" target="_blank" style="display: inline-block;padding: 6px 14px;margin-top: 15px;border: none;border-radius: 999px;background-color: var(--cx-brand);color: white;text-align: center;text-decoration: none;font-weight: bold;transition: background-color 0.3s;font-size: 14px;">跳转到网易云音乐列表</a> <a><img style="position:absolute;bottom: -9px;right: 0px;width: 66%;pointer-events:none;z-index:999;" src="https://cdn.h5ds.com/space/files/600972551685382144/20240307/689876818574024704.webp" alt="Image" referrerpolicy="no-referrer"></a>' +
                         '</div>');
                 t.msg = t.msg.replace(/【(.*?)】/g, function (match, p1) {
                     if (/^2\d{5}_202824_\d{1,3}$/.test(p1)) {
@@ -2106,19 +2197,19 @@ img.playing {
 
                     // 生成 HTML
                     const html = `
-    <a style="display: inline-flex; align-items: center; text-decoration: none; color: inherit; border: 1px solid #d1d1d1; border-radius: 5px; padding: 4px 8px; background-color: #f9f9f9; transition: background-color 0.3s; cursor: pointer;">
+    <a class="ctrm-tts-pill" style="display: inline-flex; align-items: center; text-decoration: none; color: inherit; border: 1px solid var(--cx-line); border-radius: 999px; padding: 4px 8px; background-color: #fff; transition: background-color 0.3s, border-color 0.3s; cursor: pointer;">
         <img id="${imgId}" src="//dh.z-l.top/js/语音.svg" alt="audio icon" style="width: 24px; height: 24px; margin-right: 8px;">
         <audio id="${audioId}" preload="metadata" style="display: none;">
             <source src="https://dict.youdao.com/dictvoice?audio=${$1}&le=zh" type="audio/mp3">
         </audio>
-        <span id="${buttonId}" style="margin-left: 8px; font-size: 0.9rem; color: #333;">加载中...</span>
+        <span id="${buttonId}" style="margin-left: 8px; font-size: 0.9rem; color: var(--cx-ink-2);">加载中...</span>
         <button id="${transcribeId}" style="margin-left: 8px; border: none; background: transparent; cursor: pointer;">
             <img src="//dh.z-l.top/js/语音转文字.svg" alt="转文字" style="width: 24px; height: 24px;">
         </button>
     </a>
-    <div id="${textId}" style="display: none; margin-top: 8px; font-size: 0.9rem; color: #333;"></div>
-    <div style="background: #e0e0e0; height: 4px; border-radius: 2px; margin-top: 4px; width: 100%;">
-        <div id="${barId}" style="background: #009244; height: 100%; border-radius: 2px; width: 0;"></div>
+    <div id="${textId}" style="display: none; margin-top: 8px; font-size: 0.9rem; color: var(--cx-ink);"></div>
+    <div style="background: rgba(47,36,41,.12); height: 4px; border-radius: 2px; margin-top: 4px; width: 100%;">
+        <div id="${barId}" style="background: var(--cx-brand); height: 100%; border-radius: 2px; width: 0;"></div>
     </div>
     `;
 
@@ -2239,20 +2330,20 @@ img.playing {
 
                     // 根据域名判断显示提示信息
                     const tooltipMessage = isSameDomain
-                        ? '<div class="tag-link-tips" style="border-bottom: 1px solid #009244; padding-bottom: 4px; font-size: .7rem; color: #009244; font-weight: 400; pointer-events: none;">站内链接，可放心访问</div>'
+                        ? '<div class="tag-link-tips" style="border-bottom: 1px solid rgba(47,122,79,.4); padding-bottom: 4px; font-size: .7rem; color: #2f7a4f; font-weight: 400; pointer-events: none;">站内链接，可放心访问</div>'
                         : isSafeDomain
-                            ? '<div class="tag-link-tips" style="border-bottom: 1px solid #009244; padding-bottom: 4px; font-size: .7rem; color: #009244; font-weight: 400; pointer-events: none;">链接域名在白名单中，可放心访问<img src="https://cdn.jsdmirror.com/gh/btwoa/Fluent-Emoji-3D/%E6%8B%89%E7%82%AE%E5%BD%A9%E5%B8%A6.gif" icon="反手食指向左指" style="height: 1.5rem; display: inline;"></div>'
-                            : '<div class="tag-link-tips" style="border-bottom: 1px solid #9f9f9f; padding-bottom: 4px; font-size: .6rem; color: #4b4b4b; font-weight: 400; pointer-events: none;">引用站外地址，不保证链接的可用性和安全性</div>';
+                            ? '<div class="tag-link-tips" style="border-bottom: 1px solid rgba(47,122,79,.4); padding-bottom: 4px; font-size: .7rem; color: #2f7a4f; font-weight: 400; pointer-events: none;">链接域名在白名单中，可放心访问<img src="https://cdn.jsdmirror.com/gh/btwoa/Fluent-Emoji-3D/%E6%8B%89%E7%82%AE%E5%BD%A9%E5%B8%A6.gif" icon="反手食指向左指" style="height: 1.5rem; display: inline;"></div>'
+                            : '<div class="tag-link-tips" style="border-bottom: 1px solid var(--cx-hairline); padding-bottom: 4px; font-size: .6rem; color: var(--cx-ink-2); font-weight: 400; pointer-events: none;">引用站外地址，不保证链接的可用性和安全性</div>';
 
-                    const linkCard = '<a class="tag-Link" target="_blank" href="' + url + '" rel="external nofollow" title="即将进入' + hostname + '" style="background: hsl(205deg, 16%, 77%); border-radius: 8px !important; display: flex; border: 1px solid #a1a1a1; flex-direction: column; padding: .3rem 0.9rem .6rem; border-width: 1px !important;">' +
+                    const linkCard = '<a class="tag-Link" target="_blank" href="' + url + '" rel="external nofollow" title="即将进入' + hostname + '" style="background: #fff; border-radius: 12px !important; display: flex; border: 1px solid rgba(47,36,41,.10); box-shadow: 0 1px 4px rgba(47,36,41,.05); flex-direction: column; padding: .3rem 0.9rem .6rem; border-width: 1px !important;">' +
                         tooltipMessage +
                         '<div class="tag-link-bottom" style="display: flex; margin-top: .5rem; align-items: center; justify-content: space-around; pointer-events: none;">' +
-                        '<div class="tag-link-left" style="width: 30px; min-width: 30px; height: 30px; background-size: cover !important; border-radius: 22px; background: #d3d3d3; pointer-events: none; display: flex;">' +
-                        '<img loading="lazy" onerror="this.src=\'https://blog.z-l.top/img/favicon.png\'" style="padding: 0; margin: auto; font-size: 24px; width: 30px; border-radius: 16px; color: darkred;" src="' + faviconUrl + '" alt="Favicon" class="tag-link-favicon">' +
+                        '<div class="tag-link-left" style="width: 30px; min-width: 30px; height: 30px; background-size: cover !important; border-radius: 999px; background: rgba(242,118,155,.16); pointer-events: none; display: flex;">' +
+                        '<img loading="lazy" onerror="this.src=\'https://blog.z-l.top/img/favicon.png\'" style="padding: 0; margin: auto; font-size: 24px; width: 30px; border-radius: 999px; color: darkred;" src="' + faviconUrl + '" alt="Favicon" class="tag-link-favicon">' +
                         '</div>' +
                         '<div class="tag-link-right" style="margin-left: 1rem; pointer-events: none;width: calc(100% - 5.5rem);">' +
-                        '<div class="siteDesc" style="font-size: 0.9rem; line-height: 1.2; font-weight: 700; pointer-events: none; color: #494949; word-break: break-all; text-overflow: ellipsis; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;">' + hostname + '</div>' +
-                        '<div style="font-size: .7rem; color: #7f7f7f; font-weight: 400; margin-top: 8px; pointer-events: none; line-height: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + url + '</div>' +
+                        '<div class="siteDesc" style="font-size: 0.9rem; line-height: 1.2; font-weight: 700; pointer-events: none; color: var(--cx-ink); word-break: break-all; text-overflow: ellipsis; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;">' + hostname + '</div>' +
+                        '<div style="font-size: .7rem; color: var(--cx-ink-3); font-weight: 400; margin-top: 8px; pointer-events: none; line-height: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + url + '</div>' +
                         '</div>' +
                         '<i class="icon-arrow-right-s-line" style="margin-left: auto; filter: opacity(0.5); font-size: 1.5rem; padding-left: .5rem; pointer-events: none;">🔗</i>' +
                         '</div>' +
@@ -2327,6 +2418,10 @@ img.playing {
 
                 // 将新消息添加到消息列表中
                 b.append(n);
+
+                // 超出上限就裁掉最老的。放在这里、在下面任何读版面的代码之前，
+                // 让这一帧只重排一次。
+                ctrmTrimHistory();
 
                 // 只给这条新消息里的灯箱元素做初始化（原先每条消息都对全文档重来一遍）。
                 ctrmBindFancybox(n);
@@ -2409,12 +2504,32 @@ img.playing {
                 var t = window.innerWidth;
                 t / window.innerHeight <= 1.2 ? m.addClass("ctrm-mobile") : m.removeClass("ctrm-mobile"), t <= 1210 || m.hasClass("ctrm-mobile") ? v.hide() : m.hasClass("ctrm-mobile") || v.show(), b.scrollTop(9999999)
             }
-            // beforeunload 只挂一次。原先写在 _() 里，每次（重）连都新增一个监听，
-            // 重连几次就堆几个。
-            window.addEventListener("beforeunload", function () {
-                unloading = !0, clearTimeout(reconnectTimer), clearInterval(heartbeatTimer), clearInterval(a);
+            // 用 pagehide 而不是 beforeunload：手机浏览器（尤其 iOS Safari）切走时
+            // beforeunload 常常根本不触发，pagehide 稳定。
+            // 更要紧的是 unloading 原先是个单向闩锁：一旦置 true 就再没人放开，
+            // 而页面进了 back/forward cache 之后是会被原样恢复的（切 App、点后退），
+            // 那时 ctrmScheduleReconnect() 直接 return —— 永远不再重连，只能刷新。
+            window.addEventListener("pagehide", function () {
+                unloading = !0, clearTimeout(reconnectTimer), reconnectTimer = null,
+                    clearInterval(heartbeatTimer), clearInterval(a);
                 try { n && n.close() } catch (err) { }
             });
+            window.addEventListener("pageshow", function (ev) {
+                unloading = !1;
+                // pageshow 首次加载时也会触发，那时上面 _() 刚开始连（readyState 0），
+                // 别把在飞的连接拆掉重来；只有 bfcache 恢复或连接确实已关闭才重连
+                (ev && ev.persisted || !n || 2 === n.readyState || 3 === n.readyState) && ctrmReconnectNow("页面恢复")
+            });
+            // 切后台/息屏期间浏览器会把定时器降频到 1 次/分钟甚至直接冻结，25s 心跳停摆，
+            // 连接被中间代理掐掉；回到前台时退避还可能要再等 30s，用户看到的就是"卡在掉线"。
+            // 一回前台就立刻查一次：连接还在就补发一帧心跳探活，已经断了就马上重连。
+            document.addEventListener("visibilitychange", function () {
+                if (document.hidden || unloading) return;
+                n && 1 === n.readyState ? ctrmSendHello() : ctrmReconnectNow("回到前台")
+            });
+            // 换 WiFi / 切蜂窝：旧连接通常是半开的，onclose 十几分钟都不来
+            window.addEventListener("online", function () { ctrmReconnectNow("网络恢复") });
+            window.addEventListener("offline", function () { z() });
             ctrmInitOnce();
             // 回车发送：原先是 keydown 里 preventDefault、keyup 里发送。中文输入法选词时
             // 那个回车也会冒出一个 keyup(13)，于是候选词还没上屏就把半句话发出去了。
@@ -2476,7 +2591,9 @@ var OwO_demo = new OwO({
 <style>
 .ctrm-voice-container {
     position: relative;
-    // display: inline-grid;
+    /* CSS 里的 // 不是注释：解析器会一路吃到下一个分号。原来这行把自己吃掉了，
+       没造成可见问题纯属运气，改成块注释。 */
+    /* display: inline-grid; */
     display:table;
 }
 
@@ -2485,16 +2602,17 @@ var OwO_demo = new OwO({
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
+    transition: background .2s ease, color .2s ease, border-color .2s ease;
 }
 
+/* 原来 hover 是 scale(1.1)。这颗按钮和旁边几颗都是 float 排在一行里，放大会压到
+   邻居身上，所以只换底色，不做位移和缩放。 */
 .ctrm-voice-btn:hover {
-    background:rgb(245, 249, 255);
-    transform: scale(1.1);
+    background: var(--cx-tint);
 }
 
 .recommend-tag:before {
-    border: 1px solid #5580ff;
+    border: 1px solid var(--cx-brand);
     border-radius: 12px;
     box-sizing: border-box;
     content: "";
@@ -2507,31 +2625,43 @@ var OwO_demo = new OwO({
     transform-origin: 0 0;
     width: 200%;
 }
+/* 原来是渐变文字（background-clip:text + text-fill-color:transparent）。
+   10px 的小角标上渐变根本看不出来，只是多两个前缀属性，换成实色。 */
 .recommend-tag{
-    background: linear-gradient(283.26deg, #44adfe, #5580ff);
-    background-clip: text;
-    -webkit-background-clip: text;
+    color: var(--cx-brand-ink);
     border-radius: 6px;
     padding: 0 4px;
     position: relative;
-    -webkit-text-fill-color: transparent;
     font-size: 10px;
     font-weight: 600;
     line-height: 16px;
 }
-.ctrm-voice-btn .recording {
-    background: #3742fa;
-    animation: pulse 1.5s infinite;
-}
+/* 原来写的是 .ctrm-voice-btn .recording（后代选择器），而 recording 这个类是加在
+   按钮自己身上的（voiceBtn.classList.add('recording')），所以这条规则从来没生效过
+   —— 点下录音，按钮外观毫无变化。选择器修好了，但不接原来的 pulse 缩放动画：
+   同样是怕它在一行 float 按钮里跳。旁边那个"正在录音"浮标已经在动了。
 
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
+   两处特异性都是踩过坑才写成这样的，别简化：
+   1) 必须带 #ctrm_ —— 这颗按钮的 class 是 "sb ctrm-voice-btn"，主题表里
+      #ctrm_ .sb 是 (1,1,0)，不带 id 的 (0,2,0) 反而压不过它。
+   2) 必须显式写出 :hover —— #ctrm_ .ctrm-voice-btn.recording 是 (1,2,0)，
+      #ctrm_ .sb:hover 也是 (1,2,0)（一个类 + 一个伪类），平手就看谁在后面，
+      而主题表在后面。结果就是录音中一碰鼠标整颗按钮变白、图标也白，全没了。
+      带 :hover 的这条是 (1,3,0)，跟顺序无关。
+   底色用深粉而不是亮粉：图标是白的，白配 #c23b6e 是 5:1，配 #f2769b 只有 2.6:1。 */
+#ctrm_ .ctrm-voice-btn.recording,
+#ctrm_ .ctrm-voice-btn.recording:hover {
+    background: var(--cx-brand-ink);
+    border-color: var(--cx-brand-ink);
+    color: #fff;
 }
+#ctrm_ .ctrm-voice-btn.recording svg,
+#ctrm_ .ctrm-voice-btn.recording:hover svg { stroke: #fff; }
+#ctrm_ .ctrm-voice-btn.recording .recommend-tag { display: none; }
 
 .ctrm-voice-timer {
-    color: #ffb300;
+    color: var(--cx-warm);
+    font-variant-numeric: tabular-nums;
 }
 
 .ctrm-voice-recording-indicator {
@@ -2540,10 +2670,10 @@ var OwO_demo = new OwO({
     top: -40px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(42, 42, 51, .92);
     color: white;
     padding: 5px 10px;
-    border-radius: 15px;
+    border-radius: var(--cx-pill);
     font-size: 12px;
     white-space: nowrap;
     align-items: center;
@@ -2559,6 +2689,241 @@ var OwO_demo = new OwO({
 }
 </style>
 <style>
+/* ==========================================================================
+   茉灵聊天室 · 白天模式配色（樱花粉）
+
+   两条硬规矩，是上一版踩过的坑：
+   1) 只碰"看得见但不占位"的属性 —— color / background / border-color /
+      border-radius。凡是 padding / margin / width / height / font-size /
+      border-width 一律不动。工具条那排按钮是 float 排在一行里的，给 .sb 多加
+      2px padding 就会挤成两行。
+   2) 底色留白。原来的面板是近白（hsla(0,0%,99%,.85)），上一版给它铺了一层粉，
+      结果整个窗口发闷。现在主色只出现在描边、图标、按钮和 7% 透明度的悬停底上，
+      大面积仍然是白的。
+
+   描边一律用墨色低透明度（rgba(47,36,41,.10)），不用彩色描边 —— 彩色描边一多
+   就会和气泡里那些服务端下发的随机色打架。阴影只有两处：表情面板和图床下拉，
+   因为它们是浮在内容上面的，不给点分离看不清边界。别处一律没有阴影。
+
+   位置要紧：必须排在上面那个 CDN 主样式表 <link> 之后 —— 同等特异性时靠文档
+   顺序压过它，才不用满篇 !important。
+   （CSS 里不能写 // 注释，会吞掉后面的声明，只能用这种块注释。）
+   ========================================================================== */
+:root {
+    /* 粉色分两档，别混用：
+       --cx-brand 是亮粉，只做"面"—— 实底按钮、描边、虚线、hover 的边框色。
+       --cx-brand-ink 是深粉，只做"字"—— 图标、链接、@提示、hover 文字色。
+       亮粉当文字用的话对比度只有 2.6:1，小字直接糊掉；深粉是 5.1:1。 */
+    --cx-brand: #f2769b;
+    --cx-brand-deep: #e05a84;
+    --cx-brand-ink: #c23b6e;
+    --cx-warm: #e8a94f;
+    /* 墨色也是暖调的（带一点红），跟粉放一起才像一套。ink-2 7.7:1、ink-3 4.7:1 */
+    --cx-ink: #2f2429;
+    --cx-ink-2: #5f4f56;
+    --cx-ink-3: #7f6e75;
+    --cx-hairline: rgba(47, 36, 41, .10);
+    --cx-line: rgba(47, 36, 41, .16);
+    --cx-tint: rgba(242, 118, 155, .09);
+    --cx-tint-2: rgba(242, 118, 155, .16);
+    /* 唯一一档常规阴影，几乎看不出来，只用在链接卡片这种"卡片"上 */
+    --cx-shadow: 0 1px 4px rgba(47, 36, 41, .05);
+    /* 浮层专用，也只是一层很淡的散开 */
+    --cx-shadow-pop: 0 4px 18px rgba(47, 36, 41, .10);
+    --cx-pill: 999px;
+}
+
+/* ---------- 外壳 ---------- */
+#ctrm_ { color: var(--cx-ink); }
+/* 原来只圆了左上角，右上角是直角 */
+#ctrm_ .ctrm-container { border-top-right-radius: 2vw; }
+
+/* ---------- 标题栏 ---------- */
+/* 原来是 hsla(0,0%,90%,.85) 的中灰。换成同明度、极淡的粉灰 —— 注意亮度还是 94%，
+   跟原来的 90% 差不多，不是往白底上盖一层粉，只是把那条灰带的色温掰过来。
+   底部用 inset 画发丝线（不用 border-bottom：.ctrm-title 高度是 8%，
+   加真边框会把整体撑高 1px）。 */
+#ctrm_ .ctrm-title {
+    background: hsla(345, 38%, 94%, .9);
+    box-shadow: inset 0 -1px 0 var(--cx-hairline);
+}
+/* 有新消息时的闪烁底色。原来是青→粉渐变。这里必须换成暖色而不是更深的粉 ——
+   标题栏本身已经是粉的了，再闪一格粉根本看不出来；蜜色一跳就注意到。 */
+#ctrm_ .ctrm-title.glow { background: #fbe6c4 !important; }
+
+#ctrm_ .ctrm-title-close,
+#ctrm_ .ctrm-title-reconn {
+    background: #fff;
+    border-color: var(--cx-line);
+    color: var(--cx-brand-ink);
+    transition: background .18s, border-color .18s;
+}
+#ctrm_ .ctrm-title-close:hover,
+#ctrm_ .ctrm-title-reconn:hover { background: var(--cx-tint); border-color: var(--cx-brand); }
+
+/* ---------- 消息区 ---------- */
+/* .ctrm-panel / .ctrm-online 的底色一个都不动，保持原来的近白和浅灰。 */
+#ctrm_ .ctrm-dialog { scrollbar-width: thin; scrollbar-color: var(--cx-line) transparent; }
+#ctrm_ .ctrm-dialog::-webkit-scrollbar { width: 6px; }
+#ctrm_ .ctrm-dialog::-webkit-scrollbar-track { background: transparent; }
+#ctrm_ .ctrm-dialog::-webkit-scrollbar-thumb { background: var(--cx-line); border-radius: var(--cx-pill); }
+
+#ctrm_ .ctrm-dialog-item .ctrm-dialog-sender { color: var(--cx-ink-2); }
+#ctrm_ .ctrm-dialog-item .ctrm-dialog-time { color: var(--cx-ink-3); }
+
+/* 气泡：只把靠说话人那侧的角收窄，做出朝向。底色一律不碰 —— 保持服务端按用户
+   下发的 t.color 原色（写在内联 style 上），"每人一个色"这个身份提示比统一好看重要。
+   顺手记一笔：万一以后想压一压那一屏的饱和度，别去改 background-color（内联样式
+   压不过），而是加一层 background-image: linear-gradient(rgba(255,255,255,.4) 两次)
+   —— 不同属性，能叠在内联底色上面。 */
+#ctrm_ .ctrm-dialog-item .ctrm-dialog-bubble { border-radius: 14px 14px 14px 4px; }
+#ctrm_ .ctrm-dialog-item.ctrm-me .ctrm-dialog-bubble { border-radius: 14px 14px 4px 14px; }
+#ctrm_.ctrm-mobile .ctrm-dialog-item .ctrm-dialog-bubble { border-radius: 16px 16px 16px 5px; }
+#ctrm_.ctrm-mobile .ctrm-dialog-item.ctrm-me .ctrm-dialog-bubble { border-radius: 16px 16px 5px 16px; }
+
+/* @我 的高亮。原来这里犯了两个错：
+   1) padding 是 0，配上 999px 的圆角，两头的圆弧直接切进首尾那两个字 —— 就是
+      "背景连文字都覆盖不全"。padding 用 em 而不是 px：移动端气泡是 font-size:2.8em，
+      写死 px 在手机上会小得看不见。
+   2) 底色 16% 的粉 + 粉字，两个都是粉，等于没有对比。而且气泡底色是服务端下发的
+      随机色，浅色底放在浅色气泡上可能整块消失。
+   改成深粉实底 + 白字（5:1），这样落在任何一种气泡底色上都读得出来。
+   nowrap 是防止胶囊在行尾被折断成两半。
+   font-weight 从 CDN 的 700 降到 500：实底胶囊本身已经足够抢眼了，再叠一层加粗
+   就变成"喊"。但也不降到跟正文一样的 400 —— 白字压在饱和色上视觉上本来就会显细。 */
+#ctrm_ .ctrm-dialog-item .ctrm-b {
+    background: var(--cx-brand-ink);
+    color: #fff;
+    font-weight: 500;
+    border-radius: var(--cx-pill);
+    padding: .08em .5em;
+    white-space: nowrap;
+}
+
+#ctrm_ .ctrm-dialog-item a[data-fancybox] img { border-radius: 10px; }
+#ctrm_ .ctrm-dialog-item iframe { border-radius: 10px; }
+
+/* ---------- 回到底部 ---------- */
+/* 原来是 rgba(0,0,0,.2) 的圆角方块，浮在白底上像块脏印子。
+   尺寸从 3vw 收到 2.2vw：原来它比标题栏那两颗圆按钮（2.2vw）还大，而换成实底粉
+   之后同样的尺寸看着比原来的半透明黑更抢眼，所以要收。现在跟标题按钮一样大，
+   整个界面的圆形按钮就统一成一个尺寸了。字号按比例跟着收（1.75/3 ≈ .58）。 */
+#ctrm_ .ctrm-bottom {
+    width: 2.2vw;
+    height: 2.2vw;
+    line-height: 2.2vw;
+    font-size: 1.3vw;
+    background: var(--cx-brand);
+    color: #fff;
+    border-radius: 50%;
+    transition: background .18s;
+}
+#ctrm_ .ctrm-bottom:hover { background: var(--cx-brand-deep); }
+/* 移动端把原值钉回去，一个像素都不动。CDN 那边用的是
+   transform: scale(2) + transform-origin: 0 40%，缩放基准是元素自己的盒子，
+   改了 width 会让整颗按钮的视觉位置跟着挪（右边界是 right:7% 定死的，盒子变窄
+   左边界就右移，而放大恰好是从左边界往右长的）。移动端本来就够小，不用收。 */
+#ctrm_.ctrm-mobile .ctrm-bottom {
+    width: 3vw;
+    height: 3vw;
+    line-height: 3vw;
+    font-size: 1.75vw;
+}
+
+/* ---------- 工具条按钮 ---------- */
+/* 只改这四个属性。height:22px / padding:2px 5px / margin / font-size 都不能碰：
+   .ctrm-dialog 的高度是 calc(75% - 22px)，按这排按钮算的；而 padding 变宽会让
+   这一行放不下，直接折成两排。 */
+#ctrm_ .sb {
+    border-radius: var(--cx-pill);
+    background: #fff;
+    border-color: var(--cx-line);
+    color: var(--cx-ink-2);
+    transition: background .18s, border-color .18s, color .18s;
+}
+#ctrm_ .sb:hover { background: var(--cx-tint); border-color: var(--cx-brand); color: var(--cx-brand-ink); }
+/* 表情按钮的 DOM 是 class="OwO-logo sb"，两个类都带，所以上面那条 .sb 也管着它。
+   面板展开时给它一个"按下去了"的状态 —— CDN 里 .OwO.OwO-open .OwO-logo 是
+   (0,3,0)，这里带 #ctrm_ 是 (1,3,0)，压得住。 */
+#ctrm_ .OwO.OwO-open .OwO-logo { background: var(--cx-tint); border-color: var(--cx-brand); color: var(--cx-brand-ink); }
+
+/* 三颗图标各给一个色，扫一眼能分开，但都是同一套色里的 */
+#ctrm_ #file svg { color: var(--cx-brand-ink); }
+#ctrm_ .ThirdPartyImageHost svg { color: var(--cx-brand); }
+#ctrm_ #cfbed svg { color: var(--cx-warm); }
+
+/* ---------- 表情包面板（浮层，给一层淡阴影）---------- */
+#ctrm_ .OwO .OwO-body {
+    border-color: var(--cx-hairline);
+    border-radius: 12px;
+    box-shadow: var(--cx-shadow-pop);
+}
+#ctrm_ .OwO.OwO-up .OwO-body { border-radius: 12px 12px 12px 2px; }
+#ctrm_ .OwO .OwO-body .OwO-items .OwO-item { background: #fdf8f9; border-radius: 8px; }
+/* 原来 hover 叠了三层 Material 阴影，一颗小表情格子扛不住。抖动动画是原有的，留着。 */
+#ctrm_ .OwO .OwO-body .OwO-items .OwO-item:hover { background: var(--cx-tint); box-shadow: var(--cx-shadow); }
+#ctrm_ .OwO .OwO-body .OwO-bar {
+    background: #fdf8f9;
+    border-top-color: var(--cx-hairline);
+    border-radius: 0 0 12px 12px;
+    color: var(--cx-ink-2);
+}
+#ctrm_ .OwO .OwO-body .OwO-bar .OwO-packages li { border-radius: var(--cx-pill); }
+#ctrm_ .OwO .OwO-body .OwO-bar .OwO-packages li:hover { background: var(--cx-tint); }
+#ctrm_ .OwO .OwO-body .OwO-bar .OwO-packages .OwO-package-active { background: var(--cx-tint-2); color: var(--cx-brand-ink); }
+
+/* ---------- 输入框 ---------- */
+/* 手绘虚线保留 —— 参考站的"手绘虚线框"就是 2px dashed + 圆角 + 主色低透明度，
+   原来那圈灰虚线本来是对的，只是没上色。这里只换颜色，宽度和虚线样式不动。 */
+#ctrm_ .ctrm-textarea textarea {
+    border: 2px dashed rgba(242, 118, 155, .45);
+    color: var(--cx-ink);
+}
+#ctrm_ .ctrm-textarea textarea:hover { border-color: rgba(242, 118, 155, .7); }
+#ctrm_ .ctrm-textarea textarea:focus { border-color: var(--cx-brand); }
+/* 两个 placeholder 选择器必须分开写：塞进同一个选择器列表，浏览器不认识的那个
+   会让整条规则作废。 */
+#ctrm_ .ctrm-textarea textarea::placeholder { color: var(--cx-ink-3); }
+#ctrm_ .ctrm-textarea textarea::-webkit-input-placeholder { color: var(--cx-ink-3); }
+
+#ctrm_ .ctrm-emit {
+    background: var(--cx-brand);
+    color: #fff;
+    border-radius: var(--cx-pill);
+    transition: background .18s;
+}
+#ctrm_ .ctrm-emit:hover { background: var(--cx-brand-deep); }
+#ctrm_.ctrm-mobile .ctrm-emit { border-radius: var(--cx-pill); }
+
+/* ---------- 右侧：在线名单 + 排行 ---------- */
+/* 底色同样是服务端下发的，同样保持原色，只改圆角和字色 */
+#ctrm_ .ctrm-online-item {
+    border-radius: var(--cx-pill);
+    color: var(--cx-ink);
+}
+#ctrm_.ctrm-mobile .ctrm-online-item { border-radius: var(--cx-pill); }
+
+#ctrm_ .ctrm-domain-title { color: var(--cx-ink-2); }
+#ctrm_ .ctrm-domain-item {
+    color: var(--cx-brand-ink);
+    border-radius: var(--cx-pill);
+    transition: background .16s;
+}
+#ctrm_ .ctrm-domain-item:hover { background: var(--cx-tint); }
+
+/* ---------- JS 拼内联样式的几处，hover 只能写在这儿 ---------- */
+/* 分享链接卡片：内联里已经写了 border 和 box-shadow，要 !important 才压得住 */
+.tag-Link { transition: border-color .18s, box-shadow .18s; }
+.tag-Link:hover { border-color: var(--cx-brand) !important; }
+.ctrm-tts-pill:hover { background-color: var(--cx-tint) !important; border-color: var(--cx-brand) !important; }
+.ctrm-163-btn:hover { background: var(--cx-brand-deep) !important; }
+.img-host-dropdown [data-img-host] { color: var(--cx-ink); border-radius: 8px; transition: background .16s, color .16s; }
+.img-host-dropdown [data-img-host]:hover { background: var(--cx-tint); color: var(--cx-brand-ink); }
+</style>
+<style>
+/* 这三个类没有任何标签在用（真正的语音气泡走 CTRM_VOICE_CSS 里的
+   .ctrm-voice-bubble / .ctrm-voice-play）。没删结构，只把配色带上，
+   免得以后谁接回去又冒出一块 #3742fa 的蓝。 */
 .ctrm-voice-message {
     display: flex;
     align-items: center;
@@ -2569,7 +2934,7 @@ var OwO_demo = new OwO({
 }
 
 .ctrm-voice-play-btn {
-    background: #3742fa;
+    background: var(--cx-brand);
     border: none;
     border-radius: 50%;
     width: 30px;
@@ -2578,12 +2943,11 @@ var OwO_demo = new OwO({
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: background 0.2s;
 }
 
 .ctrm-voice-play-btn:hover {
-    background: #2f3542;
-    transform: scale(1.1);
+    background: var(--cx-brand-deep);
 }
 
 .ctrm-voice-play-btn svg {
@@ -2592,17 +2956,17 @@ var OwO_demo = new OwO({
 }
 
 .ctrm-voice-duration {
-    color: #333;
+    color: var(--cx-ink-2);
     font-size: 14px;
 }
-    
+
 </style>
 <div id="ctrm_" style="z-index:10002!important;" class=" " >
     <div class="ctrm-container">
         <div class="ctrm-title">
             <span class="ctrm-title-span">
                 <span>茉灵智库 の</span>
-                <strong style="color:#bc37e79e;">匿名</strong>聊天室
+                <strong style="color:var(--cx-brand-ink);">匿名</strong>聊天室
                 <img width="19px" src="https://img.z-l.top/file/dh/heart.gif" alt="">
                 <span class="ctrm-title-countwrap" style="display: none;">(在线<span class="ctrm-title-count">0</span>人)</span>
             </span>
@@ -2614,7 +2978,7 @@ var OwO_demo = new OwO({
             <div class="ctrm-dialog"></div>
             <button class="sb" id="file" title="选择文件"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M9.035 15.956a1.29 1.29 0 0 0 1.821-.004l6.911-6.911a3.15 3.15 0 0 0 0-4.457l-.034-.034a3.15 3.15 0 0 0-4.456 0l-7.235 7.234a5.031 5.031 0 0 0 7.115 7.115l6.577-6.577a1.035 1.035 0 0 1 1.463 1.464l-6.576 6.577A7.1 7.1 0 0 1 4.579 10.32l7.235-7.234a5.22 5.22 0 0 1 7.382 0l.034.034a5.22 5.22 0 0 1 0 7.383l-6.91 6.91a3.36 3.36 0 0 1-4.741.012l-.006-.005-.012-.011a3.346 3.346 0 0 1 0-4.732L12.76 7.48a1.035 1.035 0 0 1 1.464 1.463l-5.198 5.198a1.277 1.277 0 0 0 0 1.805z" clip-rule="evenodd"/></svg></button>
              <button data-chevereto-pup-trigger data-target="#editor" class="sb ThirdPartyImageHost" title="上传图片仅支持电脑端,使用的第三方服务"><svg class="flex-shrink-0 size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0z"/></svg>图床上传</button>
-              <div class="img-host-dropdown" style="display:none;position:fixed;background:#fff;border:1px solid #ddd;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.15);z-index:9999;min-width:120px;">
+              <div class="img-host-dropdown" style="display:none;position:fixed;background:#fff;border:1px solid var(--cx-hairline);border-radius:12px;padding:4px;box-shadow:var(--cx-shadow-pop);z-index:9999;min-width:120px;">
                  <div data-img-host="tutu" style="padding:8px 16px;cursor:pointer;font-size:13px;white-space:nowrap;">tutu.to</div>
                  <div data-img-host="imgdd" style="padding:8px 16px;cursor:pointer;font-size:13px;white-space:nowrap;">imgdd</div>
                  <div data-img-host="tucdn" style="padding:8px 16px;cursor:pointer;font-size:13px;white-space:nowrap;">tucdn</div>
@@ -2730,7 +3094,7 @@ var OwO_demo = new OwO({
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(33,150,243,0);
+            background: rgba(242,118,155,0);
             color: #fff;
             font-size: 16px;
             display: flex;
@@ -2738,15 +3102,16 @@ var OwO_demo = new OwO({
             justify-content: center;
             pointer-events: none;
             z-index: 9;
-            border: 2px dashed rgba(59, 130, 246, 0);
+            /* 保持 2px dashed —— 拖拽时这圈虚线要和输入框本身那圈手绘虚线对得上 */
+            border: 2px dashed rgba(242,118,155,0);
             border-radius: 0.5rem;
             opacity: 0;
             transition: opacity 0.3s ease, background 0.3s ease, border-color 0.3s ease;
             box-sizing: border-box; /* 关键：让伪元素包含边框在宽度内 */
         }
         .ctrm-textarea.dragover::after {
-            background: rgba(33,150,243,0.3);
-            border-color: rgba(59, 130, 246, 0.7);
+            background: rgba(194,59,110,0.55);
+            border-color: rgba(255,255,255,0.85);
             opacity: 1;
             backdrop-filter: blur(1px); /* 应用4px的高斯模糊 */
         }
@@ -2755,9 +3120,10 @@ var OwO_demo = new OwO({
             top: 10px;
             right: 10px;
             padding: 16px;
-            background-color: #f44336;
+            background-color: #b8362b;
             color: white;
-            border-radius: 4px;
+            border-radius: 14px;
+            box-shadow: 0 4px 18px rgba(47,36,41,.16);
             z-index: 10000;
             font-size: 14px;
             display: none;
@@ -2771,16 +3137,16 @@ var OwO_demo = new OwO({
           position: absolute;
           top: -80px;
           left: 6px;
-          border-radius: 6px;
-          box-shadow: 0 2px 8px rgb(227 216 218);
+          border-radius: 10px;
+          box-shadow: 0 4px 18px rgba(47,36,41,.10);
           pointer-events: none;
           transition: opacity 0.3s ease;
         }
         .image-preview-overlay img {
           height: 60px;
           width: auto;
-          border-radius: 6px;
-          border: 1px solid hotpink;
+          border-radius: 10px;
+          border: 1px solid rgba(242,118,155,.5);
         }
     `);
 
@@ -2791,9 +3157,11 @@ var OwO_demo = new OwO({
     function showNotification(msg, type = "info") {
         const el = document.createElement("div");
         el.textContent = msg;
+        // 跟 ctrmToast 用同一套语义色（红/绿是语义色，info 跟主色走），
+        // 免得同一个页面上冒出两种不同风格的提示条。
         el.style = `position:fixed;top:10px;right:10px;padding:8px 16px;
-        background:${type === "error" ? "#f44336" : type === "success" ? "#4caf50" : "#2196f3"}; 
-        color:white;border-radius:4px;z-index:10000;font-size:14px`;
+        background:${type === "error" ? "#b8362b" : type === "success" ? "#2f7a4f" : "var(--cx-brand-ink)"};
+        color:white;border-radius:16px;box-shadow:0 4px 18px rgba(47,36,41,.16);z-index:10000;font-size:14px`;
         document.body.appendChild(el);
         setTimeout(() => el.remove(), CONFIG.NOTIFICATION_DURATION);
     }
@@ -3067,8 +3435,9 @@ window.uploadToTelegram = function (file) {
     });
 
     dropdown.querySelectorAll("[data-img-host]").forEach(item => {
-        item.addEventListener("mouseenter", () => item.style.background = "#f0f0f0");
-        item.addEventListener("mouseleave", () => item.style.background = "");
+        // 原来这里用 JS 在 mouseenter/mouseleave 里写 item.style.background = "#f0f0f0"。
+        // 内联样式压过任何样式表，所以 CSS 里写的 :hover 会被它顶掉；hover 现在交给
+        // .img-host-dropdown [data-img-host]:hover 管，这两个监听器删掉。
         item.addEventListener("click", () => {
             dropdown.style.display = "none";
             const hostKey = item.getAttribute("data-img-host");
@@ -3324,8 +3693,8 @@ window.uploadToTelegram = function (file) {
                 .ctrm-voice-review-btn.sending {
                     position: relative;
                     color: #fff;
-                    background: #67c23a;
-                    border-color: #67c23a;
+                    background: #2f7a4f;
+                    border-color: #2f7a4f;
                     padding-right: 8px !important;
                 }
                 .ctrm-send-loading {
@@ -3334,9 +3703,9 @@ window.uploadToTelegram = function (file) {
                     height: 16px;
                     vertical-align: middle;
                     margin-left: 6px;
-                    border: 2px solid #fff;
+                    border: 2px solid rgba(255,255,255,.45);
                     border-radius: 50%;
-                    border-top: 2px solid #67c23a;
+                    border-top: 2px solid #fff;
                     animation: ctrm-spin 0.7s linear infinite;
                     box-sizing: border-box;
                 }
@@ -3370,10 +3739,10 @@ window.uploadToTelegram = function (file) {
             top: -40px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(47, 36, 41, 0.92);
             color: white;
             padding: 5px 10px;
-            border-radius: 15px;
+            border-radius: 999px;
             font-size: 12px;
             white-space: nowrap;
             z-index: 1;
@@ -3381,11 +3750,23 @@ window.uploadToTelegram = function (file) {
             flex-wrap: wrap;
         }
         .ctrm-voice-review-btn {
-            background: #f5f7fa; border: 1px solid #ddd; border-radius: 6px; padding: 3px 12px; cursor: pointer; font-size: 13px; transition: background 0.2s;
+            /* color 必须显式写：面板是深底 + color:white，子元素会继承那个白，
+               而按钮自己是白底 —— 原来"试听"就是白字白底，一直看不见。 */
+            color: var(--cx-ink-2);
+            background: #fff; border: 1px solid rgba(47,36,41,.16); border-radius: 999px; padding: 3px 12px; cursor: pointer; font-size: 13px; transition: background 0.2s, border-color 0.2s, color 0.2s;
         }
-        .ctrm-voice-review-btn:hover { background: #e6f7ff; }
-        .ctrm-voice-review-btn.delete { color: #f56c6c; border-color: #f56c6c; }
-        .ctrm-voice-review-btn.send { color: #67c23a; border-color: #67c23a; }
+        .ctrm-voice-review-btn:hover { background: rgba(242,118,155,.12); border-color: #f2769b; color: #c23b6e; }
+        /* 红/绿是语义色，跟提示条那边保持一致。删除是次要动作，描边款；
+           发送是主要动作，实底 —— 三颗一样白的话根本看不出该点哪个。 */
+        .ctrm-voice-review-btn.delete { color: #b8362b; border-color: rgba(184,54,43,.45); }
+        .ctrm-voice-review-btn.delete:hover { background: rgba(184,54,43,.10); border-color: #b8362b; color: #b8362b; }
+        .ctrm-voice-review-btn.send { color: #fff; background: #2f7a4f; border-color: #2f7a4f; }
+        .ctrm-voice-review-btn.send:hover { color: #fff; background: #26643f; border-color: #26643f; }
+        /* 发送中那颗按钮是 disabled 的，但 disabled 的元素照样匹配 :hover ——
+           不写这条，鼠标放上去还会变深，看着像"还能再点一下"。
+           :disabled:hover 是 (0,4,0)，压得住上面 .send:hover 的 (0,3,0)。 */
+        .ctrm-voice-review-btn:disabled { cursor: default; }
+        .ctrm-voice-review-btn.send:disabled:hover { background: #2f7a4f; border-color: #2f7a4f; }
         `;
         document.head.appendChild(style);
     })();
@@ -3498,7 +3879,7 @@ function preloadAllVoiceAudios() {
                         const err = document.createElement('span');
                         err.className = 'ctrm-voice-error';
                         err.textContent = '语音加载失败';
-                        err.style.color = '#f56c6c';
+                        err.style.color = '#b8362b';
                         err.style.marginLeft = '8px';
                         bubble.appendChild(err);
                     }
