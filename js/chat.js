@@ -1231,7 +1231,13 @@
 
             function jt(t, e, n) { for (var r, i = e ? w.filter(e, t) : t, o = 0; null != (r = i[o]); o++) n || 1 !== r.nodeType || w.cleanData(st(r)), r.parentNode && (n && w.contains(r.ownerDocument, r) && ct(st(r, "script")), r.parentNode.removeChild(r)); return t }
             w.extend({
-                htmlPrefilter: function (t) { return t.replace(xt, "<$1></$2>") },
+                // 上游 jQuery 3.5.0 的 CVE-2020-11022 / CVE-2020-11023 修复：
+                // 原实现 `t.replace(xt, "<$1></$2>")` 会把自闭合标签改写成成对标签，
+                // 攻击者可借此让 <option>/<noscript> 等上下文里的内容被重新当成 HTML 解析。
+                // 3.5.0 起直接原样返回。本项目模板里的自闭合标签全是 SVG 子元素
+                // （path / rect / polygon / animate），保持自闭合本身就是合法且正确的，
+                // 而且 xt 没有 g 标志、原先每个字符串只改写第一处，行为本来就不一致。
+                htmlPrefilter: function (t) { return t },
                 clone: function (t, e, n) {
                     var r, i, o, a, s, c, l, u = t.cloneNode(!0),
                         d = w.contains(t.ownerDocument, t);
@@ -1613,7 +1619,16 @@
                 d = void 0,
                 t = "wss://topurl.cn:9001",
                 f = (i = window.jQuery ? window.jQuery : M("jQuery-slim"))(M("./dom.js"));
-            i(document.body).append(f), _();
+
+            // 这份内联 jQuery 是按 CommonJS 分支初始化的（noGlobal = true），末尾那句
+            // `t || (h.jQuery = h.$ = w)` 不会执行，所以它不创建 window.$。
+            // 而下面 fancybox、lazyload 几处用的是裸 $：宿主页面若没自带 jQuery 就是
+            // ReferenceError，且抛点在 H() 里 append 消息之前 —— 一条消息都渲染不出来。
+            // 这里把真正在用的实例补挂为全局，消除对宿主页面的隐式依赖。
+            if (!window.jQuery) window.jQuery = i;
+            if (!window.$) window.$ = i;
+
+            i(document.body).append(f), loadDeferredScripts(f), _();
             var p, h, m = i("#ctrm_"),
                 g = m.find(".ctrm-title"),
                 v = m.find(".ctrm-title-url"),
@@ -1628,22 +1643,314 @@
                 N = m.find(".ctrm-title-count"),
                 S = m.find(".ctrm-title-close"),
                 D = m.find(".ctrm-title-reconn"),
-                A = window.btoa(encodeURIComponent(m.find(".ctrm-title-url a").attr("href") || "domain")),
-                L = A[1] + A[3] + A[7] + A[9];
+                // 上行 char 字段。原实现取 btoa(encodeURIComponent($(".ctrm-title-url a").attr("href") || "domain"))
+                // 的第 1/3/7/9 个字符，但 .ctrm-title-url 在 dom.js 模板里从来不存在，A 恒为
+                // btoa("domain") = "ZG9tYWlu"（仅 8 字符），A[9] 越界得到 undefined，
+                // 拼接后每次上行的都是常量 "Gtuundefined"。服务端一直按这个值在收，
+                // 因此保持线上取值不变，只去掉越界读取和那次无效查询。
+                // 如果 char 本应随域名变化，那是服务端契约问题，要连协议一起改。
+                L = "Gtuundefined";
 
             function j() { setTimeout(function () { m.hasClass("ctrm-close") || document.activeElement !== w.get(0) && S.click() }, 1) }
 
-            function _() {
-                (n = new WebSocket(t)).onopen = function () {
-                    // 获取当前页面的完整域名，包括协议和端口
-                    var t = { type: "update", data: { domainFrom: location.hostname }, char: L };
+            // 把文本安全地放进 HTML 上下文
+            function escapeHtml(t) {
+                return null == t ? "" : String(t)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#39;");
+            }
 
-                    n.send(JSON.stringify(t)), n.onmessage = function (t) {
-                        return function (t) {
-                            var e = JSON.parse(t.data),
-                                n = e.type,
-                                r = e.data;
-                            switch (n) {
+            // 轻量非阻塞提示条。原先反馈全走 alert()（阻塞、丑），而节流命中时连 alert
+            // 都没有，消息被静默丢弃。挂到 window 上供文件末尾那几个独立 IIFE 复用。
+            function ctrmToast(msg, type) {
+                var el = document.createElement("div");
+                el.className = "ctrm-toast";
+                el.setAttribute("role", "status");
+                el.textContent = msg;
+                el.style.cssText = "position:fixed;left:50%;bottom:88px;transform:translateX(-50%);" +
+                    "max-width:78vw;padding:8px 16px;border-radius:6px;font-size:14px;line-height:1.4;" +
+                    "color:#fff;z-index:100000;pointer-events:none;white-space:pre-wrap;text-align:center;" +
+                    "box-shadow:0 4px 12px rgba(0,0,0,.18);background:" +
+                    ("error" === type ? "#f56c6c" : "success" === type ? "#67c23a" : "#409eff");
+                document.body.appendChild(el);
+                setTimeout(function () { el.parentNode && el.parentNode.removeChild(el) }, 2600)
+            }
+            window.__ctrmToast = ctrmToast;
+
+            // 一次性注入样式。原先 H() 每收到一条消息就往 head 塞一个 <style>（内容完全一样），
+            // 500 条消息就是 500 个标签。
+            function injectStyleOnce(id, css) {
+                if (document.getElementById(id)) return;
+                var el = document.createElement("style");
+                el.id = id;
+                el.textContent = css;
+                document.head.appendChild(el)
+            }
+
+            // 生成页面内唯一的 DOM id。凡是拿消息内容拼 id 的地方都必须用它：
+            // 相同内容的两条消息会拼出相同 id，getElementById 只认第一个。
+            var ctrmUidSeq = 0;
+
+            function ctrmUid(prefix) {
+                return (prefix || "ctrm") + "-" + Date.now().toString(36) + "-" + (++ctrmUidSeq)
+            }
+
+            // ===== 以下都是原先写在 H() 里、每条消息重复执行一遍的一次性工作 =====
+
+            var CTRM_VOICE_CSS = `
+.ctrm-voice-bubble {
+  display: flex;
+  align-items: center;
+  background: #f5f7fa;
+  border-radius: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 6px 16px 6px 10px;
+  min-height: 38px;
+  margin: 6px 0;
+  font-size: 15px;
+  position: relative;
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.ctrm-voice-bubble.playing { background: #e6f7ff; }
+.ctrm-voice-play {
+  background: #67c23a;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+  padding: 0;
+}
+.ctrm-voice-bubble.playing .ctrm-voice-play { background: #409eff; }
+.ctrm-voice-play .icon-play { display: block; }
+.ctrm-voice-play .icon-pause { display: none; }
+.ctrm-voice-bubble.playing .icon-play { display: none; }
+.ctrm-voice-bubble.playing .icon-pause { display: block; }
+.ctrm-voice-progress {
+  flex: 1;
+  height: 4px;
+  background: #e0e0e0;
+  border-radius: 2px;
+  margin: 0 8px;
+  position: relative;
+  min-width: 60px;
+  max-width: 120px;
+}
+.ctrm-voice-bar {
+  background: #67c23a;
+  height: 100%;
+  border-radius: 2px;
+  width: 0;
+  transition: width 0.2s;
+}
+.ctrm-voice-time {
+  color: #888;
+  font-size: 13px;
+  min-width: 36px;
+  text-align: right;
+}
+`;
+
+            var CTRM_PLAYING_CSS = `
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+img.playing {
+    animation: blink 0.5s infinite;
+}
+`;
+
+            // 灯箱配置原先内联在 H() 里，每条消息重新构造一次对象
+            var CTRM_FANCYBOX_OPTS = {
+                caption: function (instance, item) { return i(this).find("img").attr("alt") },
+                loop: !0,
+                animationEffect: "fade",
+                buttons: ["zoom", "share", "slideShow", "fullScreen", "close"],
+                wheel: { scrollZoom: !0 },
+                thumbs: { autoStart: !0, axis: "y" },
+                fullScreen: { autoStart: !1 },
+                slideShow: { playOnStart: !0 },
+                protect: !0,
+                keyboard: { Escape: "close", ArrowLeft: "prev", ArrowRight: "next" },
+                touch: { vertical: !0, momentum: !0 },
+                lang: "zh",
+                i18n: {
+                    zh: {
+                        CLOSE: "关闭", NEXT: "下一张", PREV: "上一张",
+                        ERROR: "无法加载内容。请稍后再试。",
+                        PLAY_START: "开始幻灯片播放", PLAY_STOP: "停止幻灯片播放",
+                        FULL_SCREEN: "全屏", THUMBS: "缩略图",
+                        DOWNLOAD: "下载", SHARE: "分享", ZOOM: "缩放"
+                    }
+                }
+            };
+
+            // 只给传入的节点做灯箱绑定；不传就全量补一次。
+            function ctrmBindFancybox(scope) {
+                if (!i.fn || !i.fn.fancybox) return;
+                (scope ? scope.find('[data-fancybox="gallery"]') : i('[data-fancybox="gallery"]'))
+                    .fancybox(CTRM_FANCYBOX_OPTS)
+            }
+
+            // fancybox 走的是 dom.js 里的异步外链脚本，比首批历史消息晚到。
+            // 等它就绪后补一次全量绑定，之后每条新消息只绑自己那一份。
+            function ctrmWhenFancyboxReady() {
+                var tries = 0,
+                    timer = setInterval(function () {
+                        if (i.fn && i.fn.fancybox) { clearInterval(timer), ctrmBindFancybox(null) }
+                        else if (60 < ++tries) { clearInterval(timer), console.warn("[ctrm] fancybox 未就绪，图片灯箱不可用") }
+                    }, 200)
+            }
+
+            function ctrmVoiceLabel(sec) {
+                var mm = Math.floor(sec / 60),
+                    ss = Math.floor(sec % 60);
+                return (mm < 10 ? "0" : "") + mm + ":" + (ss < 10 ? "0" : "") + ss
+            }
+
+            function ctrmPlayVoice(bubble, audio) {
+                var p = audio.play();
+                if (!p || !p.then) return bubble.classList.add("playing"), void (window._voicePlaying = audio);
+                p.then(function () {
+                    bubble.classList.add("playing"), window._voicePlaying = audio
+                }).catch(function (err) {
+                    // AbortError 原先是三套处理器互相打断造成的，合并成一套后不该再出现；
+                    // 真出现也只提示一次，不再 100ms 后盲目重试。
+                    bubble.classList.remove("playing"),
+                        ctrmToast("无法播放语音：" + (err && err.message || err), "error")
+                })
+            }
+
+            function ctrmToggleVoice(bubble, audio) {
+                var bar = bubble.querySelector(".ctrm-voice-bar"),
+                    label = bubble.querySelector(".ctrm-voice-time");
+                audio.volume = 1, audio.muted = !1;
+                // 换一条语音时先停掉上一条
+                if (window._voicePlaying && window._voicePlaying !== audio) {
+                    var prev = window._voicePlaying.closest(".ctrm-voice-bubble");
+                    window._voicePlaying.pause(), prev && prev.classList.remove("playing"), window._voicePlaying = null
+                }
+                if (!audio.paused) return audio.pause(), bubble.classList.remove("playing"), void (window._voicePlaying = null);
+                audio.ontimeupdate = function () {
+                    audio.duration && isFinite(audio.duration) && (
+                        bar && (bar.style.width = audio.currentTime / audio.duration * 100 + "%"),
+                        label && (label.textContent = ctrmVoiceLabel(Math.max(0, audio.duration - audio.currentTime)))
+                    )
+                };
+                audio.onended = function () {
+                    bubble.classList.remove("playing"), bar && (bar.style.width = "100%"), window._voicePlaying = null
+                };
+                audio.onloadedmetadata = function () {
+                    isFinite(audio.duration) && label && (label.textContent = ctrmVoiceLabel(audio.duration))
+                };
+                // 元数据还没到就先 load()，用 canplay 续上，不要像原来那样再 click 一次递归
+                if (audio.readyState < 2) return audio.load(), void (audio.oncanplay = function () {
+                    audio.oncanplay = null, ctrmPlayVoice(bubble, audio)
+                });
+                ctrmPlayVoice(bubble, audio)
+            }
+
+            // 语音播放的唯一入口：一个 document 级委托
+            function ctrmBindVoicePlayback() {
+                document.addEventListener("click", function (ev) {
+                    var playBtn = ev.target && ev.target.closest && ev.target.closest(".ctrm-voice-play");
+                    if (!playBtn) return;
+                    var bubble = playBtn.closest(".ctrm-voice-bubble");
+                    if (!bubble) return;
+                    ev.preventDefault(), ev.stopPropagation();
+                    var audio = bubble.querySelector("audio");
+                    audio ? ctrmToggleVoice(bubble, audio) : console.warn("[ctrm] 语音气泡里没有 audio 元素")
+                })
+            }
+
+            function ctrmInitOnce() {
+                injectStyleOnce("ctrm-voice-bubble-style", CTRM_VOICE_CSS);
+                injectStyleOnce("ctrm-playing-anim-style", CTRM_PLAYING_CSS);
+                ctrmBindVoicePlayback();
+                // 点击昵称 -> @他。一次性委托，取代原来每条消息全量 off/on 所有历史发送者。
+                b.on("click", ".ctrm-dialog-sender", function () {
+                    var item = this.parentNode;
+                    if (item && -1 < item.className.indexOf("ctrm-me")) return;
+                    w.val("@" + this.innerText + " "), w.get(0).focus()
+                });
+                ctrmWhenFancyboxReady()
+            }
+
+            // 这个 jQuery build 用 -manipulation/_evalUrl 剪掉了 _evalUrl，
+            // 于是 domManip 里 `c.src ? w._evalUrl && w._evalUrl(c.src) : DOMEval(...)`
+            // 对带 src 的 script 直接跳过 —— dom.js 模板里的 fancybox、图床脚本
+            // 会被插入 DOM 但永远不执行。这里显式重建成新 script 节点触发加载。
+            function loadDeferredScripts(nodes) {
+                nodes.filter("script[src]").each(function () {
+                    var old = this,
+                        fresh = document.createElement("script");
+                    for (var idx = 0; idx < old.attributes.length; idx++) {
+                        fresh.setAttribute(old.attributes[idx].name, old.attributes[idx].value);
+                    }
+                    fresh.onerror = function () { console.warn("[ctrm] 外部脚本加载失败: " + fresh.src) };
+                    old.parentNode && old.parentNode.replaceChild(fresh, old);
+                })
+            }
+
+            var reconnectTimer = null,
+                reconnectDelay = 1e3,
+                heartbeatTimer = null,
+                offlineNoticed = !1,
+                unloading = !1;
+
+            // 上行心跳复用已有的 update 帧：服务端本来就在收这个类型（排行榜就是它驱动的），
+            // 不必为 ping 新增一个服务端可能不认的协议类型。25s 短于常见代理 60s 的空闲断连。
+            function ctrmSendHello() {
+                try {
+                    n && 1 === n.readyState &&
+                        n.send(JSON.stringify({ type: "update", data: { domainFrom: location.hostname }, char: L }))
+                } catch (err) { }
+            }
+
+            // 指数退避重连：1s → 2s → 4s … 上限 30s，带随机抖动，避免整个房间同时重连
+            function ctrmScheduleReconnect() {
+                if (unloading || reconnectTimer) return;
+                var wait = Math.min(reconnectDelay, 3e4);
+                reconnectDelay = Math.min(2 * reconnectDelay, 3e4),
+                    reconnectTimer = setTimeout(function () { reconnectTimer = null, _() }, wait + Math.floor(1e3 * Math.random()))
+            }
+
+            function _() {
+                clearTimeout(reconnectTimer), reconnectTimer = null;
+                // 换新连接前先摘掉旧连接的回调再关，否则它的 onclose 会再排一次重连
+                if (n) try { n.onopen = n.onmessage = n.onclose = n.onerror = null, n.close() } catch (err) { }
+                var sock = n = new WebSocket(t);
+                sock.onopen = function () {
+                    if (sock !== n) return;
+                    reconnectDelay = 1e3, offlineNoticed = !1;
+                    // 获取当前页面的完整域名，包括协议和端口
+                    ctrmSendHello();
+                    clearInterval(heartbeatTimer), heartbeatTimer = setInterval(ctrmSendHello, 25e3);
+                    clearInterval(a), a = setInterval(q, 15e3)
+                };
+                // onmessage / onclose / onerror 现在在这里就挂上。原先三个全写在 onopen 内部，
+                // 首次就连不上时一个回调都没挂，完全静默 —— 连"您已掉线"都不弹。
+                sock.onerror = function () { sock === n && console.warn("[ctrm] WebSocket 出错，等 onclose 后重连") };
+                sock.onclose = function () { sock === n && (z(), ctrmScheduleReconnect()) };
+                sock.onmessage = function (ev) {
+                    sock === n && function (t) {
+                        var e;
+                        // 一个坏帧原先能让整条 onmessage 抛出
+                        try { e = JSON.parse(t.data) } catch (err) { return void console.warn("[ctrm] 收到无法解析的帧", t.data) }
+                        var n = e.type,
+                            r = e.data;
+                        switch (n) {
                                 case "identity":
                                     s = r.id, c = r.name,
                                         function (t) {
@@ -1657,7 +1964,8 @@
                                             e.sort(function (t, e) { return e.times - t.times });
                                             u || (e = e.slice(0, 3));
                                             e.forEach(function (t, e) {
-                                                var n = i('<a class="ctrm-domain-item" target="_blank" rel="noopener" href="http://' + t.domainFrom + '?source=' + location.hostname + '">' + t.domainFrom + "</a>");
+                                                var r = escapeHtml(t.domainFrom),
+                                                    n = i('<a class="ctrm-domain-item" target="_blank" rel="noopener" href="http://' + r + '?source=' + escapeHtml(location.hostname) + '">' + r + "</a>");
                                                 k.append(n)
                                             });
                                             if (!u && 3 < l.length) {
@@ -1675,16 +1983,16 @@
                                 case "ack":
                                     w.val("")
                             }
-                        }(t)
-                    }, n.onclose = function () { return z() }, clearInterval(a), a = setInterval(q, 15e3), window.addEventListener("beforeunload", function () { return n.close() })
-                }
+                        }(ev)
+                };
             }
 
-            function q() { n.readyState !== n.OPEN && z() }
+            // 看门狗：readyState 不是 OPEN 就提示并排重连。原先只调 z()，从不重连。
+            function q() { n && 1 !== n.readyState && (z(), ctrmScheduleReconnect()) }
 
             function O(t) {
                 F(d = t), C.empty(), d.forEach(function (t) {
-                    var e = i('<div class="ctrm-online-item" style="background-color: ' + t.color + '">' + t.name + "</div>");
+                    var e = i('<div class="ctrm-online-item" style="background-color: ' + t.color + '">' + escapeHtml(t.name) + "</div>");
                     t.isSelf && e.css({ "font-weight": "bold" }), C.append(e), e.click(function () {
                         var t = this.innerText;
                         w.val("@" + t + " "), w.get(0).focus()
@@ -1709,13 +2017,25 @@
                 // 调用消息处理函数
                 F(t);
 
+                // 正文来自其他访客，先整体转义，再交给下面的富文本流水线。
+                // 在此之前 t.msg 是原样拼进 HTML 字符串、再由 i(e) 解析的，任何人发
+                // <img src=x onerror=...> 或 <script> 都会在整个房间里执行。
+                // 转义之后，只有下面这些正则显式产出的标签才会成为真正的 HTML。
+                t.msg = escapeHtml(t.msg);
+                t.name = escapeHtml(t.name);
+
+                // @我 高亮：c 是服务端下发的昵称，要与已转义的正文同形才能匹配上
+                var selfName = escapeHtml(c);
+
                 // 使用正则表达式进行替换
+                // 两个 URL 分支原先用 .*（贪婪且能跨越空白），一行里出现两个图片链接时
+                // 会被合并成一个坏 src，这里收紧成"不含空白/引号/尖括号"的字符类。
                 t.msg = t.msg.replace(
-                    /\[url=([^\]]+)\](?:\[img\][^\]]*\[\/img\]) ?\[\/url\]|(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp|svg|bmp|apng|ico|tiff|avif|heic|tga|jxr))|(https?:\/\/.*\.tutu\.to\/.*\/[^"\s]+)/gi,
+                    /\[url=([^\]]+)\](?:\[img\][^\]]*\[\/img\]) ?\[\/url\]|(https?:\/\/[^\s<>"]*\.(?:png|jpg|jpeg|gif|webp|svg|bmp|apng|ico|tiff|avif|heic|tga|jxr))|(https?:\/\/[^\s<>"]*\.tutu\.to\/[^\s<>"]*\/[^"\s]+)/gi,
                     '<a data-fancybox="gallery" data-src="$1$2$3"><img src="$1$2$3" alt="$1$2$3" style="max-width: 100%;" referrerpolicy="no-referrer"></a>'
                 );
 
-                t.msg = t.msg.replace("@" + c, '<span class="ctrm-b">@' + c + "</span>");
+                t.msg = t.msg.replace("@" + selfName, '<span class="ctrm-b">@' + selfName + "</span>");
 
                 t.msg = t.msg.replace(/我们还是说点其他的吧！|我们换个话题吧|这真是个好问题，让我想一想再告诉你吧/, '我是笨蛋机器人小尬,不是聪明的ChatGpt也不是机智的豆包,你的提问太难了');
 
@@ -1729,7 +2049,12 @@
 
                 t.msg = t.msg.replace(/\/?jp (.+)/, '<img src="https://api.cenguigui.cn/api/jp/?msg=$1" alt="Image" style="max-width: 100%;" referrerpolicy="no-referrer">');
 
-                t.msg = t.msg.replace(/(https?:\/\/.*\.(?:mp4|avi|m3u8))/gi, '<iframe src="https://www.yemu.xyz/?url=$1" id="player" width="100%" scrolling="no" allowfullscreen="true" allowtransparency="true" marginheight="0" marginwidth="0" frameborder="0"></iframe><a href="https://www.yemu.xyz/?url=$1" target="_blank">点我试试,</a>仅供学习使用<img src="https://npm.elemecdn.com/blobcat@1.0.0/ablobcatheart.png" alt="Image" style="max-width: 2rem;" referrerpolicy="no-referrer">');
+                t.msg = t.msg.replace(/(https?:\/\/[^\s<>"]*\.(?:mp4|avi|m3u8))/gi, function (match, url, offset, whole) {
+                    // iOS Safari 不支持 webm 录音，那边录出来是 mp4 容器。这条规则跑在
+                    // 语音气泡之前，不排除的话 iOS 语音会被当成普通视频渲染成播放器 iframe。
+                    if (/\[语音消息 \d{2}:\d{2}\]\s*$/.test(whole.slice(0, offset))) return match;
+                    return '<iframe src="https://www.yemu.xyz/?url=' + url + '" id="player" width="100%" scrolling="no" allowfullscreen="true" allowtransparency="true" marginheight="0" marginwidth="0" frameborder="0"></iframe><a href="https://www.yemu.xyz/?url=' + url + '" target="_blank">点我试试,</a>仅供学习使用<img src="https://npm.elemecdn.com/blobcat@1.0.0/ablobcatheart.png" alt="Image" style="max-width: 2rem;" referrerpolicy="no-referrer">'
+                });
 
                 t.msg = t.msg.replace(/(https:\/\/music\.163\.com\/#\/song\?id=(\d+))/g,
                     '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="calc(100% + 20px)" style="width: calc(100% + 20px); margin-left: -10px" height="86" src="//music.163.com/outchain/player?type=2&id=$2&auto=0&height=66"></iframe>')
@@ -1768,25 +2093,32 @@
 
                 // v: 这里是文字转语音的代码
                 t.msg = t.msg.replace(/\/?v:([^<]*)?(?:<a[^>]*>[^<]*<\/a>)?/, function (match, $1) {
-                    const audioId = `audio-${$1}`;
-                    const buttonId = `play-button-${$1}`;
-                    const textId = `transcribe-text-${$1}`;
+                    // 原先这些 id 是拿消息文本拼的（audio-${$1}）：两条同样的 "v:你好"
+                    // 就是两套一模一样的 id，getElementById 永远返回第一条那个节点，
+                    // 第二条的按钮点下去播的是第一条的音频。改成全局唯一。
+                    const uid = ctrmUid("tts");
+                    const audioId = `audio-${uid}`;
+                    const buttonId = `play-button-${uid}`;
+                    const textId = `transcribe-text-${uid}`;
+                    const imgId = `img-${uid}`;
+                    const barId = `audio-bar-${uid}`;
+                    const transcribeId = `transcribe-button-${uid}`;
 
                     // 生成 HTML
                     const html = `
     <a style="display: inline-flex; align-items: center; text-decoration: none; color: inherit; border: 1px solid #d1d1d1; border-radius: 5px; padding: 4px 8px; background-color: #f9f9f9; transition: background-color 0.3s; cursor: pointer;">
-        <img id="img-${$1}" src="//dh.z-l.top/js/语音.svg" alt="audio icon" style="width: 24px; height: 24px; margin-right: 8px;">
+        <img id="${imgId}" src="//dh.z-l.top/js/语音.svg" alt="audio icon" style="width: 24px; height: 24px; margin-right: 8px;">
         <audio id="${audioId}" preload="metadata" style="display: none;">
             <source src="https://dict.youdao.com/dictvoice?audio=${$1}&le=zh" type="audio/mp3">
         </audio>
         <span id="${buttonId}" style="margin-left: 8px; font-size: 0.9rem; color: #333;">加载中...</span>
-        <button id="transcribe-button-${$1}" style="margin-left: 8px; border: none; background: transparent; cursor: pointer;">
+        <button id="${transcribeId}" style="margin-left: 8px; border: none; background: transparent; cursor: pointer;">
             <img src="//dh.z-l.top/js/语音转文字.svg" alt="转文字" style="width: 24px; height: 24px;">
         </button>
     </a>
     <div id="${textId}" style="display: none; margin-top: 8px; font-size: 0.9rem; color: #333;"></div>
     <div style="background: #e0e0e0; height: 4px; border-radius: 2px; margin-top: 4px; width: 100%;">
-        <div id="audio-bar-${$1}" style="background: #009244; height: 100%; border-radius: 2px; width: 0;"></div>
+        <div id="${barId}" style="background: #009244; height: 100%; border-radius: 2px; width: 0;"></div>
     </div>
     `;
 
@@ -1794,10 +2126,13 @@
                     setTimeout(() => {
                         const button = document.getElementById(buttonId);
                         const audio = document.getElementById(audioId);
-                        const imgElement = document.getElementById(`img-${$1}`);
-                        const audioBar = document.getElementById(`audio-bar-${$1}`);
-                        const transcribeButton = document.getElementById(`transcribe-button-${$1}`);
+                        const imgElement = document.getElementById(imgId);
+                        const audioBar = document.getElementById(barId);
+                        const transcribeButton = document.getElementById(transcribeId);
                         const textElement = document.getElementById(textId);
+                        // 消息可能已经被清掉（重连会 remove 所有 .ctrm-dialog-item），
+                        // 那时这里全是 null，下面 addEventListener 会抛在 setTimeout 里没人接
+                        if (!button || !audio || !imgElement || !audioBar || !transcribeButton || !textElement) return;
 
                         audio.addEventListener('loadedmetadata', () => {
                             const duration = formatTime(audio.duration);
@@ -1863,24 +2198,22 @@
                     return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
                 }
 
-                // CSS 动画
-                const style = document.createElement('style');
-                style.textContent = `
-@keyframes blink {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
-}
-img.playing {
-    animation: blink 0.5s infinite;
-}
-`;
-                document.head.appendChild(style);
+                // CSS 动画已挪到 ctrmInitOnce()（原先这里每条消息 appendChild 一个 <style>，
+                // 且没有任何去重判断，内容却完全一样）。
 
                 // end: 这里是文字转语音的代码
                 t.msg = t.msg.replace(/(https?:\/\/[^\s<>"]+)(?![^<>]*>.*<\/a>)/g, function (match, url) {
                     const currentHostname = window.location.hostname; // 获取当前页面的域名
-                    const hostname = new URL(url).hostname; // 获取链接的域名
+
+                    // new URL 遇到 "https://[" / "http://%zz" 这类畸形串会抛 TypeError。
+                    // 这个回调跑在 H() 的同步流程里、b.append(n) 之前，一旦抛出，本条及
+                    // 后续消息都渲染不出来 —— 任何人发一条畸形链接就能打断全房间的渲染。
+                    let hostname;
+                    try {
+                        hostname = new URL(url).hostname; // 获取链接的域名
+                    } catch (e) {
+                        return match; // 解析不了就按纯文本原样保留
+                    }
 
                     // 黑名单域名列表,将需要不转为url卡片的域名填这里
                     const blacklist = ['dict.youdao.com', 'npm.elemecdn.com', 'api.cenguigui.cn', 't.tutu.to', 'img.z-l.top', 'imgdd.com', 'tucdn.wpon.cn', 'share-text.org'];
@@ -1931,8 +2264,10 @@ img.playing {
 
                 // 语音消息替换，audio标签直接用src属性，优先本地blob
                 // 保证只渲染一个audio[src]，不再用<source>
-                t.msg = t.msg.replace(/\[语音消息 (\d{2}:\d{2})\]\s*(https?:\/\/[^\s]+\.webm)/g, function (_, duration, url) {
-                    var uid = 'voice_' + Math.random().toString(36).slice(2) + '_' + Date.now();
+                // 扩展名不再只认 .webm：iOS 录出来是 mp4 容器，只认 webm 的话 iOS 发的
+                // 语音在所有人那里都渲染不成气泡
+                t.msg = t.msg.replace(/\[语音消息 (\d{2}:\d{2})\]\s*(https?:\/\/[^\s<>"]+\.(?:webm|mp4|m4a|ogg|mp3|wav))/g, function (_, duration, url) {
+                    var uid = ctrmUid("voice");
                     var localSrc = '';
                     if (window._myVoiceBlobs && window._myVoiceBlobs[url] && t.id === s) {
                         localSrc = window._myVoiceBlobs[url];
@@ -1949,274 +2284,17 @@ img.playing {
     </div>`;
                 });
 
-                // 动态插入语音气泡样式
-                if (!document.getElementById('ctrm-voice-bubble-style')) {
-                    var voiceStyle = document.createElement('style');
-                    voiceStyle.id = 'ctrm-voice-bubble-style';
-                    voiceStyle.textContent = `
-.ctrm-voice-bubble {
-  display: flex;
-  align-items: center;
-  background: #f5f7fa;
-  border-radius: 18px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  padding: 6px 16px 6px 10px;
-  min-height: 38px;
-  margin: 6px 0;
-  font-size: 15px;
-  position: relative;
-  gap: 10px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.ctrm-voice-bubble.playing {
-  background: #e6f7ff;
-}
-.ctrm-voice-play {
-  background: #67c23a;
-  border: none;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.2s;
-  padding: 0;
-}
-.ctrm-voice-bubble.playing .ctrm-voice-play {
-  background: #409eff;
-}
-.ctrm-voice-play .icon-play { display: block; }
-.ctrm-voice-play .icon-pause { display: none; }
-.ctrm-voice-bubble.playing .icon-play { display: none; }
-.ctrm-voice-bubble.playing .icon-pause { display: block; }
-.ctrm-voice-progress {
-  flex: 1;
-  height: 4px;
-  background: #e0e0e0;
-  border-radius: 2px;
-  margin: 0 8px;
-  position: relative;
-  min-width: 60px;
-  max-width: 120px;
-}
-.ctrm-voice-bar {
-  background: #67c23a;
-  height: 100%;
-  border-radius: 2px;
-  width: 0;
-  transition: width 0.2s;
-}
-.ctrm-voice-time {
-  color: #888;
-  font-size: 13px;
-  min-width: 36px;
-  text-align: right;
-}
-`;
-                    document.head.appendChild(voiceStyle);
-                }
+                // 语音气泡样式已挪到 ctrmInitOnce()，这里不再每条消息查一次 DOM。
 
-                // 语音气泡交互逻辑（事件委托，防止多条消息失效）
-                if (!window._voiceBubbleEventBinded) {
-                    window._voiceBubbleEventBinded = true;
-                    document.addEventListener('click', function (e) {
-                        const playBtn = e.target.closest('.ctrm-voice-play');
-                        if (!playBtn) return;
-                        const bubble = playBtn.closest('.ctrm-voice-bubble');
-                        if (!bubble) return;
-                        // 只用audio[src]，不用<source>
-                        const audio = bubble.querySelector('audio');
-                        if (!audio) { alert('audio标签没找到'); return; }
-                        audio.volume = 1;
-                        audio.muted = false;
-                        // 停止其他正在播放的音频
-                        if (window._voicePlaying && window._voicePlaying !== audio) {
-                            window._voicePlaying.pause();
-                            const otherBubble = window._voicePlaying.closest('.ctrm-voice-bubble');
-                            if (otherBubble) otherBubble.classList.remove('playing');
-                            window._voicePlaying = null;
-                        }
-                        // 播放逻辑
-                        if (audio.paused) {
-                            console.log('will play', audio.src);
-                            const playPromise = audio.play();
-                            if (playPromise !== undefined) {
-                                playPromise.then(() => {
-                                    bubble.classList.add('playing');
-                                    window._voicePlaying = audio;
-                                    console.log('play success');
-                                }).catch(err => {
-                                    console.error('play error', err);
-                                    alert('无法播放语音：' + err.message);
-                                });
-                            }
-                        } else {
-                            audio.pause();
-                            bubble.classList.remove('playing');
-                            window._voicePlaying = null;
-                        }
-                        audio.ontimeupdate = function () {
-                            if (audio.duration) {
-                                const bar = bubble.querySelector('.ctrm-voice-bar');
-                                const time = bubble.querySelector('.ctrm-voice-time');
-                                bar.style.width = (audio.currentTime / audio.duration * 100) + '%';
-                                const remain = Math.max(0, audio.duration - audio.currentTime);
-                                const m = Math.floor(remain / 60), s = Math.floor(remain % 60);
-                                time.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
-                            }
-                        };
-                        audio.onended = function () {
-                            bubble.classList.remove('playing');
-                            const bar = bubble.querySelector('.ctrm-voice-bar');
-                            bar.style.width = '100%';
-                            window._voicePlaying = null;
-                        };
-                        audio.onloadedmetadata = function () {
-                            const time = bubble.querySelector('.ctrm-voice-time');
-                            const m = Math.floor(audio.duration / 60), s = Math.floor(audio.duration % 60);
-                            time.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
-                        };
-                        e.stopPropagation();
-                    });
-                }
+                // 语音播放的三套注册（这里两个 document 委托 + 下面每个按钮的直接绑定）
+                // 已合并成 ctrmInitOnce() 里的单一 document 委托。
+                // 原先三套同时生效：同一节点上的多个 listener，stopPropagation() 挡不住彼此
+                // （那需要 stopImmediatePropagation），所以一次点击会被处理多次，
+                // 表现为播放后立刻暂停 —— 代码里那些 AbortError 重试和 alert 就是这个竞态的症状。
 
-                // 额外的事件委托绑定，确保在DOM更新后也能生效
-                setTimeout(function () {
-                    if (!window._voiceBubbleEventBindedExtra) {
-                        window._voiceBubbleEventBindedExtra = true;
-                        document.addEventListener('click', function (e) {
-                            const playBtn = e.target.closest('.ctrm-voice-play');
-                            if (!playBtn) return;
-                            const bubble = playBtn.closest('.ctrm-voice-bubble');
-                            if (!bubble) return;
-                            const audio = bubble.querySelector('audio');
-                            if (!audio) { alert('audio标签没找到'); return; }
-                            audio.volume = 1;
-                            audio.muted = false;
-                            if (!window._voicePlaying) window._voicePlaying = null;
-                            if (window._voicePlaying && window._voicePlaying !== audio) {
-                                window._voicePlaying.pause();
-                                if (window._voicePlaying.parentElement) window._voicePlaying.parentElement.parentElement.classList.remove('playing');
-                            }
-                            if (audio.paused) {
-                                // 确保音频已加载
-                                if (audio.readyState < 2) {
-                                    audio.load();
-                                    setTimeout(() => {
-                                        playBtn.click();
-                                    }, 100);
-                                    return;
-                                }
-
-                                // 重置音频到开始位置
-                                audio.currentTime = 0;
-
-                                // 使用Promise处理播放
-                                const playPromise = audio.play();
-                                if (playPromise !== undefined) {
-                                    playPromise.then(() => {
-                                        bubble.classList.add('playing');
-                                        window._voicePlaying = audio;
-                                    }).catch(err => {
-                                        console.error('播放失败:', err);
-                                        // 如果是中断错误，尝试重新播放
-                                        if (err.name === 'AbortError') {
-                                            setTimeout(() => {
-                                                audio.play().catch(e => {
-                                                    alert('无法播放语音：' + e.message);
-                                                });
-                                            }, 100);
-                                        } else {
-                                            alert('无法播放语音：' + err.message);
-                                        }
-                                    });
-                                }
-                            } else {
-                                audio.pause();
-                                audio.currentTime = 0;
-                                bubble.classList.remove('playing');
-                                window._voicePlaying = null;
-                            }
-                            audio.ontimeupdate = function () {
-                                if (audio.duration) {
-                                    const bar = bubble.querySelector('.ctrm-voice-bar');
-                                    const time = bubble.querySelector('.ctrm-voice-time');
-                                    bar.style.width = (audio.currentTime / audio.duration * 100) + '%';
-                                    const remain = Math.max(0, audio.duration - audio.currentTime);
-                                    const m = Math.floor(remain / 60), s = Math.floor(remain % 60);
-                                    time.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
-                                }
-                            };
-                            audio.onended = function () {
-                                bubble.classList.remove('playing');
-                                const bar = bubble.querySelector('.ctrm-voice-bar');
-                                bar.style.width = '100%';
-                                window._voicePlaying = null;
-                            };
-                            audio.onloadedmetadata = function () {
-                                const time = bubble.querySelector('.ctrm-voice-time');
-                                const m = Math.floor(audio.duration / 60), s = Math.floor(audio.duration % 60);
-                                time.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
-                            };
-                            e.stopPropagation();
-                        });
-                    }
-                }, 100);
-
-                // 图片灯箱开始
-                $(document).ready(function () {
-                    $('[data-fancybox="gallery"]').fancybox({
-                        caption: function (instance, item) {
-                            return $(this).find('img').attr('alt');
-                        },
-                        loop: true,
-                        animationEffect: "fade",
-                        buttons: ["zoom", "share", "slideShow", "fullScreen", "close"],
-                        wheel: {
-                            scrollZoom: true
-                        },
-                        thumbs: {
-                            autoStart: true,
-                            axis: "y"
-                        },
-                        fullScreen: {
-                            autoStart: false
-                        },
-                        slideShow: {
-                            playOnStart: true,
-                        },
-                        protect: true,
-                        keyboard: {
-                            Escape: "close",
-                            ArrowLeft: "prev",
-                            ArrowRight: "next"
-                        },
-                        touch: {
-                            vertical: true,
-                            momentum: true
-                        },
-                        lang: "zh",
-                        i18n: {
-                            zh: {
-                                CLOSE: "关闭",
-                                NEXT: "下一张",
-                                PREV: "上一张",
-                                ERROR: "无法加载内容。请稍后再试。",
-                                PLAY_START: "开始幻灯片播放",
-                                PLAY_STOP: "停止幻灯片播放",
-                                FULL_SCREEN: "全屏",
-                                THUMBS: "缩略图",
-                                DOWNLOAD: "下载",
-                                SHARE: "分享",
-                                ZOOM: "缩放"
-                            }
-                        }
-                    });
-                });
-                // 图片灯箱结束
+                // 图片灯箱：初始化已挪出 H()。原先每条消息都对全文档
+                // $('[data-fancybox="gallery"]') 重新 init 一遍，是 O(n²)；
+                // 现在只对新消息节点做一次（见下面 b.append(n) 之后）。
 
                 // 构建HTML字符串，包含消息发送者、消息内容、时间等信息
                 var e = (
@@ -2250,93 +2328,8 @@ img.playing {
                 // 将新消息添加到消息列表中
                 b.append(n);
 
-                // 为新创建的语音气泡直接绑定事件
-                setTimeout(function () {
-                    const voiceBubbles = n.find('.ctrm-voice-bubble');
-                    voiceBubbles.each(function () {
-                        const bubble = this;
-                        const playBtn = bubble.querySelector('.ctrm-voice-play');
-                        const audio = bubble.querySelector('audio');
-                        if (playBtn && audio) {
-                            playBtn.addEventListener('click', function (e) {
-                                e.preventDefault();
-                                e.stopPropagation();
-
-                                // 确保音频已加载
-                                if (audio.readyState < 2) {
-                                    audio.load();
-                                    setTimeout(() => {
-                                        playBtn.click();
-                                    }, 100);
-                                    return;
-                                }
-
-                                audio.volume = 1;
-                                audio.muted = false;
-
-                                // 停止其他正在播放的音频
-                                if (window._voicePlaying && window._voicePlaying !== audio) {
-                                    window._voicePlaying.pause();
-                                    window._voicePlaying.currentTime = 0;
-                                    const otherBubble = window._voicePlaying.closest('.ctrm-voice-bubble');
-                                    if (otherBubble) otherBubble.classList.remove('playing');
-                                }
-
-                                if (audio.paused) {
-                                    // 重置音频到开始位置
-                                    audio.currentTime = 0;
-
-                                    // 使用Promise处理播放
-                                    const playPromise = audio.play();
-                                    if (playPromise !== undefined) {
-                                        playPromise.then(() => {
-                                            bubble.classList.add('playing');
-                                            window._voicePlaying = audio;
-                                        }).catch(err => {
-                                            console.error('播放失败:', err);
-                                            // 如果是中断错误，尝试重新播放
-                                            if (err.name === 'AbortError') {
-                                                setTimeout(() => {
-                                                    audio.play().catch(e => {
-                                                        alert('无法播放语音：' + e.message);
-                                                    });
-                                                }, 100);
-                                            } else {
-                                                alert('无法播放语音：' + err.message);
-                                            }
-                                        });
-                                    }
-                                } else {
-                                    audio.pause();
-                                    audio.currentTime = 0;
-                                    bubble.classList.remove('playing');
-                                    window._voicePlaying = null;
-                                }
-                                audio.ontimeupdate = function () {
-                                    if (audio.duration) {
-                                        const bar = bubble.querySelector('.ctrm-voice-bar');
-                                        const time = bubble.querySelector('.ctrm-voice-time');
-                                        bar.style.width = (audio.currentTime / audio.duration * 100) + '%';
-                                        const remain = Math.max(0, audio.duration - audio.currentTime);
-                                        const m = Math.floor(remain / 60), s = Math.floor(remain % 60);
-                                        time.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
-                                    }
-                                };
-                                audio.onended = function () {
-                                    bubble.classList.remove('playing');
-                                    const bar = bubble.querySelector('.ctrm-voice-bar');
-                                    bar.style.width = '100%';
-                                    window._voicePlaying = null;
-                                };
-                                audio.onloadedmetadata = function () {
-                                    const time = bubble.querySelector('.ctrm-voice-time');
-                                    const m = Math.floor(audio.duration / 60), s = Math.floor(audio.duration % 60);
-                                    time.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
-                                };
-                            });
-                        }
-                    });
-                }, 50);
+                // 只给这条新消息里的灯箱元素做初始化（原先每条消息都对全文档重来一遍）。
+                ctrmBindFancybox(n);
 
                 // 调用滚动到底部函数
                 I();
@@ -2349,18 +2342,9 @@ img.playing {
                 }
                 showNewMessageGlow();
 
-                // 为每个消息发送者的元素添加点击事件
-                b.find(".ctrm-dialog-sender").each(function (t, e) {
-                    i(e).off("click").on("click", function () {
-                        // 如果点击的不是当前用户的消息
-                        if (!(-1 < e.parentNode.className.indexOf("ctrm-me"))) {
-                            var t = e.innerText;
-                            // 在输入框中添加"@username"，并将焦点移动到输入框
-                            w.val("@" + t + " ");
-                            w.get(0).focus();
-                        }
-                    });
-                });
+                // 发送者点击「@他」已改为 ctrmInitOnce() 里 b 上的一次性事件委托。
+                // 原先每收到一条消息都要遍历**全部**历史 .ctrm-dialog-sender 重新 off/on，
+                // 整场会话是 O(n²)。
 
                 // 仅在消息来源不是 SYSTEM 时发送邮件通知
                 // if (t.name !== 'SYSTEM') {
@@ -2378,29 +2362,83 @@ img.playing {
             }
 
             function z() {
-                var t = Date.now();
-                e || H({ time: t, id: 111111111211, name: "SYSTEM", msg: "您已掉线，点'😜'重连..." }), O([]), clearInterval(a)
+                clearInterval(heartbeatTimer), heartbeatTimer = null, O([]);
+                // 原先 q() 和 onclose 各调一次 z()，一次掉线能刷出好几条"您已掉线"；
+                // 而且它里面的 clearInterval(a) 把看门狗也停了，等于彻底放弃重连。
+                // 现在整段离线期只提示一次，重连交给 ctrmScheduleReconnect()。
+                if (e || offlineNoticed || unloading) return;
+                offlineNoticed = !0,
+                    H({ time: Date.now(), id: 111111111211, name: "SYSTEM", msg: "连接已断开，正在自动重连…（也可点 '😜' 立即重连）" })
             }
 
 
             function I() { o && b.scrollTop(9999999) }
 
+            var chatThrottleUntil = 0;
+
             function R() {
-                var t = w.val().slice(0, 700).trim(); // 增加字符限制至700字符,不管用啊
-                if (0 === t.length) return alert("哦，我的天呐，你好像什么也没有输入呢");
-                if (!r) {
-                    var e = { type: "chat", data: { msg: t }, char: L };
-                    r = !0, n.send(JSON.stringify(e)), setTimeout(function () { r = !1 }, 5e3)
+                var t = w.val().slice(0, 700).trim(); // 上限 700，已与 textarea 的 maxlength 对齐
+                if (0 === t.length) return void ctrmToast("你好像什么也没有输入呢");
+                // 连接没开时原先直接 n.send 会抛 InvalidStateError，消息静默丢失
+                if (!n || 1 !== n.readyState)
+                    return void ctrmToast("还没连上服务器，这条没发出去；重连后再点一次发送", "error");
+                if (r) {
+                    // 原先这个分支是空的：被 5 秒节流拦下的消息既不发也不提示，
+                    // 输入框内容还在，用户以为已经发出去了。语音走的也是这条路
+                    // （上传完往输入框塞文本再 click .ctrm-emit），所以整条语音会静默消失。
+                    var left = Math.max(1, Math.ceil((chatThrottleUntil - Date.now()) / 1e3));
+                    return void ctrmToast("发得太快了，还要等 " + left + " 秒；内容已保留，稍后再点发送", "error")
                 }
+                var e = { type: "chat", data: { msg: t }, char: L };
+                r = !0, chatThrottleUntil = Date.now() + 5e3,
+                    n.send(JSON.stringify(e)),
+                    setTimeout(function () { r = !1 }, 5e3)
             }
 
-            function W() { e || (n.close(), _(), e = !0, b.find(".ctrm-dialog-item").remove(), w.val(""), setTimeout(function () { e = !1 }, 2e3)) }
+            // 手动重连（😜）。原先是 n.close() 紧接着 _()，而 close 触发的 onclose 又会
+            // 排一次重连，等于开两条连接；现在 _() 自己负责摘旧回调 + 关旧连接，
+            // 这里只把退避状态归零。
+            function W() {
+                e || (e = !0, reconnectDelay = 1e3, offlineNoticed = !1,
+                    clearTimeout(reconnectTimer), reconnectTimer = null,
+                    _(), b.find(".ctrm-dialog-item").remove(), w.val(""),
+                    setTimeout(function () { e = !1 }, 2e3))
+            }
 
             function B() {
                 var t = window.innerWidth;
                 t / window.innerHeight <= 1.2 ? m.addClass("ctrm-mobile") : m.removeClass("ctrm-mobile"), t <= 1210 || m.hasClass("ctrm-mobile") ? v.hide() : m.hasClass("ctrm-mobile") || v.show(), b.scrollTop(9999999)
             }
-            document.body.addEventListener("click", j), window.addEventListener("popstate", j), m.on("click", function (t) { return t.stopPropagation() }), m.on("touchstart", function (t) { return t.stopPropagation() }), m.on("touchend", function (t) { return t.stopPropagation() }), m.on("touchmove", function (t) { return t.stopPropagation() }), S.click(function (t) { m.addClass("ctrm-close"), S.hide(), D.hide(), v.hide(), E.show(), t.stopPropagation() }), g.click(function () { m.hasClass("ctrm-close") && (m.removeClass("ctrm-close"), S.show(), D.show(), E.hide(), B()) }), D.click(W), x.click(R), w.on("keydown", function (t) { 13 === t.keyCode && t.preventDefault() }), w.on("keyup", function (t) { 13 === t.keyCode && R() }), b.on("scroll", function () {
+            // beforeunload 只挂一次。原先写在 _() 里，每次（重）连都新增一个监听，
+            // 重连几次就堆几个。
+            window.addEventListener("beforeunload", function () {
+                unloading = !0, clearTimeout(reconnectTimer), clearInterval(heartbeatTimer), clearInterval(a);
+                try { n && n.close() } catch (err) { }
+            });
+            ctrmInitOnce();
+            // 回车发送：原先是 keydown 里 preventDefault、keyup 里发送。中文输入法选词时
+            // 那个回车也会冒出一个 keyup(13)，于是候选词还没上屏就把半句话发出去了。
+            // 改成只在 keydown 里处理，并跳过输入法组合态。
+            var ctrmComposing = !1,
+                ctrmComposeEndAt = 0;
+            w.on("compositionstart", function () { ctrmComposing = !0 });
+            w.on("compositionend", function () { ctrmComposing = !1, ctrmComposeEndAt = Date.now() });
+
+            function ctrmIsEnterSend(t) {
+                if (13 !== t.keyCode && "Enter" !== t.key) return !1;
+                // isComposing 不在 jQuery 的属性白名单里，得从原生事件上取；
+                // 229 是部分安卓输入法在组合态给出的 keyCode
+                var native = t.originalEvent || t;
+                if (ctrmComposing || native.isComposing || 229 === t.keyCode) return !1;
+                // 少数输入法把 compositionend 排在这个 keydown 之前，上面几个标志全是假的，
+                // 只能靠时间差挡掉"选词那一下"回车
+                return !(80 > Date.now() - ctrmComposeEndAt)
+            }
+            document.body.addEventListener("click", j), window.addEventListener("popstate", j), m.on("click", function (t) { return t.stopPropagation() }), m.on("touchstart", function (t) { return t.stopPropagation() }), m.on("touchend", function (t) { return t.stopPropagation() }), m.on("touchmove", function (t) { return t.stopPropagation() }), S.click(function (t) { m.addClass("ctrm-close"), S.hide(), D.hide(), v.hide(), E.show(), t.stopPropagation() }), g.click(function () { m.hasClass("ctrm-close") && (m.removeClass("ctrm-close"), S.show(), D.show(), E.hide(), B()) }), D.click(W), x.click(R), w.on("keydown", function (t) {
+                // 组合态不 preventDefault：那一下回车要留给输入法上屏，
+                // 而组合态的回车本身也不会往 textarea 里插换行
+                ctrmIsEnterSend(t) && (t.preventDefault(), R())
+            }), b.on("scroll", function () {
                 var t = b[0],
                     e = t.clientHeight,
                     n = t.scrollTop,
@@ -2603,7 +2641,7 @@ var OwO_demo = new OwO({
     </div>
 </div>
             <div class="ctrm-textarea">
-                <textarea id="editor" placeholder="拖拽或Ctrl+V至此可发图片..." maxlength="70" class="OwO-textarea" contenteditable></textarea>
+                <textarea id="editor" placeholder="拖拽或Ctrl+V至此可发图片..." maxlength="700" class="OwO-textarea" contenteditable></textarea>
                 <div id="sendMessageButton" class="ctrm-emit">发送</div>
                 <div class="image-preview-overlay" style="display: none;"><img src="" alt="preview"></div>
             </div>
@@ -2622,7 +2660,12 @@ var OwO_demo = new OwO({
     </div>
 </div>    
 
-`.replace(/\t/g, "").replace(/\n/g, "");
+`;
+        // 原先这里是 .replace(/\t/g,"").replace(/\n/g,"")：整个模板被压成一行。
+        // 上面 <script> 块里只要有人写一行 // 注释，压平之后这行注释就把后面全部代码
+        // （包括 </script> 之前的所有内容）注释掉，页面直接哑火。<style> 里的 // 同理。
+        // 这里的换行对 HTML 没有意义（唯一怕换行的 <textarea> 写成了紧贴的空标签），
+        // 所以直接不压，把这个地雷去掉。
         e.exports = r;
     }, {}]
 }, {}, [2]);
@@ -2774,8 +2817,10 @@ var OwO_demo = new OwO({
             .replace("{url}", url)
             .replace("{filename}", filename.replace(/\.[^/.]+$/, ""));
 
-        const start = element.selectionStart || element.value.length;
-        const end = element.selectionEnd || element.value.length;
+        // 原先是 `selectionStart || value.length`：光标在最前面时 selectionStart 是 0，
+        // 0 为假值就被 fallback 顶掉，链接插到了末尾。只有真的取不到选区（null）才该 fallback。
+        const start = typeof element.selectionStart === "number" ? element.selectionStart : element.value.length;
+        const end = typeof element.selectionEnd === "number" ? element.selectionEnd : element.value.length;
         const text = element.value;
         element.value = text.substring(0, start) + tpl + text.substring(end);
         element.selectionStart = element.selectionEnd = start + tpl.length;
@@ -3055,6 +3100,62 @@ window.uploadToTelegram = function (file) {
     let startTime = null;
     let timerInterval = null;
     let voiceAutoSendLock = false;
+    let recordedMime = 'audio/webm';
+    let recordedExt = 'webm';
+
+    // iOS Safari 不支持 audio/webm 录音，硬编码 webm 等于 iOS 用户的录音功能直接废掉
+    // （new MediaRecorder 抛 NotSupportedError，落到 catch 里连提示都没有）。
+    // 按支持度依次探测；一个都不支持就不传 mimeType，让浏览器自己挑默认格式。
+    const VOICE_MIME_CANDIDATES = [
+        ['audio/webm;codecs=opus', 'webm'],
+        ['audio/webm', 'webm'],
+        ['audio/mp4;codecs=mp4a.40.2', 'mp4'],
+        ['audio/mp4', 'mp4'],
+        ['audio/ogg;codecs=opus', 'ogg'],
+        ['audio/ogg', 'ogg']
+    ];
+
+    function pickVoiceMime() {
+        if (typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) return null;
+        for (const [mime, ext] of VOICE_MIME_CANDIDATES) {
+            if (MediaRecorder.isTypeSupported(mime)) return { mime, ext };
+        }
+        return null;
+    }
+
+    // 从 mediaRecorder.mimeType 反查扩展名：浏览器实际用的格式可能和我们请求的不同
+    function extFromMime(mime) {
+        if (!mime) return 'webm';
+        if (mime.indexOf('mp4') !== -1 || mime.indexOf('aac') !== -1 || mime.indexOf('m4a') !== -1) return 'mp4';
+        if (mime.indexOf('ogg') !== -1) return 'ogg';
+        if (mime.indexOf('wav') !== -1) return 'wav';
+        if (mime.indexOf('mpeg') !== -1) return 'mp3';
+        return 'webm';
+    }
+
+    // blob URL 必须显式 revoke，否则每录一次就泄漏一个（连着 blob 本体一起常驻内存）。
+    // 注意：上传成功后那个 URL 的所有权交给了 window._myVoiceBlobs（H() 里拿它当自己
+    // 语音气泡的 <audio src>，自己发的语音不重新下载），那种情况下不能 revoke。
+    function revokeVoiceUrl(url) {
+        if (!url) return;
+        try { URL.revokeObjectURL(url) } catch (err) { }
+    }
+
+    function dropPendingVoiceBlob() {
+        if (window._lastVoiceBlobUrl) {
+            // 只有还没被 _myVoiceBlobs 接管的才revoke
+            const inUse = window._myVoiceBlobs && Object.keys(window._myVoiceBlobs)
+                .some(function (k) { return window._myVoiceBlobs[k] === window._lastVoiceBlobUrl });
+            if (!inUse) revokeVoiceUrl(window._lastVoiceBlobUrl);
+        }
+        window._lastVoiceBlob = null;
+        window._lastVoiceBlobUrl = null;
+    }
+
+    // 复用主模块的提示条；主模块若提前 return（hostname 不含点号）就退回 alert
+    function voiceToast(msg, type) {
+        window.__ctrmToast ? window.__ctrmToast(msg, type) : alert(msg);
+    }
     let audioBlob = null;
     let audioUrl = null;
     let state = 'idle'; // idle, recording, review
@@ -3062,6 +3163,31 @@ window.uploadToTelegram = function (file) {
     const voiceBtn = document.getElementById('ctrm-voice-btn');
     const timerDisplay = document.querySelector('.ctrm-voice-recording-indicator .ctrm-voice-timer');
     const recordingIndicator = document.querySelector('.ctrm-voice-recording-indicator');
+
+    // 主逻辑若提前 return（例如 hostname 不含点号时 chat.js 会 return），dom.js 模板
+    // 根本没被注入，voiceBtn / recordingIndicator 都是 null，
+    // 下面的 addEventListener 会抛 TypeError 并打断整个 IIFE。
+    if (!voiceBtn || !recordingIndicator) {
+        console.warn('[ctrm] 未找到录音按钮，语音功能未启用');
+        return;
+    }
+
+    // 把录音提示气泡对齐到按钮上方。原先这段写在文件末尾的顶层作用域，
+    // 通过 `const origStartRecording = startRecording` 包装 startRecording，
+    // 但 startRecording 是本 IIFE 的局部函数，顶层取不到 —— 那里会抛
+    // ReferenceError，导致它后面的 resize/scroll 监听和语音预加载全部不执行。
+    // 现在挪进闭包内，直接在显示提示后调用。
+    function alignRecordingIndicator() {
+        if (recordingIndicator.style.display === 'none') return;
+        const rect = voiceBtn.getBoundingClientRect();
+        recordingIndicator.style.position = 'fixed';
+        recordingIndicator.style.left = (rect.left + rect.width / 2) + 'px';
+        recordingIndicator.style.top = (rect.top - recordingIndicator.offsetHeight - 12) + 'px';
+        recordingIndicator.style.transform = 'translateX(-50%)';
+        recordingIndicator.style.zIndex = '9999';
+    }
+    window.addEventListener('resize', alignRecordingIndicator);
+    window.addEventListener('scroll', alignRecordingIndicator);
 
     // 录音按钮点击事件
     voiceBtn.addEventListener('click', async function () {
@@ -3076,7 +3202,10 @@ window.uploadToTelegram = function (file) {
         if (state !== 'idle') return;
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+            const picked = pickVoiceMime();
+            mediaRecorder = picked ? new MediaRecorder(stream, { mimeType: picked.mime }) : new MediaRecorder(stream);
+            recordedMime = mediaRecorder.mimeType || (picked && picked.mime) || 'audio/webm';
+            recordedExt = extFromMime(recordedMime);
             audioChunks = [];
             mediaRecorder.ondataavailable = (event) => {
                 if (event.data.size > 0) {
@@ -3087,6 +3216,7 @@ window.uploadToTelegram = function (file) {
             mediaRecorder.start();
             voiceBtn.classList.add('recording');
             recordingIndicator.style.display = 'flex';
+            alignRecordingIndicator();
             if (timerDisplay) timerDisplay.textContent = '00:00';
             startTime = Date.now();
             timerInterval = setInterval(() => {
@@ -3100,9 +3230,13 @@ window.uploadToTelegram = function (file) {
         } catch (err) {
             console.error('录音错误:', err);
             if (err.name === 'NotAllowedError') {
-                alert('请允许麦克风权限');
+                voiceToast('请允许麦克风权限', 'error');
             } else if (err.name === 'NotFoundError') {
-                alert('未找到麦克风设备');
+                voiceToast('未找到麦克风设备', 'error');
+            } else {
+                // 原先没有这个分支：NotSupportedError（浏览器不支持所选录音格式）
+                // 之类的错误连提示都没有，按钮点下去毫无反应
+                voiceToast('无法开始录音：' + (err && (err.message || err.name) || err), 'error');
             }
         }
     }
@@ -3125,12 +3259,15 @@ window.uploadToTelegram = function (file) {
 
     function onRecordingStop() {
         const durationMs = Date.now() - startTime;
-        audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        audioBlob = new Blob(audioChunks, { type: recordedMime });
         if (durationMs < VOICE_CONFIG.MIN_RECORD_TIME || audioBlob.size === 0) {
-            alert('录音内容过短或失败，请重试');
+            voiceToast('录音内容过短或失败，请重试', 'error');
             state = 'idle';
             return;
         }
+        // 录完不发、直接再录一次时，旧的 blob URL 会被下面这行覆盖掉。
+        // 原先没人 revoke，它连着 blob 本体一直留在内存里，录多少次漏多少个。
+        dropPendingVoiceBlob();
         // 录音结束后全局保存本地blob和url
         window._lastVoiceBlob = audioBlob;
         window._lastVoiceBlobUrl = URL.createObjectURL(audioBlob);
@@ -3163,7 +3300,11 @@ window.uploadToTelegram = function (file) {
         audio.onended = () => { playBtn.textContent = '试听'; };
         // 删除
         reviewPanel.querySelector('.ctrm-voice-review-btn.delete').onclick = function () {
-            window._lastVoiceBlob = null; window._lastVoiceBlobUrl = null;
+            // 原先只把两个变量置 null，createObjectURL 出来的 URL 从没 revoke 过：
+            // 录一次删一次就永久漏一个 blob，谁也再拿不到它
+            audio.pause();
+            audio.removeAttribute('src');
+            dropPendingVoiceBlob();
             reviewPanel.remove();
             reviewPanel = null;
             state = 'idle';
@@ -3260,9 +3401,13 @@ window.uploadToTelegram = function (file) {
     // 上传并发送语音（修复时长问题）
     async function uploadAndSendVoice(blob, durationMs) {
         console.log('uploadAndSendVoice blob:', blob, typeof blob, blob && blob.size);
-        if (voiceAutoSendLock) return;
+        // 原先这里是裸 return：1 秒内重复触发的语音被静默丢弃，面板照样关掉，
+        // 录音也已经被清掉，用户完全不知道刚才那条没发出去。
+        if (voiceAutoSendLock) return void voiceToast('上一条语音还在发送中，请稍候再试', 'error');
         voiceAutoSendLock = true;
-        const filename = `voice-${Date.now()}.webm`;
+        // 扩展名跟着实际录音格式走：iOS 录出来是 mp4 容器，硬写 .webm 服务端就会
+        // 返回一个 .webm 结尾的 URL，而那个文件根本不是 webm
+        const filename = `voice-${Date.now()}.${recordedExt}`;
         const formData = new FormData();
         formData.append('file', blob, filename);
         const query = new URLSearchParams({
@@ -3292,47 +3437,51 @@ window.uploadToTelegram = function (file) {
                 // 强制保证映射对象存在
                 if (!window._myVoiceBlobs || typeof window._myVoiceBlobs !== 'object') window._myVoiceBlobs = {};
                 if (window._lastVoiceBlobUrl) {
+                    // 同一个 URL 又传了一次时，先把旧的那个 blob URL 放掉
+                    if (window._myVoiceBlobs[voiceUrl] && window._myVoiceBlobs[voiceUrl] !== window._lastVoiceBlobUrl) {
+                        revokeVoiceUrl(window._myVoiceBlobs[voiceUrl]);
+                    }
+                    // 这个 blob URL 的所有权从这里起归 _myVoiceBlobs：H() 拿它当自己
+                    // 语音气泡的 <audio src>，所以不能 revoke，只把待发引用清掉
                     window._myVoiceBlobs[voiceUrl] = window._lastVoiceBlobUrl;
+                    window._lastVoiceBlob = null;
+                    window._lastVoiceBlobUrl = null;
                 }
                 const message = `[语音消息 ${formatTime(durationMs)}] ${voiceUrl}`;
                 const chatInput = document.querySelector('.ctrm-textarea textarea');
-                if (chatInput) {
+                const emitBtn = document.querySelector('.ctrm-emit');
+                if (chatInput && emitBtn) {
                     chatInput.value = message;
-                    document.querySelector('.ctrm-emit').click();
+                    // 发送仍然走主模块的 R()：若被 5 秒节流拦下，那边会提示并保留内容
+                    emitBtn.click();
+                } else {
+                    // 原先这里没有 else：找不到输入框就静默丢弃，语音上传都成功了却什么也没发出去
+                    voiceToast('找不到聊天输入框，语音没能发出；链接已复制到控制台\n' + voiceUrl, 'error');
+                    console.warn('[ctrm] 语音已上传但无法发送:', voiceUrl);
                 }
             } else {
-                alert('语音上传失败');
+                voiceToast('语音上传失败', 'error');
+                dropPendingVoiceBlob();
             }
         } catch (error) {
             console.error('上传错误:', error);
-            alert('语音上传失败，请检查网络\n' + (error && error.message ? error.message : '') + (error && error.stack ? '\n' + error.stack : ''));
+            voiceToast('语音上传失败，请检查网络\n' + (error && error.message ? error.message : ''), 'error');
+            // 上传没成功，没人接管这个 blob URL，直接放掉
+            dropPendingVoiceBlob();
         } finally {
             setTimeout(() => voiceAutoSendLock = false, 1000);
         }
     }
 })();
-// ... existing code ...
 
-function alignRecordingIndicator() {
-    const btn = document.getElementById('ctrm-voice-btn');
-    const indicator = document.querySelector('.ctrm-voice-recording-indicator');
-    if (btn && indicator && indicator.style.display !== 'none') {
-        const rect = btn.getBoundingClientRect();
-        indicator.style.position = 'fixed';
-        indicator.style.left = (rect.left + rect.width / 2) + 'px';
-        indicator.style.top = (rect.top - indicator.offsetHeight - 12) + 'px';
-        indicator.style.transform = 'translateX(-50%)';
-        indicator.style.zIndex = 9999;
-    }
-}
-// 在录音提示显示后立即对齐
-const origStartRecording = startRecording;
-startRecording = async function () {
-    await origStartRecording.apply(this, arguments);
-    setTimeout(alignRecordingIndicator, 10);
-};
-window.addEventListener('resize', alignRecordingIndicator);
-window.addEventListener('scroll', alignRecordingIndicator);
+// 说明：原先这里还有一份 alignRecordingIndicator，以及
+//     const origStartRecording = startRecording;
+//     startRecording = async function () { ... };
+// startRecording 是上面那个 IIFE 的局部函数，顶层作用域取不到它，
+// 这两行必然抛 ReferenceError: startRecording is not defined，
+// 于是它下面的 resize / scroll 监听和 preloadAllVoiceAudios 全都没能注册。
+// 而且即使不报错，包装也是无效的 —— click 处理器捕获的是原函数引用，
+// 重新赋值影响不到它。现在对齐逻辑已挪进 IIFE 内，由 startRecording 直接调用。
 
 // 语音气泡后台预加载，提升点击体验
 function preloadAllVoiceAudios() {
