@@ -1953,7 +1953,7 @@ img.playing {
                     })
                 });
                 var e = C.find(".ctrm-online-item").length;
-                N.text(e)
+                N.text(e), E.show()
             }
 
             function F(t) {
@@ -2432,7 +2432,7 @@ img.playing {
                 // 少数输入法把 compositionend 排在 keydown 之前，只能靠时间差挡掉选词那一下回车
                 return !(80 > Date.now() - ctrmComposeEndAt)
             }
-            document.body.addEventListener("click", j), window.addEventListener("popstate", j), m.on("click", function (t) { return t.stopPropagation() }), m.on("touchstart", function (t) { return t.stopPropagation() }), m.on("touchend", function (t) { return t.stopPropagation() }), m.on("touchmove", function (t) { return t.stopPropagation() }), S.click(function (t) { foldToBall(!0), t.stopPropagation() }), g.click(function () { m.hasClass("ctrm-close") && (m.removeClass("ctrm-close"), S.show(), D.show(), E.hide(), B()) }), D.click(W), x.click(R), w.on("keydown", function (t) {
+            document.body.addEventListener("click", j), window.addEventListener("popstate", j), m.on("click", function (t) { return t.stopPropagation() }), m.on("touchstart", function (t) { return t.stopPropagation() }), m.on("touchend", function (t) { return t.stopPropagation() }), m.on("touchmove", function (t) { return t.stopPropagation() }), S.click(function (t) { foldToBall(!0), t.stopPropagation() }), g.click(function () { m.hasClass("ctrm-close") && (m.removeClass("ctrm-close"), S.show(), D.show(), E.show(), B()) }), D.click(W), x.click(R), w.on("keydown", function (t) {
                 // 组合态不 preventDefault：那一下回车要留给输入法上屏
                 ctrmIsEnterSend(t) && (t.preventDefault(), R())
             }), b.on("scroll", function () {
@@ -2613,6 +2613,12 @@ var OwO_demo = new OwO({
 #ctrm_ .ctrm-title.glow { background: #fbe6c4 !important; }
 #ctrm_ .ctrm-title-span { font-weight: 600; }
 #ctrm_ .ctrm-title-span strong { font-weight: 600; }
+/* 在线人数。CDN 那套只在折叠态显示它（JS 一展开就 hide），聊着天反而看不见人数，
+   标题栏右边还空一大块。现在两个态都留着（见 O() 末尾的 E.show()），展开态就是标题后
+   面一串灰字，别做成胶囊 —— 标题栏本身已经是粉底了。折叠态的角标样式在下面折叠段里，
+   选择器带 .ctrm-close、排在这条后面，压得住。 */
+#ctrm_ .ctrm-title-countwrap { margin-left: .35em; color: var(--cx-ink-2); font-weight: 400; }
+#ctrm_ .ctrm-title-count { color: var(--cx-brand-ink); }
 
 #ctrm_ .ctrm-title-close,
 #ctrm_ .ctrm-title-reconn {
@@ -2954,8 +2960,8 @@ var OwO_demo = new OwO({
    style 上（真要压饱和度得叠一层 background-image 渐变，background-color 压不过它）。 */
 #ctrm_ .ctrm-dialog-item .ctrm-dialog-bubble { border-radius: 14px 14px 14px 4px; }
 #ctrm_ .ctrm-dialog-item.ctrm-me .ctrm-dialog-bubble { border-radius: 14px 14px 4px 14px; }
-#ctrm_.ctrm-mobile .ctrm-dialog-item .ctrm-dialog-bubble { border-radius: 16px 16px 16px 5px; }
-#ctrm_.ctrm-mobile .ctrm-dialog-item.ctrm-me .ctrm-dialog-bubble { border-radius: 16px 16px 5px 16px; }
+#ctrm_.ctrm-mobile .ctrm-dialog-item .ctrm-dialog-bubble { border-radius: 10px 10px 10px 3px; }
+#ctrm_.ctrm-mobile .ctrm-dialog-item.ctrm-me .ctrm-dialog-bubble { border-radius: 10px 10px 3px 10px; }
 
 /* @我 的高亮：深粉实底 + 白字（5:1），落在任何一种气泡底色上都读得出来。
    padding 必须有、且要用 em 不用 px —— 999px 圆角会切进首尾那两个字，而移动端气泡是
@@ -2984,20 +2990,24 @@ var OwO_demo = new OwO({
     color: #fff;
     border-radius: 50%;
     transition: background .18s;
+    /* CDN 的 bottom:28% 让按钮落在工具条那一排上，看着像第五个工具按钮。输入框占
+       25%、工具条 27px，再往上留 8px 才是浮在消息区里面。 */
+    bottom: calc(25% + 35px);
 }
 #ctrm_ .ctrm-bottom:hover { background: var(--cx-brand-deep); }
-/* 移动端把原值钉回去，一个像素都别动：CDN 那边是 transform:scale(2) + transform-origin:0 40%，
-   缩放基准是元素自己的盒子，改 width 会让整颗按钮的视觉位置跟着挪。 */
+/* CDN 手机端是 3vw 的盒子 + transform:scale(2)，缩放基准 (0 40%) 会把按钮往右下角带、
+   越过消息区。直接写成 6vw：视觉尺寸跟缩放后一模一样，位置才算得准。 */
 #ctrm_.ctrm-mobile .ctrm-bottom {
-    width: 3vw;
-    height: 3vw;
-    line-height: 3vw;
-    font-size: 1.75vw;
+    width: 6vw;
+    height: 6vw;
+    line-height: 6vw;
+    font-size: 3.5vw;
+    transform: none;
 }
 
 /* ---------- 工具条按钮 ---------- */
-/* 只改这四个属性。height:22px / padding:2px 5px / margin / font-size 一个都不能碰：
-   .ctrm-dialog 的高度是 calc(75% - 22px)，按这排按钮算的；padding 变宽会折成两排。 */
+/* 盒子不能碰：height:22px / padding:2px 5px / margin 都算进了下面 .ctrm-dialog 的
+   calc 里，变大就折成两排。字号是唯一例外，窄屏那条规则要靠它收掉文字。 */
 #ctrm_ .sb {
     border-radius: var(--cx-pill);
     background: #fff;
@@ -3015,23 +3025,72 @@ var OwO_demo = new OwO({
 #ctrm_ .ThirdPartyImageHost svg { color: var(--cx-brand); }
 #ctrm_ #cfbed svg { color: var(--cx-warm); }
 
-/* ---------- 表情包面板（浮层，给一层淡阴影）---------- */
+/* ---------- 工具条必须永远只有一行 ---------- */
+/* 折成两排 = 输入框和发送键被顶到 .ctrm-container 外面裁掉（手机上的表现就是"看不见
+   发送按钮"）。按钮宽度是固定 px，容器宽度是 vw：五个带文字的按钮要 342px，而
+   .ctrm-panel 只有 24.5vw，视口窄于 1440px 就装不下了。窄屏只留图标 —— 按钮里的
+   文字是裸文本节点、选不中，只能 font-size:0 连锅端（svg 有固定宽高，不受影响），
+   顺手把 flex 的 gap 收掉，否则空文本节点还占 4px。 */
+@media (max-width: 1439px) {
+    #ctrm_ .ctrm-panel .sb { font-size: 0; gap: 0; }
+}
+#ctrm_.ctrm-mobile .ctrm-panel .sb { font-size: 0; gap: 0; }
+/* 图床上传只支持电脑端（按钮 title 里就这么写的），手机上连图标一起收掉 */
+#ctrm_.ctrm-mobile .ThirdPartyImageHost { display: none; }
+/* 这排按钮实际吃掉 22px 高 + 5px 下边距，CDN 的 calc 只减了 22px，差的 5px 一直在把
+   输入框往外顶（桌面端的表现是虚线框底边被裁掉一条）。 */
+#ctrm_ .ctrm-dialog { height: calc(75% - 27px); }
+
+/* ---------- 表情包面板 ---------- */
+/* CDN 那版是"每颗表情一个灰底圆角格子 + 10px 外边距"，格子比表情本身还显眼，横竖还各
+   一条滚动条。这里改成纯网格：格子不要底色，只在 hover 时给一层浅粉；圆角压到 6px
+   —— 表情本身只有 32px，圆角再大整颗就成药丸了。 */
 #ctrm_ .OwO .OwO-body {
     border-color: var(--cx-hairline);
-    border-radius: 12px;
+    border-radius: 10px;
     box-shadow: var(--cx-shadow-pop);
 }
-#ctrm_ .OwO.OwO-up .OwO-body { border-radius: 12px 12px 12px 2px; }
-#ctrm_ .OwO .OwO-body .OwO-items .OwO-item { background: #fdf8f9; border-radius: 8px; }
-/* hover 不要叠重阴影，一颗小表情格子扛不住。抖动动画是原有的，留着。 */
-#ctrm_ .OwO .OwO-body .OwO-items .OwO-item:hover { background: var(--cx-tint); box-shadow: var(--cx-shadow); }
+#ctrm_ .OwO.OwO-up .OwO-body { border-radius: 10px 10px 10px 2px; }
+/* display 只能写在 .OwO-items-show 上：.OwO-items 本身是 display:none，没选中的表情包
+   全靠它藏着，改成 flex 会所有包一起摊开。 */
+#ctrm_ .OwO .OwO-body .OwO-items.OwO-items-show {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 4px;
+    padding: 8px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+#ctrm_ .OwO .OwO-body .OwO-items::-webkit-scrollbar { width: 0; height: 0; }
+#ctrm_ .OwO .OwO-body .OwO-items .OwO-item {
+    margin: 0;
+    padding: 3px;
+    background: transparent;
+    border-radius: 6px;
+}
+/* hover 不要叠阴影，一颗小格子扛不住。抖动动画是原有的，留着。 */
+#ctrm_ .OwO .OwO-body .OwO-items .OwO-item:hover { background: var(--cx-tint); box-shadow: none; }
+/* 手机上面板会盖住标题栏：宽度是内联 width:100%（只有 .OwO-panel 那么宽，一行才放得下
+   四颗），必须 !important 才压得住。90vw 之后右边缘离容器还有一截，不会被裁。 */
+#ctrm_.ctrm-mobile .OwO .OwO-body { width: 90vw !important; }
+/* max-height 同样是内联的 197px，正好切在第五行中间，露半排脑袋。一格 40px + 4px 间距，
+   而 overflow 是裁在 padding 边上（上下各 8px 都算进可视区），所以要 4*44 - 16 = 168px：
+   第五行正好从可视区外面开始。手机上表情区上边缘本来就贴着标题栏下沿，这个值再大就盖过去了。 */
+#ctrm_ .OwO .OwO-body .OwO-items { max-height: 168px !important; }
 #ctrm_ .OwO .OwO-body .OwO-bar {
-    background: #fdf8f9;
+    background: #fff;
     border-top-color: var(--cx-hairline);
-    border-radius: 0 0 12px 12px;
+    border-radius: 0 0 10px 10px;
     color: var(--cx-ink-2);
 }
-#ctrm_ .OwO .OwO-body .OwO-bar .OwO-packages li { border-radius: var(--cx-pill); }
+/* 包名条是横向滚的，滚动条同样藏掉；左右各留 4px，否则选中态那块粉底会怼在面板
+   左下角的圆角上，露出一个直角。 */
+#ctrm_ .OwO .OwO-body .OwO-bar .OwO-packages { padding: 0 4px; scrollbar-width: none; -ms-overflow-style: none; }
+#ctrm_ .OwO .OwO-body .OwO-bar .OwO-packages::-webkit-scrollbar { width: 0; height: 0; }
+#ctrm_ .OwO .OwO-body .OwO-bar .OwO-packages li { border-radius: 6px; }
 #ctrm_ .OwO .OwO-body .OwO-bar .OwO-packages li:hover { background: var(--cx-tint); }
 #ctrm_ .OwO .OwO-body .OwO-bar .OwO-packages .OwO-package-active { background: var(--cx-tint-2); color: var(--cx-brand-ink); }
 
@@ -3063,6 +3122,10 @@ var OwO_demo = new OwO({
     border-radius: var(--cx-pill);
     color: var(--cx-ink);
 }
+/* 名单 75% + 域名榜 25% 已经占满，CDN 还给名单加了 padding-top:2%（百分比内边距按
+   宽度算，约 3px），content-box 下这 3px 是额外撑出来的，域名榜最后一行底部被
+   .ctrm-container 的 overflow:hidden 削掉一条。改 border-box 让内边距算进 75% 里。 */
+#ctrm_ .ctrm-online-wrap { box-sizing: border-box; }
 #ctrm_.ctrm-mobile .ctrm-online-item { border-radius: var(--cx-pill); }
 
 #ctrm_ .ctrm-domain-title { color: var(--cx-ink-2); }
@@ -3104,7 +3167,7 @@ var OwO_demo = new OwO({
             <div class="ctrm-bottom" style="display: none;">⇩</div>
             <div class="ctrm-dialog"></div>
             <button class="sb" id="file" title="选择文件"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M9.035 15.956a1.29 1.29 0 0 0 1.821-.004l6.911-6.911a3.15 3.15 0 0 0 0-4.457l-.034-.034a3.15 3.15 0 0 0-4.456 0l-7.235 7.234a5.031 5.031 0 0 0 7.115 7.115l6.577-6.577a1.035 1.035 0 0 1 1.463 1.464l-6.576 6.577A7.1 7.1 0 0 1 4.579 10.32l7.235-7.234a5.22 5.22 0 0 1 7.382 0l.034.034a5.22 5.22 0 0 1 0 7.383l-6.91 6.91a3.36 3.36 0 0 1-4.741.012l-.006-.005-.012-.011a3.346 3.346 0 0 1 0-4.732L12.76 7.48a1.035 1.035 0 0 1 1.464 1.463l-5.198 5.198a1.277 1.277 0 0 0 0 1.805z" clip-rule="evenodd"/></svg></button>
-             <button data-chevereto-pup-trigger data-target="#editor" class="sb ThirdPartyImageHost" title="上传图片仅支持电脑端,使用的第三方服务"><svg class="flex-shrink-0 size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0z"/></svg>图床上传</button>
+             <button data-chevereto-pup-trigger data-target="#editor" class="sb ThirdPartyImageHost pc" title="上传图片仅支持电脑端,使用的第三方服务"><svg class="flex-shrink-0 size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0z"/></svg>图床上传</button>
               <div class="img-host-dropdown" style="display:none;position:fixed;background:#fff;border:1px solid var(--cx-hairline);border-radius:12px;padding:4px;box-shadow:var(--cx-shadow-pop);z-index:9999;min-width:120px;">
                  <div data-img-host="tutu" style="padding:8px 16px;cursor:pointer;font-size:13px;white-space:nowrap;">tutu.to</div>
                  <div data-img-host="imgdd" style="padding:8px 16px;cursor:pointer;font-size:13px;white-space:nowrap;">imgdd</div>
@@ -3257,7 +3320,9 @@ var OwO_demo = new OwO({
         .image-preview-overlay {
           z-index: 10;
           position: absolute;
-          top: -80px;
+          /* 缩略图 60px + 边框，-80px 会压住工具条那一排按钮。往上挪够 27px 的工具条高度
+             才完全落在消息区里。 */
+          top: -92px;
           left: 6px;
           border-radius: 10px;
           box-shadow: 0 4px 18px rgba(47,36,41,.10);
@@ -3335,9 +3400,10 @@ var OwO_demo = new OwO({
         overlay.style.display = "none";
     }
 
-    // 手机端隐藏图床上传.pc
+    // 手机端隐藏只支持电脑端的按钮。选择器必须限定在 #ctrm_ 里 —— .pc 是宿主页面
+    // 常用的响应式类名，全局找会把人家自己的内容一起藏了。
     if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        document.querySelectorAll(".pc").forEach((el) => (el.style.display = "none"));
+        document.querySelectorAll("#ctrm_ .pc").forEach((el) => (el.style.display = "none"));
     }
 
     async function uploadImage(blob, targetElement) {
