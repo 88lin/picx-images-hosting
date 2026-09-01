@@ -11,41 +11,35 @@
     return l
 }({
     0: [function () {
-        "use strict"; // 启用严格模式，提高代码的安全性和执行效率
-        // 定义一个辅助函数 _createClass，用于创建类的方法和静态属性
+        "use strict";
         var _createClass = function () {
-            // 辅助函数 defineProperties，用于将属性定义到目标对象上
             function defineProperties(target, props) {
-                for (var i = 0; i < props.length; i++) { // 遍历属性数组
-                    var descriptor = props[i]; // 获取当前属性描述符
-                    descriptor.enumerable = descriptor.enumerable || false; // 设置属性是否可枚举
-                    descriptor.configurable = true; // 设置属性是否可配置
-                    if ("value" in descriptor) descriptor.writable = true; // 如果属性描述符中有 value 属性，则设置其可写性
-                    Object.defineProperty(target, descriptor.key, descriptor); // 将属性定义到目标对象上
+                for (var i = 0; i < props.length; i++) {
+                    var descriptor = props[i];
+                    descriptor.enumerable = descriptor.enumerable || false;
+                    descriptor.configurable = true;
+                    if ("value" in descriptor) descriptor.writable = true;
+                    Object.defineProperty(target, descriptor.key, descriptor);
                 }
             }
 
-            // 返回一个函数，用于将方法和静态属性定义到构造函数和原型上
             return function (Constructor, protoProps, staticProps) {
-                if (protoProps) defineProperties(Constructor.prototype, protoProps); // 定义原型属性
-                if (staticProps) defineProperties(Constructor, staticProps); // 定义静态属性
-                return Constructor; // 返回构造函数
+                if (protoProps) defineProperties(Constructor.prototype, protoProps);
+                if (staticProps) defineProperties(Constructor, staticProps);
+                return Constructor;
             };
         }();
-        // 辅助函数 _classCallCheck，用于检查类的实例化
         function _classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) { // 如果 instance 不是 Constructor 的实例
-                throw new TypeError("Cannot call a class as a function"); // 抛出类型错误
+            if (!(instance instanceof Constructor)) {
+                throw new TypeError("Cannot call a class as a function");
             }
         }
-        // 使用立即执行函数表达式 (IIFE) 创建 OwO 类
         (function () {
             var OwO = function () {
-                // OwO 类的构造函数
                 function OwO(option) {
                     var _this = this;
 
-                    _classCallCheck(this, OwO); // 检查类的实例化
+                    _classCallCheck(this, OwO);
 
                     // 定义默认选项 该项api不起作用，在下面另行插入了js
                     var defaultOption = {
@@ -58,97 +52,74 @@
                         api: 'js/owo.json'
                     };
 
-                    // 合并用户传入的选项和默认选项
                     for (var defaultKey in defaultOption) {
                         if (defaultOption.hasOwnProperty(defaultKey) && !option.hasOwnProperty(defaultKey)) {
                             option[defaultKey] = defaultOption[defaultKey];
                         }
                     }
 
-                    // 初始化实例属性
                     this.container = option.container;
                     this.target = option.target;
 
-                    // 根据选项设置容器的类
                     if (option.position === 'up') {
                         this.container.classList.add('OwO-up');
                     }
 
-                    // 创建 XMLHttpRequest 对象
                     var xhr = new XMLHttpRequest();
-
-                    // 设置请求状态变化的回调函数
                     xhr.onreadystatechange = function () {
-                        if (xhr.readyState === 4) { // 请求完成
+                        if (xhr.readyState === 4) {
                             if (xhr.status >= 200 && xhr.status < 300 || xhr.status === 304) {
-                                _this.odata = JSON.parse(xhr.responseText); // 解析 JSON 数据
+                                _this.odata = JSON.parse(xhr.responseText);
                                 Object.keys(_this.odata).forEach(function (key) {
                                     if (key === "颜文字" || key.indexOf("小黄豆") !== -1) {
                                         delete _this.odata[key];
                                     }
                                 });
 
-                                _this.init(option); // 初始化 OwO
+                                _this.init(option);
                             } else {
-                                console.log('OwO data request was unsuccessful: ' + xhr.status); // 请求失败
+                                console.log('OwO data request was unsuccessful: ' + xhr.status);
                             }
                         }
                     };
 
-                    // 打开请求并发送
                     xhr.open('get', option.api, true);
                     xhr.send(null);
                 }
 
-                // 使用 _createClass 定义 OwO 类的方法
                 _createClass(OwO, [{
                     key: 'init',
                     value: function init(option) {
                         var _this2 = this;
 
                         this.area = option.target;
-                        this.packages = Object.keys(this.odata); // 获取表情包的键
+                        this.packages = Object.keys(this.odata);
 
-                        // 生成 HTML 内容
                         var html = '\n <div class="OwO-logo sb">' + option.logo + '</div>\n <div class="OwO-body" style="width: ' + option.width + '">';
 
-                        // 遍历表情包，生成表情列表
                         for (var i = 0; i < this.packages.length; i++) {
                             html += '\n <ul class="OwO-items OwO-' + this.odata[this.packages[i]].name + ' OwO-items-' + this.odata[this.packages[i]].type + '" style="max-height: ' + (parseInt(option.maxHeight) - 53 + 'px') + ';">';
                             var opackage = this.odata[this.packages[i]].container;
 
-                            // 遍历表情包中的每个表情
-                            for (var _i = 0; _i < opackage.length; _i++) { // 遍历当前表情包中的所有表情
-                                if (this.odata[this.packages[i]].type === 'image-zl') { // 如果当前表情包的类型是 'image'
+                            for (var _i = 0; _i < opackage.length; _i++) {
+                                if (this.odata[this.packages[i]].type === 'image-zl') {
                                     html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '">' + '<img data-original="' + 'https://emoticons.z-l.top/' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '.png" src="" icon="' + opackage[_i].text + '" referrerpolicy="no-referrer"></li>';
-                                } else if (this.odata[this.packages[i]].type === 'image') { // 如果当前表情包的类型是 'image'
+                                } else if (this.odata[this.packages[i]].type === 'image') {
                                     html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + opackage[_i].text + '">' + '<img data-original="' + 'https://cdn.jsdmirror.com/gh/btwoa/Fluent-Emoji-3D/' + opackage[_i].text + '.gif" src="" icon="' + opackage[_i].text + '" referrerpolicy="no-referrer"></li>';
-                                    // 追加一个新的 <li> 元素到 html 变量中，表示一个图片表情项
-                                    // - class="OwO-item" 设置表情项的类名
-                                    // - title="' + opackage[_i].text + '" 设置表情项的标题（悬停时显示的提示）
-                                    // - data-input="' + this.odata[this.packages[i]].name + ":" + opackage[_i].icon + '" 设置自定义属性 data-input，用于插入到文本域中的内容
-                                    // - <img> 元素用于显示图片表情
-                                    //   - data-original="' + 'https://emoticons.z-l.top/' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '.png"' 设置图片的原始 URL（懒加载时使用）
-                                    //   - src="" 图片初始 src 为空，懒加载时会动态加载
-                                    //   - icon="' + opackage[_i].text + '" 设置自定义属性 icon，用于存储表情的文字表示
-                                } else if (this.odata[this.packages[i]].type === 'cat') { // 如果当前表情包的类型是 'image'
+                                } else if (this.odata[this.packages[i]].type === 'cat') {
                                     html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + opackage[_i].icon + '">' + '<img data-original="' + 'https://npm.elemecdn.com/blobcat@1.0.0' + "/" + opackage[_i].icon + '.png" src="" icon="' + opackage[_i].text + '" referrerpolicy="no-referrer"></li>';
-                                } else if (this.odata[this.packages[i]].type === 'bb_') { // 如果当前表情包的类型是 'image'
+                                } else if (this.odata[this.packages[i]].type === 'bb_') {
                                     html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + opackage[_i].icon + '">' + '<img data-original="' + 'https://unpkg.com/@waline/emojis@1.1.0/bilibili/bb_' + opackage[_i].icon + '.png" src="" icon="' + opackage[_i].text + '" referrerpolicy="no-referrer"></li>';
-                                } else if (this.odata[this.packages[i]].type === 'tuzki') { // 如果当前表情包的类型是 'image'
+                                } else if (this.odata[this.packages[i]].type === 'tuzki') {
                                     html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + opackage[_i].icon + '">' + '<img data-original="' + 'https://tools.kalvinbg.cn/static/image/emotion/tuzki/' + opackage[_i].icon + '.gif" src="" icon="' + opackage[_i].text + '" style="min-height:4rem" referrerpolicy="no-referrer"></li>';
-                                } else if (this.odata[this.packages[i]].type === 'quicker') { // 新增Quicker表情包类型
+                                } else if (this.odata[this.packages[i]].type === 'quicker') {
                                     html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="quicker/' + opackage[_i].icon + '">' + '<img data-original="https://files.getquicker.net/_sitefiles/_guides/52593d69-c99a-4367-8b98-08d9a65be47e/2022/07/04/' + opackage[_i].icon + '.png" src="" icon="' + opackage[_i].text + '" referrerpolicy="no-referrer"></li>';
-                                } else if (this.odata[this.packages[i]].type === 'quicker-gif') { // 新增Quicker-GIF表情包类型
+                                } else if (this.odata[this.packages[i]].type === 'quicker-gif') {
                                     html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + opackage[_i].icon + '">' + '<img data-original="https://files.getquicker.net/_sitefiles/_guides/52593d69-c99a-4367-8b98-08d9a65be47e/2022/07/06/' + opackage[_i].icon + '.gif" src="" icon="' + opackage[_i].text + '" referrerpolicy="no-referrer"></li>';
-                                } else if (this.odata[this.packages[i]].type === 'ka_pian_men') { // 新增卡片门表情包类型
+                                } else if (this.odata[this.packages[i]].type === 'ka_pian_men') {
                                     html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + opackage[_i].icon + '">' + '<img data-original="https://files.getquicker.net/_sitefiles/_guides/52593d69-c99a-4367-8b98-08d9a65be47e/2022/03/27/' + opackage[_i].icon + '.gif" src="" icon="' + opackage[_i].text + '" referrerpolicy="no-referrer"></li>';
                                 } else {
                                     html += '\n <li class="OwO-item" title="' + opackage[_i].text + '">' + opackage[_i].icon + '</li>';
-                                    // 追加一个新的 <li> 元素到 html 变量中，表示一个文字表情项
-                                    // - class="OwO-item" 设置表情项的类名
-                                    // - title="' + opackage[_i].text + '" 设置表情项的标题（悬停时显示的提示）
-                                    // - 直接插入 opackage[_i].icon 表情的文字表示
                                 }
                             }
 
@@ -156,7 +127,6 @@
                             html += '\n </ul>';
                         }
 
-                        // 生成表情包选项卡
                         html += '\n <div class="OwO-bar">\n <ul class="OwO-packages">';
 
                         for (var _i2 = 0; _i2 < this.packages.length; _i2++) {
@@ -164,9 +134,8 @@
                         }
 
                         html += '\n </ul>\n </div>\n </div>\n ';
-                        this.container.innerHTML = html; // 设置容器的 HTML 内容
+                        this.container.innerHTML = html;
 
-                        // 绑定事件
                         this.logo = this.container.getElementsByClassName('OwO-logo')[0];
                         this.logo.addEventListener('click', function () {
                             _this2.toggle();
@@ -175,7 +144,6 @@
                         this.container.getElementsByClassName('OwO-body')[0].addEventListener('click', function (e) {
                             var target = null;
 
-                            // 判断点击的是表情项还是表情项的子元素
                             if (e.target.classList.contains('OwO-item')) {
                                 target = e.target;
                             } else if (e.target.parentNode.classList.contains('OwO-item')) {
@@ -183,13 +151,11 @@
                             }
 
                             if (target) {
-                                // 获取光标位置
                                 var startPos = _this2.area.selectionStart;
                                 var endPos = _this2.area.selectionEnd;
                                 var areaValue = _this2.area.value;
                                 var insertContent;
 
-                                // 插入表情文本或图像标记
                                 if (target.dataset.hasOwnProperty("input")) {
                                     if (target.dataset.input && target.dataset.input.startsWith('quicker/')) {
                                         insertContent = "【" + target.dataset.input.replace('quicker/', '') + "】";
@@ -200,18 +166,16 @@
                                     insertContent = target.innerHTML;
                                 }
 
-                                _this2.area.value = areaValue.slice(0, startPos) + insertContent + areaValue.slice(endPos); // 插入表情
+                                _this2.area.value = areaValue.slice(0, startPos) + insertContent + areaValue.slice(endPos);
                                 _this2.area.selectionStart = startPos + insertContent.length;
                                 _this2.area.selectionEnd = startPos + insertContent.length;
-                                _this2.area.focus(); // 聚焦到光标位置
-
-                                _this2.toggle(); // 切换 OwO 状态
+                                _this2.area.focus();
+                                _this2.toggle();
                             }
                         });
 
                         this.packagesEle = this.container.getElementsByClassName('OwO-packages')[0];
 
-                        // 绑定选项卡点击事件
                         var _loop = function _loop(_i3) {
                             (function (index) {
                                 _this2.packagesEle.children[_i3].addEventListener('click', function () {
@@ -224,19 +188,17 @@
                             _loop(_i3);
                         }
 
-                        this.tab(0); // 默认选中第一个表情包
+                        this.tab(0);
                     }
                 }, {
                     key: 'toggle',
                     value: function toggle() {
-                        // 切换 OwO 容器的显示状态
                         if (this.container.classList.contains('OwO-open')) {
                             this.container.classList.remove('OwO-open');
                         } else {
                             this.container.classList.add('OwO-open');
                         }
 
-                        // 懒加载该区域类的图片
                         try {
                             $("img").lazyload({
                                 effect: "fadeIn"
@@ -254,14 +216,13 @@
                 }, {
                     key: 'tab',
                     value: function tab(index) {
-                        // 切换选项卡显示的表情包
                         var itemsShow = this.container.getElementsByClassName('OwO-items-show')[0];
 
                         if (itemsShow) {
                             itemsShow.classList.remove('OwO-items-show');
                         }
 
-                        this.container.getElementsByClassName('OwO-items')[index].classList.add('OwO-items-show'); // 切换选项卡的选中状态
+                        this.container.getElementsByClassName('OwO-items')[index].classList.add('OwO-items-show');
 
                         var packageActive = this.container.getElementsByClassName('OwO-package-active')[0];
 
@@ -269,7 +230,7 @@
                             packageActive.classList.remove('OwO-package-active');
                         }
 
-                        this.packagesEle.getElementsByTagName('li')[index].classList.add('OwO-package-active'); // 懒加载该区域类的图片
+                        this.packagesEle.getElementsByTagName('li')[index].classList.add('OwO-package-active');
 
                         try {
                             $("img").lazyload({
@@ -287,10 +248,9 @@
                     }
                 }]);
 
-                return OwO; // 返回 OwO 类
+                return OwO;
             }();
 
-            // 判断模块环境，导出 OwO 类
             if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
                 module.exports = OwO;
             } else {
@@ -1231,12 +1191,8 @@
 
             function jt(t, e, n) { for (var r, i = e ? w.filter(e, t) : t, o = 0; null != (r = i[o]); o++) n || 1 !== r.nodeType || w.cleanData(st(r)), r.parentNode && (n && w.contains(r.ownerDocument, r) && ct(st(r, "script")), r.parentNode.removeChild(r)); return t }
             w.extend({
-                // 上游 jQuery 3.5.0 的 CVE-2020-11022 / CVE-2020-11023 修复：
-                // 原实现 `t.replace(xt, "<$1></$2>")` 会把自闭合标签改写成成对标签，
-                // 攻击者可借此让 <option>/<noscript> 等上下文里的内容被重新当成 HTML 解析。
-                // 3.5.0 起直接原样返回。本项目模板里的自闭合标签全是 SVG 子元素
-                // （path / rect / polygon / animate），保持自闭合本身就是合法且正确的，
-                // 而且 xt 没有 g 标志、原先每个字符串只改写第一处，行为本来就不一致。
+                // CVE-2020-11022/11023 修复：原实现 t.replace(xt, "<$1></$2>") 会重写自闭合标签，
+                // 3.5.0 起原样返回。模板里的自闭合标签全是 SVG 子元素，别改回去。
                 htmlPrefilter: function (t) { return t },
                 clone: function (t, e, n) {
                     var r, i, o, a, s, c, l, u = t.cloneNode(!0),
@@ -1620,11 +1576,8 @@
                 t = "wss://topurl.cn:9001",
                 f = (i = window.jQuery ? window.jQuery : M("jQuery-slim"))(M("./dom.js"));
 
-            // 这份内联 jQuery 是按 CommonJS 分支初始化的（noGlobal = true），末尾那句
-            // `t || (h.jQuery = h.$ = w)` 不会执行，所以它不创建 window.$。
-            // 而下面 fancybox、lazyload 几处用的是裸 $：宿主页面若没自带 jQuery 就是
-            // ReferenceError，且抛点在 H() 里 append 消息之前 —— 一条消息都渲染不出来。
-            // 这里把真正在用的实例补挂为全局，消除对宿主页面的隐式依赖。
+            // 内联 jQuery 走的是 CommonJS 分支，不会自己创建 window.$；下面 fancybox、
+            // lazyload 用的是裸 $，宿主页面不一定有，所以在这里补挂全局。
             if (!window.jQuery) window.jQuery = i;
             if (!window.$) window.$ = i;
 
@@ -1643,17 +1596,12 @@
                 N = m.find(".ctrm-title-count"),
                 S = m.find(".ctrm-title-close"),
                 D = m.find(".ctrm-title-reconn"),
-                // 上行 char 字段。原实现取 btoa(encodeURIComponent($(".ctrm-title-url a").attr("href") || "domain"))
-                // 的第 1/3/7/9 个字符，但 .ctrm-title-url 在 dom.js 模板里从来不存在，A 恒为
-                // btoa("domain") = "ZG9tYWlu"（仅 8 字符），A[9] 越界得到 undefined，
-                // 拼接后每次上行的都是常量 "Gtuundefined"。服务端一直按这个值在收，
-                // 因此保持线上取值不变，只去掉越界读取和那次无效查询。
-                // 如果 char 本应随域名变化，那是服务端契约问题，要连协议一起改。
+                // 上行的 char 字段。服务端一直按这个常量在收，别改（原实现从一个不存在的
+                // 元素上取字符，结果恒等于此值）。
                 L = "Gtuundefined";
 
             function j() { setTimeout(function () { m.hasClass("ctrm-close") || document.activeElement !== w.get(0) && S.click() }, 1) }
 
-            // 把文本安全地放进 HTML 上下文
             function escapeHtml(t) {
                 return null == t ? "" : String(t)
                     .replace(/&/g, "&amp;")
@@ -1663,8 +1611,7 @@
                     .replace(/'/g, "&#39;");
             }
 
-            // 轻量非阻塞提示条。原先反馈全走 alert()（阻塞、丑），而节流命中时连 alert
-            // 都没有，消息被静默丢弃。挂到 window 上供文件末尾那几个独立 IIFE 复用。
+            // 轻量非阻塞提示条。挂到 window 上供文件末尾那几个独立 IIFE 复用。
             function ctrmToast(msg, type) {
                 var el = document.createElement("div");
                 el.className = "ctrm-toast";
@@ -1673,19 +1620,14 @@
                 el.style.cssText = "position:fixed;left:50%;bottom:88px;transform:translateX(-50%);" +
                     "max-width:78vw;padding:8px 16px;border-radius:16px;font-size:14px;line-height:1.4;" +
                     "color:#fff;z-index:100000;pointer-events:none;white-space:pre-wrap;text-align:center;" +
-                    // 阴影比原来轻一半多（原来是 rgba(0,0,0,.18)）。提示条是浮在页面上的，
-                    // 需要一点分离，但不需要一坨黑。
                     "box-shadow:0 4px 18px rgba(47,36,41,.16);background:" +
-                    // 红和绿是语义色，故意不进配色表：主色本身是粉的，报错要是也用粉系
-                    // 就分不出"出错了"还是"普通提示"。info 才跟着主色走。
+                    // 红绿是语义色，故意不进配色表：主色是粉的，报错也用粉系就分不出来了。
                     ("error" === type ? "#b8362b" : "success" === type ? "#2f7a4f" : "var(--cx-brand-ink)");
                 document.body.appendChild(el);
                 setTimeout(function () { el.parentNode && el.parentNode.removeChild(el) }, 2600)
             }
             window.__ctrmToast = ctrmToast;
 
-            // 一次性注入样式。原先 H() 每收到一条消息就往 head 塞一个 <style>（内容完全一样），
-            // 500 条消息就是 500 个标签。
             function injectStyleOnce(id, css) {
                 if (document.getElementById(id)) return;
                 var el = document.createElement("style");
@@ -1694,15 +1636,14 @@
                 document.head.appendChild(el)
             }
 
-            // 生成页面内唯一的 DOM id。凡是拿消息内容拼 id 的地方都必须用它：
-            // 相同内容的两条消息会拼出相同 id，getElementById 只认第一个。
+            // 凡是拿消息内容拼 DOM id 的地方都必须用它：同内容的两条消息会撞 id。
             var ctrmUidSeq = 0;
 
             function ctrmUid(prefix) {
                 return (prefix || "ctrm") + "-" + Date.now().toString(36) + "-" + (++ctrmUidSeq)
             }
 
-            // ===== 以下都是原先写在 H() 里、每条消息重复执行一遍的一次性工作 =====
+            // ===== 以下是一次性初始化用的常量和函数，不要挪回 H() 里 =====
 
             var CTRM_VOICE_CSS = `
 .ctrm-voice-bubble {
@@ -1710,9 +1651,7 @@
   align-items: center;
   background: #fdf8f9;
   border-radius: 18px;
-  /* 原来是 box-shadow: 0 2px 8px rgba(0,0,0,.04) —— 这块东西本来就长在气泡里，
-     不是浮层，投影没有意义。换成 inset 描一圈发丝线：既能跟气泡底色分开，
-     又不像真 border 那样把盒子撑大（这里没写 box-sizing:border-box）。 */
+  /* 用 inset 描边而不是 border：这里没写 box-sizing:border-box，border 会把盒子撑大。 */
   box-shadow: inset 0 0 0 1px rgba(47,36,41,.10);
   padding: 6px 16px 6px 10px;
   min-height: 38px;
@@ -1778,7 +1717,6 @@ img.playing {
 }
 `;
 
-            // 灯箱配置原先内联在 H() 里，每条消息重新构造一次对象
             var CTRM_FANCYBOX_OPTS = {
                 caption: function (instance, item) { return i(this).find("img").attr("alt") },
                 loop: !0,
@@ -1810,8 +1748,7 @@ img.playing {
                     .fancybox(CTRM_FANCYBOX_OPTS)
             }
 
-            // fancybox 走的是 dom.js 里的异步外链脚本，比首批历史消息晚到。
-            // 等它就绪后补一次全量绑定，之后每条新消息只绑自己那一份。
+            // fancybox 是异步外链脚本，比首批历史消息晚到，就绪后补一次全量绑定。
             function ctrmWhenFancyboxReady() {
                 var tries = 0,
                     timer = setInterval(function () {
@@ -1832,8 +1769,6 @@ img.playing {
                 p.then(function () {
                     bubble.classList.add("playing"), window._voicePlaying = audio
                 }).catch(function (err) {
-                    // AbortError 原先是三套处理器互相打断造成的，合并成一套后不该再出现；
-                    // 真出现也只提示一次，不再 100ms 后盲目重试。
                     bubble.classList.remove("playing"),
                         ctrmToast("无法播放语音：" + (err && err.message || err), "error")
                 })
@@ -1861,7 +1796,7 @@ img.playing {
                 audio.onloadedmetadata = function () {
                     isFinite(audio.duration) && label && (label.textContent = ctrmVoiceLabel(audio.duration))
                 };
-                // 元数据还没到就先 load()，用 canplay 续上，不要像原来那样再 click 一次递归
+                // 元数据还没到就先 load()，用 canplay 续上
                 if (audio.readyState < 2) return audio.load(), void (audio.oncanplay = function () {
                     audio.oncanplay = null, ctrmPlayVoice(bubble, audio)
                 });
@@ -1885,7 +1820,7 @@ img.playing {
                 injectStyleOnce("ctrm-voice-bubble-style", CTRM_VOICE_CSS);
                 injectStyleOnce("ctrm-playing-anim-style", CTRM_PLAYING_CSS);
                 ctrmBindVoicePlayback();
-                // 点击昵称 -> @他。一次性委托，取代原来每条消息全量 off/on 所有历史发送者。
+                // 点击昵称 -> @他。一次性委托，不要改回每条消息重新绑定。
                 b.on("click", ".ctrm-dialog-sender", function () {
                     var item = this.parentNode;
                     if (item && -1 < item.className.indexOf("ctrm-me")) return;
@@ -1894,10 +1829,8 @@ img.playing {
                 ctrmWhenFancyboxReady()
             }
 
-            // 这个 jQuery build 用 -manipulation/_evalUrl 剪掉了 _evalUrl，
-            // 于是 domManip 里 `c.src ? w._evalUrl && w._evalUrl(c.src) : DOMEval(...)`
-            // 对带 src 的 script 直接跳过 —— dom.js 模板里的 fancybox、图床脚本
-            // 会被插入 DOM 但永远不执行。这里显式重建成新 script 节点触发加载。
+            // 这个 jQuery build 剪掉了 _evalUrl，带 src 的 <script> 插进 DOM 后不会执行
+            // （模板里的 fancybox、图床脚本都是这种），所以重建成新节点触发加载。
             function loadDeferredScripts(nodes) {
                 nodes.filter("script[src]").each(function () {
                     var old = this,
@@ -1917,8 +1850,7 @@ img.playing {
                 stalledTicks = 0,
                 unloading = !1;
 
-            // 上行心跳复用已有的 update 帧：服务端本来就在收这个类型（排行榜就是它驱动的），
-            // 不必为 ping 新增一个服务端可能不认的协议类型。25s 短于常见代理 60s 的空闲断连。
+            // 心跳复用已有的 update 帧（服务端本来就收这个类型）。25s 短于代理常见的 60s 空闲断连。
             function ctrmSendHello() {
                 try {
                     n && 1 === n.readyState &&
@@ -1934,9 +1866,7 @@ img.playing {
                     reconnectTimer = setTimeout(function () { reconnectTimer = null, _() }, wait + Math.floor(1e3 * Math.random()))
             }
 
-            // 立刻重连，不走退避。只在拿到明确外部信号时用（回到前台、网络恢复、页面从
-            // back/forward cache 恢复）—— 这些时候干等最多 30s 的退避，用户看到的就是
-            // "还卡在掉线"。
+            // 立刻重连，不走退避。只在拿到明确外部信号时用（回前台、网络恢复、bfcache 恢复）。
             function ctrmReconnectNow(reason) {
                 if (unloading) return;
                 console.warn("[ctrm] 立即重连：" + reason),
@@ -1952,19 +1882,15 @@ img.playing {
                 sock.onopen = function () {
                     if (sock !== n) return;
                     reconnectDelay = 1e3, offlineNoticed = !1;
-                    // 获取当前页面的完整域名，包括协议和端口
                     ctrmSendHello();
                     clearInterval(heartbeatTimer), heartbeatTimer = setInterval(ctrmSendHello, 25e3);
                     clearInterval(a), a = setInterval(q, 15e3)
                 };
-                // onmessage / onclose / onerror 现在在这里就挂上。原先三个全写在 onopen 内部，
-                // 首次就连不上时一个回调都没挂，完全静默 —— 连"您已掉线"都不弹。
                 sock.onerror = function () { sock === n && console.warn("[ctrm] WebSocket 出错，等 onclose 后重连") };
                 sock.onclose = function () { sock === n && (z(), ctrmScheduleReconnect()) };
                 sock.onmessage = function (ev) {
                     sock === n && function (t) {
                         var e;
-                        // 一个坏帧原先能让整条 onmessage 抛出
                         try { e = JSON.parse(t.data) } catch (err) { return void console.warn("[ctrm] 收到无法解析的帧", t.data) }
                         var n = e.type,
                             r = e.data;
@@ -1973,10 +1899,7 @@ img.playing {
                                     s = r.id, c = r.name,
                                         function (t) {
                                             if (!t || 0 === t.length) return;
-                                            // 自动重连后服务端会重新下发整份 history。原先这里直接 append，
-                                            // 于是每自动重连一次，整份聊天记录就在下面重复一遍
-                                            // （W() 手动重连有 remove，ctrmScheduleReconnect() 那条路没有）。
-                                            // 只在确实要重画 history 时才清，服务端不带 history 时不会误删。
+                                            // 重连后服务端会重发整份 history，先清旧的再画，否则记录会重复一遍。
                                             b.find(".ctrm-dialog-item").remove();
                                             t.forEach(function (t) { H(t, !0) })
                                         }(r.history),
@@ -2010,11 +1933,9 @@ img.playing {
                 };
             }
 
-            // 看门狗：readyState 不是 OPEN 就提示并排重连。原先只调 z()，从不重连。
-            // 另外再查一次发送缓冲：半开连接（笔记本睡眠、NAT 超时、换网）上 readyState
-            // 会一直停在 OPEN，onclose 要等操作系统 TCP 重传彻底放弃才来，可能十几分钟。
-            // 心跳帧只有几十字节，连着 4 个 15s 周期都排不出去，这条连接就是死的。
-            // 这个判据不依赖服务端回不回话，安静的房间也不会误判。
+            // 看门狗。除了看 readyState，还要查发送缓冲：半开连接（睡眠、NAT 超时、换网）上
+            // readyState 会一直停在 OPEN，onclose 可能十几分钟才来。心跳只有几十字节，连着
+            // 4 个 15s 周期都排不出去就是死连接；这个判据不依赖服务端回话，安静房间也不误判。
             function q() {
                 if (!n) return;
                 if (1 !== n.readyState) return z(), void ctrmScheduleReconnect();
@@ -2046,21 +1967,18 @@ img.playing {
                 return (r = "hours" === e ? "" + n.getHours() : "" + n.getMinutes()) === r[0] && (r = "0" + r), r
             }
 
-            // 消息列表裁剪。原先 .ctrm-dialog-item 只有 W()（手动重连）会清，挂两三个
-            // 小时就是几千个节点 + 全部图片/iframe/语音都留在内存里；手机上标签页会被
-            // 系统回收，用户看到的和掉线一模一样 —— 同样要点刷新。
-            // 稳态保留 300 条；攒到 350 才裁一次，不然每来一条消息都要动一次 DOM。
+            // 消息列表裁剪：不裁的话挂几小时就是几千个节点 + 图片/iframe/语音全留在内存里，
+            // 手机上标签页会被系统回收。稳态保留 300 条，攒到 350 才裁一次。
             var CTRM_MSG_KEEP = 300,
                 CTRM_MSG_TRIM_AT = 350,
                 // 用户滚上去看历史时先不裁，但不能真的无上限，到这个数照裁
                 CTRM_MSG_HARD_CAP = 600;
 
-            // 摘掉一批消息之前的收尾：返回它们持有的 blob: 地址，交给下面去放。
+            // 返回这批消息持有的 blob: 地址，交给 ctrmReleaseVoiceBlobs 去放。
             function ctrmDetachVoices(scope) {
                 var srcs = [];
                 scope.find("audio").each(function () {
-                    // 正在播的那条被裁掉了：脱离文档的 <audio> 还会继续出声，
-                    // 而气泡已经没了，用户没有任何办法让它停下来
+                    // 脱离文档的 <audio> 还会继续出声，而气泡已经没了，用户没法让它停
                     if (window._voicePlaying === this) {
                         try { this.pause() } catch (err) { }
                         window._voicePlaying = null
@@ -2071,8 +1989,7 @@ img.playing {
                 return srcs
             }
 
-            // 自己录的语音，那份 blob 被 window._myVoiceBlobs 攥着，消息裁掉了它还在占内存。
-            // 放掉是安全的：真要重画历史，H() 查不到本地副本就退回用服务器上的地址，照样能播。
+            // 放掉是安全的：H() 查不到本地副本会退回用服务器地址，照样能播。
             // 必须等节点已经从列表里摘掉之后再查引用 —— 同一个 blob 可能被多条消息引用。
             function ctrmReleaseVoiceBlobs(srcs) {
                 var map = window._myVoiceBlobs;
@@ -2090,8 +2007,7 @@ img.playing {
                 var items = b.children(".ctrm-dialog-item"),
                     drop = items.length - CTRM_MSG_KEEP;
                 if (0 >= drop) return;
-                // o 为假说明用户滚上去在看历史（滚动处理器在维护它），这时裁掉的正是
-                // 他在看的那一段，先攒着
+                // o 为假 = 用户滚上去在看历史，裁掉的正是他在看的那段，先攒着
                 if (!o && items.length <= CTRM_MSG_HARD_CAP) return;
                 var dropped = items.slice(0, drop),
                     scrollBefore = el.scrollTop,
@@ -2099,32 +2015,23 @@ img.playing {
                     blobs = ctrmDetachVoices(dropped);
                 dropped.remove();
                 ctrmReleaseVoiceBlobs(blobs);
-                // 裁掉的都在视口上方。钉底时 H() 随后的 I() 会重新贴底，不用管；
-                // 否则要按删掉的高度回补 scrollTop，不然用户正在读的那段会整体往上蹦。
+                // 裁掉的都在视口上方：钉底时随后的 I() 会贴底，否则要按删掉的高度回补 scrollTop。
                 o || (el.scrollTop = Math.max(0, scrollBefore - (heightBefore - el.scrollHeight)))
             }
 
-            // quiet 为真 = 这条不算"新消息"，折叠成球时不要闪。
-            // 两个地方会传：重连后服务端重发的整份 history，和"连接已断开"那条系统提示。
-            // 从别的标签页切回来时，被节流的连接常常已经断了，于是这两件事一起发生 ——
-            // 原先每条都闪一下，球上就一直挂着一圈光。
+            // quiet 为真 = 这条不算"新消息"，折叠成球时不闪。两处会传真：重连后重发的整份
+            // history，和"连接已断开"那条系统提示（切回标签页时这两件事常常一起发生）。
             function H(t, quiet) {
-                // 调用消息处理函数
                 F(t);
 
-                // 正文来自其他访客，先整体转义，再交给下面的富文本流水线。
-                // 在此之前 t.msg 是原样拼进 HTML 字符串、再由 i(e) 解析的，任何人发
-                // <img src=x onerror=...> 或 <script> 都会在整个房间里执行。
-                // 转义之后，只有下面这些正则显式产出的标签才会成为真正的 HTML。
+                // 正文来自其他访客，先整体转义；之后只有下面这些正则显式产出的标签才是真 HTML。
                 t.msg = escapeHtml(t.msg);
                 t.name = escapeHtml(t.name);
 
                 // @我 高亮：c 是服务端下发的昵称，要与已转义的正文同形才能匹配上
                 var selfName = escapeHtml(c);
 
-                // 使用正则表达式进行替换
-                // 两个 URL 分支原先用 .*（贪婪且能跨越空白），一行里出现两个图片链接时
-                // 会被合并成一个坏 src，这里收紧成"不含空白/引号/尖括号"的字符类。
+                // 字符类不能放宽成 .*：贪婪且跨空白，一行两个图片链接会被合并成一个坏 src。
                 t.msg = t.msg.replace(
                     /\[url=([^\]]+)\](?:\[img\][^\]]*\[\/img\]) ?\[\/url\]|(https?:\/\/[^\s<>"]*\.(?:png|jpg|jpeg|gif|webp|svg|bmp|apng|ico|tiff|avif|heic|tga|jxr))|(https?:\/\/[^\s<>"]*\.tutu\.to\/[^\s<>"]*\/[^"\s]+)/gi,
                     '<a data-fancybox="gallery" data-src="$1$2$3"><img src="$1$2$3" alt="$1$2$3" style="max-width: 100%;" referrerpolicy="no-referrer"></a>'
@@ -2145,8 +2052,7 @@ img.playing {
                 t.msg = t.msg.replace(/\/?jp (.+)/, '<img src="https://api.cenguigui.cn/api/jp/?msg=$1" alt="Image" style="max-width: 100%;" referrerpolicy="no-referrer">');
 
                 t.msg = t.msg.replace(/(https?:\/\/[^\s<>"]*\.(?:mp4|avi|m3u8))/gi, function (match, url, offset, whole) {
-                    // iOS Safari 不支持 webm 录音，那边录出来是 mp4 容器。这条规则跑在
-                    // 语音气泡之前，不排除的话 iOS 语音会被当成普通视频渲染成播放器 iframe。
+                    // iOS 录音是 mp4 容器。这条规则跑在语音气泡之前，不排除就会把 iOS 语音当视频。
                     if (/\[语音消息 \d{2}:\d{2}\]\s*$/.test(whole.slice(0, offset))) return match;
                     return '<iframe src="https://www.yemu.xyz/?url=' + url + '" id="player" width="100%" scrolling="no" allowfullscreen="true" allowtransparency="true" marginheight="0" marginwidth="0" frameborder="0"></iframe><a href="https://www.yemu.xyz/?url=' + url + '" target="_blank">点我试试,</a>仅供学习使用<img src="https://npm.elemecdn.com/blobcat@1.0.0/ablobcatheart.png" alt="Image" style="max-width: 2rem;" referrerpolicy="no-referrer">'
                 });
@@ -2188,9 +2094,7 @@ img.playing {
 
                 // v: 这里是文字转语音的代码
                 t.msg = t.msg.replace(/\/?v:([^<]*)?(?:<a[^>]*>[^<]*<\/a>)?/, function (match, $1) {
-                    // 原先这些 id 是拿消息文本拼的（audio-${$1}）：两条同样的 "v:你好"
-                    // 就是两套一模一样的 id，getElementById 永远返回第一条那个节点，
-                    // 第二条的按钮点下去播的是第一条的音频。改成全局唯一。
+                    // id 必须全局唯一，不能拿消息文本拼：同内容的两条消息会撞 id。
                     const uid = ctrmUid("tts");
                     const audioId = `audio-${uid}`;
                     const buttonId = `play-button-${uid}`;
@@ -2199,7 +2103,6 @@ img.playing {
                     const barId = `audio-bar-${uid}`;
                     const transcribeId = `transcribe-button-${uid}`;
 
-                    // 生成 HTML
                     const html = `
     <a class="ctrm-tts-pill" style="display: inline-flex; align-items: center; text-decoration: none; color: inherit; border: 1px solid var(--cx-line); border-radius: 999px; padding: 4px 8px; background-color: #fff; transition: background-color 0.3s, border-color 0.3s; cursor: pointer;">
         <img id="${imgId}" src="//dh.z-l.top/js/语音.svg" alt="audio icon" style="width: 24px; height: 24px; margin-right: 8px;">
@@ -2217,7 +2120,6 @@ img.playing {
     </div>
     `;
 
-                    // 绑定音频事件
                     setTimeout(() => {
                         const button = document.getElementById(buttonId);
                         const audio = document.getElementById(audioId);
@@ -2225,106 +2127,94 @@ img.playing {
                         const audioBar = document.getElementById(barId);
                         const transcribeButton = document.getElementById(transcribeId);
                         const textElement = document.getElementById(textId);
-                        // 消息可能已经被清掉（重连会 remove 所有 .ctrm-dialog-item），
-                        // 那时这里全是 null，下面 addEventListener 会抛在 setTimeout 里没人接
+                        // 消息可能已被清掉（重连会 remove 所有 .ctrm-dialog-item），那时这些全是 null
                         if (!button || !audio || !imgElement || !audioBar || !transcribeButton || !textElement) return;
 
                         audio.addEventListener('loadedmetadata', () => {
                             const duration = formatTime(audio.duration);
-                            button.textContent = duration; // 显示音频总时长
+                            button.textContent = duration;
                         });
 
                         audio.addEventListener('timeupdate', () => {
                             const remainingTime = audio.duration - audio.currentTime;
-                            button.textContent = formatTime(remainingTime); // 更新剩余时间
-
-                            // 更新音频条长度
+                            button.textContent = formatTime(remainingTime);
                             const lengthPercentage = (audio.currentTime / audio.duration) * 100;
                             audioBar.style.width = `${lengthPercentage}%`;
                         });
 
                         audio.addEventListener('ended', () => {
-                            button.textContent = formatTime(audio.duration); // 恢复为总时长
-                            audioBar.style.width = '100%'; // 播放完成后填满条
-                            imgElement.classList.remove('playing'); // 移除播放动画
+                            button.textContent = formatTime(audio.duration);
+                            audioBar.style.width = '100%';
+                            imgElement.classList.remove('playing');
                         });
 
-                        // 将点击事件绑定到整个<a>标签
+                        // 整个 <a> 都是播放/暂停的点击区
                         button.parentElement.addEventListener('click', () => {
                             if (audio.paused) {
                                 audio.play();
-                                imgElement.classList.add('playing'); // 添加播放动画
+                                imgElement.classList.add('playing');
                             } else {
                                 audio.pause();
-                                imgElement.classList.remove('playing'); // 移除播放动画
+                                imgElement.classList.remove('playing');
                             }
                         });
 
-                        // 绑定转文字按钮事件
                         transcribeButton.addEventListener('click', (e) => {
-                            e.stopPropagation(); // 阻止事件冒泡
+                            e.stopPropagation();
                             if (textElement.style.display === 'none') {
-                                textElement.style.display = 'block'; // 显示文本
-                                textElement.textContent = ''; // 清空文本
-                                typeWriter(textElement, $1); // 开始打字机动画
+                                textElement.style.display = 'block';
+                                textElement.textContent = '';
+                                typeWriter(textElement, $1);
                             } else {
-                                textElement.style.display = 'none'; // 隐藏文本
-                                textElement.textContent = ''; // 清空文本
+                                textElement.style.display = 'none';
+                                textElement.textContent = '';
                             }
                         });
-                    }, 0); // 确保在 DOM 更新后执行
+                    }, 0);
 
                     return html;
                 });
 
-                // 打字机动画函数
                 function typeWriter(element, text, i = 0) {
                     if (i < text.length) {
                         element.textContent += text.charAt(i);
                         i++;
-                        setTimeout(() => typeWriter(element, text, i), 100); // 每100ms打一个字
+                        setTimeout(() => typeWriter(element, text, i), 100);
                     }
                 }
 
-                // 格式化时间为 mm:ss
                 function formatTime(seconds) {
                     const minutes = Math.floor(seconds / 60);
                     const secs = Math.floor(seconds % 60);
                     return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
                 }
 
-                // CSS 动画已挪到 ctrmInitOnce()（原先这里每条消息 appendChild 一个 <style>，
-                // 且没有任何去重判断，内容却完全一样）。
-
                 // end: 这里是文字转语音的代码
                 t.msg = t.msg.replace(/(https?:\/\/[^\s<>"]+)(?![^<>]*>.*<\/a>)/g, function (match, url) {
-                    const currentHostname = window.location.hostname; // 获取当前页面的域名
+                    const currentHostname = window.location.hostname;
 
-                    // new URL 遇到 "https://[" / "http://%zz" 这类畸形串会抛 TypeError。
-                    // 这个回调跑在 H() 的同步流程里、b.append(n) 之前，一旦抛出，本条及
-                    // 后续消息都渲染不出来 —— 任何人发一条畸形链接就能打断全房间的渲染。
+                    // new URL 遇到畸形串会抛 TypeError，而这里是 H() 的同步流程，
+                    // 抛出去就会打断本条及之后所有消息的渲染。
                     let hostname;
                     try {
-                        hostname = new URL(url).hostname; // 获取链接的域名
+                        hostname = new URL(url).hostname;
                     } catch (e) {
-                        return match; // 解析不了就按纯文本原样保留
+                        return match;
                     }
 
                     // 黑名单域名列表,将需要不转为url卡片的域名填这里
                     const blacklist = ['dict.youdao.com', 'npm.elemecdn.com', 'api.cenguigui.cn', 't.tutu.to', 'img.z-l.top', 'imgdd.com', 'tucdn.wpon.cn', 'share-text.org'];
 
-                    // 检查是否在黑名单中
                     if (blacklist.includes(hostname)) {
-                        return match; // 如果在黑名单中，直接返回原链接
+                        return match;
                     }
 
-                    // 判断域名是否相同
                     const isSameDomain = hostname === currentHostname;
 
                     // 白名单域名列表
                     const safeDomains = ['http://localhost:3000', 'bilibili.com', '88lin.github.io', '*.88lin.eu.org', 'jasnode.github.io'];
 
-                    // 检查是否是安全域名或其二级域名
+                    // 白名单域名及其二级域名
                     const isSafeDomain = safeDomains.some(domain => {
                         const regex = new RegExp(`(?:^|\\.)${domain.replace('.', '\\.')}$`);
                         return regex.test(hostname);
@@ -2332,7 +2222,6 @@ img.playing {
 
                     var faviconUrl = 'https://ico.cxr.cool/' + encodeURIComponent(hostname) + '.ico';
 
-                    // 根据域名判断显示提示信息
                     const tooltipMessage = isSameDomain
                         ? '<div class="tag-link-tips" style="border-bottom: 1px solid rgba(47,122,79,.4); padding-bottom: 4px; font-size: .7rem; color: #2f7a4f; font-weight: 400; pointer-events: none;">站内链接，可放心访问</div>'
                         : isSafeDomain
@@ -2357,10 +2246,8 @@ img.playing {
                 });
 
 
-                // 语音消息替换，audio标签直接用src属性，优先本地blob
-                // 保证只渲染一个audio[src]，不再用<source>
-                // 扩展名不再只认 .webm：iOS 录出来是 mp4 容器，只认 webm 的话 iOS 发的
-                // 语音在所有人那里都渲染不成气泡
+                // 语音消息：只渲染一个 audio[src]，优先用本地 blob。扩展名不能只认 .webm ——
+                // iOS 录出来是 mp4 容器，只认 webm 的话 iOS 发的语音谁都看不到气泡。
                 t.msg = t.msg.replace(/\[语音消息 (\d{2}:\d{2})\]\s*(https?:\/\/[^\s<>"]+\.(?:webm|mp4|m4a|ogg|mp3|wav))/g, function (_, duration, url) {
                     var uid = ctrmUid("voice");
                     var localSrc = '';
@@ -2379,19 +2266,8 @@ img.playing {
     </div>`;
                 });
 
-                // 语音气泡样式已挪到 ctrmInitOnce()，这里不再每条消息查一次 DOM。
-
-                // 语音播放的三套注册（这里两个 document 委托 + 下面每个按钮的直接绑定）
-                // 已合并成 ctrmInitOnce() 里的单一 document 委托。
-                // 原先三套同时生效：同一节点上的多个 listener，stopPropagation() 挡不住彼此
-                // （那需要 stopImmediatePropagation），所以一次点击会被处理多次，
-                // 表现为播放后立刻暂停 —— 代码里那些 AbortError 重试和 alert 就是这个竞态的症状。
-
-                // 图片灯箱：初始化已挪出 H()。原先每条消息都对全文档
-                // $('[data-fancybox="gallery"]') 重新 init 一遍，是 O(n²)；
-                // 现在只对新消息节点做一次（见下面 b.append(n) 之后）。
-
-                // 构建HTML字符串，包含消息发送者、消息内容、时间等信息
+                // 语音气泡样式、语音播放委托、灯箱初始化都在 ctrmInitOnce() 里做一次，
+                // 不要挪回这里 —— 这个函数每条消息都跑一遍。
                 var e = (
                     '\n\t\t\t\t<div class="ctrm-dialog-item">\n\t\t\t\t\t<div class="ctrm-dialog-sender">\n\t\t\t\t\t\t<span>' +
                     t.name +
@@ -2408,42 +2284,31 @@ img.playing {
                     .replace(/\t/g, "")
                     .replace(/\n/g, "");
 
-                // 创建消息元素
                 var n = i(e);
 
-                // 如果消息的ID和当前用户的ID相同，表示这条消息是当前用户发送的
                 if (s === t.id) {
-                    // 为消息添加特定的CSS类
                     n.addClass("ctrm-me");
-                    // 将发送者名字后面加上"（我）"
                     var r = n.find(".ctrm-dialog-sender span").text();
                     n.find(".ctrm-dialog-sender span").text(r + "（我）");
                 }
 
-                // 将新消息添加到消息列表中
                 b.append(n);
 
-                // 超出上限就裁掉最老的。放在这里、在下面任何读版面的代码之前，
-                // 让这一帧只重排一次。
+                // 必须在下面任何读版面的代码之前，让这一帧只重排一次
                 ctrmTrimHistory();
 
-                // 只给这条新消息里的灯箱元素做初始化（原先每条消息都对全文档重来一遍）。
+                // 只给这条新消息里的灯箱元素做初始化
                 ctrmBindFancybox(n);
 
-                // 调用滚动到底部函数
                 I();
 
-                // 折叠成球时来了新消息，给球提示一下（见上面 quiet 的说明）。
-                // .ctrm-ding 挂在 #ctrm_ 上，球边上那圈光晕靠它（借的是 .ctrm-container
-                // 的 ::after，CSS 里选不到父级，所以只能挂外层）。动画 .9s，留 950ms ——
-                // 摘类必须晚于动画本身，早了动画会被从中间掐断、直接跳回原样。
-                // .glow 不管视觉，只是把模板里那条 .glow{background:#fbe6c4!important}
-                // 顶住，不让球被拍成一块死色。
-                // 连着来消息时（群里刷屏很常见）光靠 addClass 是不行的：类已经在上面了，
-                // 浏览器认为什么都没变，动画不重跑，而且第一条的定时器到点还会把类摘掉，
-                // 后面几条等于没提示。所以先摘类、读一次 offsetWidth 强制重排、再挂回去，
-                // 定时器 id 存在 DOM 节点上（这个函数每收一条消息重新声明一次，
-                // 局部变量存不住），每次都清掉上一个。
+                // 折叠成球时来了新消息，让球边上闪一圈光晕。
+                // .ctrm-ding 必须挂在 #ctrm_ 上：光晕借的是 .ctrm-container 的 ::after，
+                // CSS 里选不到父级。.glow 不管视觉，只是压住模板里那条
+                // .glow{background:#fbe6c4!important}，不让球被拍成一块死色。
+                // 950ms 必须晚于 .9s 动画，早了动画会被掐断、直接跳回原样。
+                // 先摘类 + 读一次 offsetWidth 再挂回去，连着来消息时才能重新触发动画；
+                // 定时器 id 存在 DOM 节点上，因为这个函数每条消息都重新声明一次。
                 function showNewMessageHalo() {
                     if (quiet || !m.hasClass("ctrm-close")) return;
                     var root = m[0];
@@ -2458,10 +2323,6 @@ img.playing {
                     }, 950);
                 }
                 showNewMessageHalo();
-
-                // 发送者点击「@他」已改为 ctrmInitOnce() 里 b 上的一次性事件委托。
-                // 原先每收到一条消息都要遍历**全部**历史 .ctrm-dialog-sender 重新 off/on，
-                // 整场会话是 O(n²)。
 
                 // 仅在消息来源不是 SYSTEM 时发送邮件通知
                 // if (t.name !== 'SYSTEM') {
@@ -2480,9 +2341,7 @@ img.playing {
 
             function z() {
                 clearInterval(heartbeatTimer), heartbeatTimer = null, O([]);
-                // 原先 q() 和 onclose 各调一次 z()，一次掉线能刷出好几条"您已掉线"；
-                // 而且它里面的 clearInterval(a) 把看门狗也停了，等于彻底放弃重连。
-                // 现在整段离线期只提示一次，重连交给 ctrmScheduleReconnect()。
+                // 整段离线期只提示一次。这里不要 clearInterval(a)：那会把看门狗也停掉。
                 if (e || offlineNoticed || unloading) return;
                 offlineNoticed = !0,
                     H({ time: Date.now(), id: 111111111211, name: "SYSTEM", msg: "连接已断开，正在自动重连…（也可点 '😜' 立即重连）" }, !0)
@@ -2496,13 +2355,11 @@ img.playing {
             function R() {
                 var t = w.val().slice(0, 700).trim(); // 上限 700，已与 textarea 的 maxlength 对齐
                 if (0 === t.length) return void ctrmToast("你好像什么也没有输入呢");
-                // 连接没开时原先直接 n.send 会抛 InvalidStateError，消息静默丢失
                 if (!n || 1 !== n.readyState)
                     return void ctrmToast("还没连上服务器，这条没发出去；重连后再点一次发送", "error");
                 if (r) {
-                    // 原先这个分支是空的：被 5 秒节流拦下的消息既不发也不提示，
-                    // 输入框内容还在，用户以为已经发出去了。语音走的也是这条路
-                    // （上传完往输入框塞文本再 click .ctrm-emit），所以整条语音会静默消失。
+                    // 被 5s 节流拦下必须提示：语音也走这条路（上传完塞进输入框再 click
+                    // .ctrm-emit），不提示的话整条语音就静默消失了。
                     var left = Math.max(1, Math.ceil((chatThrottleUntil - Date.now()) / 1e3));
                     return void ctrmToast("发得太快了，还要等 " + left + " 秒；内容已保留，稍后再点发送", "error")
                 }
@@ -2512,9 +2369,8 @@ img.playing {
                     setTimeout(function () { r = !1 }, 5e3)
             }
 
-            // 手动重连（😜）。原先是 n.close() 紧接着 _()，而 close 触发的 onclose 又会
-            // 排一次重连，等于开两条连接；现在 _() 自己负责摘旧回调 + 关旧连接，
-            // 这里只把退避状态归零。
+            // 手动重连（😜）。_() 自己会摘旧回调 + 关旧连接，这里只把退避状态归零；
+            // 不要在这里 n.close()，它的 onclose 会再排一次重连，等于开两条。
             function W() {
                 e || (e = !0, reconnectDelay = 1e3, offlineNoticed = !1,
                     clearTimeout(reconnectTimer), reconnectTimer = null,
@@ -2526,9 +2382,8 @@ img.playing {
                 var t = window.innerWidth;
                 t / window.innerHeight <= 1.2 ? m.addClass("ctrm-mobile") : m.removeClass("ctrm-mobile"), t <= 1210 || m.hasClass("ctrm-mobile") ? v.hide() : m.hasClass("ctrm-mobile") || v.show(), b.scrollTop(9999999)
             }
-            // 折叠成球。animate 为真时走 CSS 那两条动画（面板缩着淡出 → 球弹进来），
-            // 两个 setTimeout 的时长必须跟 cxFoldOut / cxOrbPop 对齐。
-            // 初始化那次传 false：刷新时不该有任何动作，这套动画只属于"用户点了 ▼"。
+            // 折叠成球。animate 为真时走 cxFoldOut / cxOrbPop 两条动画，下面两个 setTimeout
+            // 的时长必须跟它们对齐。初始化那次传 false：刷新时不该有任何动作。
             function foldToBall(animate) {
                 if (m.hasClass("ctrm-close") || m.hasClass("ctrm-folding")) return;
                 S.hide(), D.hide(), v.hide(), E.show();
@@ -2539,11 +2394,9 @@ img.playing {
                     setTimeout(function () { m.removeClass("ctrm-popin") }, 320);
                 }, 190);
             }
-            // 用 pagehide 而不是 beforeunload：手机浏览器（尤其 iOS Safari）切走时
-            // beforeunload 常常根本不触发，pagehide 稳定。
-            // 更要紧的是 unloading 原先是个单向闩锁：一旦置 true 就再没人放开，
-            // 而页面进了 back/forward cache 之后是会被原样恢复的（切 App、点后退），
-            // 那时 ctrmScheduleReconnect() 直接 return —— 永远不再重连，只能刷新。
+            // 用 pagehide 而不是 beforeunload：手机浏览器（尤其 iOS Safari）常常不触发后者。
+            // unloading 必须由下面的 pageshow 放开 —— 页面会从 bfcache 原样恢复，
+            // 不放开就永远不再重连了。
             window.addEventListener("pagehide", function () {
                 unloading = !0, clearTimeout(reconnectTimer), reconnectTimer = null,
                     clearInterval(heartbeatTimer), clearInterval(a);
@@ -2551,13 +2404,11 @@ img.playing {
             });
             window.addEventListener("pageshow", function (ev) {
                 unloading = !1;
-                // pageshow 首次加载时也会触发，那时上面 _() 刚开始连（readyState 0），
-                // 别把在飞的连接拆掉重来；只有 bfcache 恢复或连接确实已关闭才重连
+                // pageshow 首次加载时也会触发（那时 _() 刚开始连），别把在飞的连接拆掉重来
                 (ev && ev.persisted || !n || 2 === n.readyState || 3 === n.readyState) && ctrmReconnectNow("页面恢复")
             });
-            // 切后台/息屏期间浏览器会把定时器降频到 1 次/分钟甚至直接冻结，25s 心跳停摆，
-            // 连接被中间代理掐掉；回到前台时退避还可能要再等 30s，用户看到的就是"卡在掉线"。
-            // 一回前台就立刻查一次：连接还在就补发一帧心跳探活，已经断了就马上重连。
+            // 切后台时定时器被降频甚至冻结，心跳停摆、连接被代理掐掉。所以一回前台就查一次：
+            // 连接还在就补发一帧心跳探活，已经断了就立刻重连。
             document.addEventListener("visibilitychange", function () {
                 if (document.hidden || unloading) return;
                 n && 1 === n.readyState ? ctrmSendHello() : ctrmReconnectNow("回到前台")
@@ -2566,9 +2417,8 @@ img.playing {
             window.addEventListener("online", function () { ctrmReconnectNow("网络恢复") });
             window.addEventListener("offline", function () { z() });
             ctrmInitOnce();
-            // 回车发送：原先是 keydown 里 preventDefault、keyup 里发送。中文输入法选词时
-            // 那个回车也会冒出一个 keyup(13)，于是候选词还没上屏就把半句话发出去了。
-            // 改成只在 keydown 里处理，并跳过输入法组合态。
+            // 回车发送只在 keydown 里处理，且必须跳过输入法组合态，否则中文选词那一下回车
+            // 会把半句话发出去。
             var ctrmComposing = !1,
                 ctrmComposeEndAt = 0;
             w.on("compositionstart", function () { ctrmComposing = !0 });
@@ -2576,17 +2426,14 @@ img.playing {
 
             function ctrmIsEnterSend(t) {
                 if (13 !== t.keyCode && "Enter" !== t.key) return !1;
-                // isComposing 不在 jQuery 的属性白名单里，得从原生事件上取；
-                // 229 是部分安卓输入法在组合态给出的 keyCode
+                // isComposing 得从原生事件上取（不在 jQuery 属性白名单里）；229 是部分安卓输入法的组合态 keyCode
                 var native = t.originalEvent || t;
                 if (ctrmComposing || native.isComposing || 229 === t.keyCode) return !1;
-                // 少数输入法把 compositionend 排在这个 keydown 之前，上面几个标志全是假的，
-                // 只能靠时间差挡掉"选词那一下"回车
+                // 少数输入法把 compositionend 排在 keydown 之前，只能靠时间差挡掉选词那一下回车
                 return !(80 > Date.now() - ctrmComposeEndAt)
             }
             document.body.addEventListener("click", j), window.addEventListener("popstate", j), m.on("click", function (t) { return t.stopPropagation() }), m.on("touchstart", function (t) { return t.stopPropagation() }), m.on("touchend", function (t) { return t.stopPropagation() }), m.on("touchmove", function (t) { return t.stopPropagation() }), S.click(function (t) { foldToBall(!0), t.stopPropagation() }), g.click(function () { m.hasClass("ctrm-close") && (m.removeClass("ctrm-close"), S.show(), D.show(), E.hide(), B()) }), D.click(W), x.click(R), w.on("keydown", function (t) {
-                // 组合态不 preventDefault：那一下回车要留给输入法上屏，
-                // 而组合态的回车本身也不会往 textarea 里插换行
+                // 组合态不 preventDefault：那一下回车要留给输入法上屏
                 ctrmIsEnterSend(t) && (t.preventDefault(), R())
             }), b.on("scroll", function () {
                 var t = b[0],
@@ -2595,14 +2442,9 @@ img.playing {
                     r = t.scrollHeight;
                 o = e + n < .9 * r ? (y.show(), !1) : (y.hide(), !0)
             }), y.click(function () { y.hide(), o = !0, I() }), T.click(function () { m.find(".ctrm-domain-filter").hide() }), B(), p = document.querySelector("script[src*=z-l]"),
-                // 默认折叠成球。原先是反过来的：默认展开，只有移动端、或者宿主 script 标签
-                // 上写了 fold="" 才折叠。现在改成一律先折叠，宿主想让它一进来就展开，
-                // 就在引入这个脚本的 <script> 上加个 open 属性。
+                // 默认折叠成球。想让它一进来就展开，在引入本脚本的 <script> 上加 open 属性。
                 h = !(p && null !== p.getAttribute("open")),
-                // 折叠这一步改成同步做：原先是 10ms 后 hide + 点 ▼、100ms 后再 show，
-                // 那条路只有移动端会走，现在人人都走，那 90ms 空白和中间可能闪一下的
-                // 展开态就都露出来了。同一个 tick 里折叠再 show，浏览器根本没机会画
-                // 中间态，也不用等两个定时器。这里走 foldToBall(!1)：不带动画。
+                // 折叠必须和 m.show() 在同一个 tick 里做，否则会先闪一下展开态。不带动画。
                 (m.hasClass("ctrm-mobile") || h) && foldToBall(!1), m.show(), window.addEventListener("resize", B)
         }()
     }, { "./dom.js": 3, "jQuery-slim": 1 }],
@@ -2635,9 +2477,6 @@ var OwO_demo = new OwO({
 <style>
 .ctrm-voice-container {
     position: relative;
-    /* CSS 里的 // 不是注释：解析器会一路吃到下一个分号。原来这行把自己吃掉了，
-       没造成可见问题纯属运气，改成块注释。 */
-    /* display: inline-grid; */
     display:table;
 }
 
@@ -2649,8 +2488,7 @@ var OwO_demo = new OwO({
     transition: background .2s ease, color .2s ease, border-color .2s ease;
 }
 
-/* 原来 hover 是 scale(1.1)。这颗按钮和旁边几颗都是 float 排在一行里，放大会压到
-   邻居身上，所以只换底色，不做位移和缩放。 */
+/* 这排按钮是 float 排在一行里，hover 不能放大或位移，会压到邻居身上，只换底色。 */
 .ctrm-voice-btn:hover {
     background: var(--cx-tint);
 }
@@ -2669,8 +2507,6 @@ var OwO_demo = new OwO({
     transform-origin: 0 0;
     width: 200%;
 }
-/* 原来是渐变文字（background-clip:text + text-fill-color:transparent）。
-   10px 的小角标上渐变根本看不出来，只是多两个前缀属性，换成实色。 */
 .recommend-tag{
     color: var(--cx-brand-ink);
     border-radius: 6px;
@@ -2680,19 +2516,12 @@ var OwO_demo = new OwO({
     font-weight: 600;
     line-height: 16px;
 }
-/* 原来写的是 .ctrm-voice-btn .recording（后代选择器），而 recording 这个类是加在
-   按钮自己身上的（voiceBtn.classList.add('recording')），所以这条规则从来没生效过
-   —— 点下录音，按钮外观毫无变化。选择器修好了，但不接原来的 pulse 缩放动画：
-   同样是怕它在一行 float 按钮里跳。旁边那个"正在录音"浮标已经在动了。
-
-   两处特异性都是踩过坑才写成这样的，别简化：
-   1) 必须带 #ctrm_ —— 这颗按钮的 class 是 "sb ctrm-voice-btn"，主题表里
-      #ctrm_ .sb 是 (1,1,0)，不带 id 的 (0,2,0) 反而压不过它。
-   2) 必须显式写出 :hover —— #ctrm_ .ctrm-voice-btn.recording 是 (1,2,0)，
-      #ctrm_ .sb:hover 也是 (1,2,0)（一个类 + 一个伪类），平手就看谁在后面，
-      而主题表在后面。结果就是录音中一碰鼠标整颗按钮变白、图标也白，全没了。
-      带 :hover 的这条是 (1,3,0)，跟顺序无关。
-   底色用深粉而不是亮粉：图标是白的，白配 #c23b6e 是 5:1，配 #f2769b 只有 2.6:1。 */
+/* 两处特异性都是踩过坑的，别简化：
+   1) 必须带 #ctrm_ —— 按钮的 class 是 "sb ctrm-voice-btn"，主题表里 #ctrm_ .sb 是
+      (1,1,0)，不带 id 的 (0,2,0) 反而压不过它。
+   2) 必须显式写出 :hover —— 不写就跟 #ctrm_ .sb:hover 平手、被后面的主题表压掉，
+      表现是录音中一碰鼠标整颗按钮变白、图标也白。带 :hover 的这条是 (1,3,0)。
+   底色用深粉：图标是白的，白配 #c23b6e 是 5:1，配 #f2769b 只有 2.6:1。 */
 #ctrm_ .ctrm-voice-btn.recording,
 #ctrm_ .ctrm-voice-btn.recording:hover {
     background: var(--cx-brand-ink);
@@ -2736,28 +2565,21 @@ var OwO_demo = new OwO({
 /* ==========================================================================
    茉灵聊天室 · 白天模式配色（樱花粉）
 
-   两条硬规矩，是上一版踩过的坑：
-   1) 只碰"看得见但不占位"的属性 —— color / background / border-color /
-      border-radius。凡是 padding / margin / width / height / font-size /
-      border-width 一律不动。工具条那排按钮是 float 排在一行里的，给 .sb 多加
-      2px padding 就会挤成两行。
-   2) 底色留白。原来的面板是近白（hsla(0,0%,99%,.85)），上一版给它铺了一层粉，
-      结果整个窗口发闷。现在主色只出现在描边、图标、按钮和 7% 透明度的悬停底上，
-      大面积仍然是白的。
+   两条硬规矩：
+   1) 只碰 color / background / border-color / border-radius。padding / margin /
+      width / height / font-size / border-width 一律不动 —— 工具条那排按钮是 float
+      排在一行里的，给 .sb 多加 2px padding 就会挤成两行。
+   2) 底色留白：主色只出现在描边、图标、按钮和低透明度的悬停底上，大面积保持白色。
+      .ctrm-panel / .ctrm-online 的底色一个都别动。
 
-   描边一律用墨色低透明度（rgba(47,36,41,.10)），不用彩色描边 —— 彩色描边一多
-   就会和气泡里那些服务端下发的随机色打架。阴影只有两处：表情面板和图床下拉，
-   因为它们是浮在内容上面的，不给点分离看不清边界。别处一律没有阴影。
-
-   位置要紧：必须排在上面那个 CDN 主样式表 <link> 之后 —— 同等特异性时靠文档
-   顺序压过它，才不用满篇 !important。
-   （CSS 里不能写 // 注释，会吞掉后面的声明，只能用这种块注释。）
+   描边一律用墨色低透明度，不用彩色 —— 会跟气泡里服务端下发的随机色打架。
+   阴影只给表情面板和图床下拉这两个浮层，别处一律没有。
+   位置要紧：必须排在上面那个 CDN 主样式表 <link> 之后，靠文档顺序压过它，
+   才不用满篇 !important。CSS 里不能写 // 注释，会吞掉后面的声明。
    ========================================================================== */
 :root {
-    /* 粉色分两档，别混用：
-       --cx-brand 是亮粉，只做"面"—— 实底按钮、描边、虚线、hover 的边框色。
-       --cx-brand-ink 是深粉，只做"字"—— 图标、链接、@提示、hover 文字色。
-       亮粉当文字用的话对比度只有 2.6:1，小字直接糊掉；深粉是 5.1:1。 */
+    /* 粉色分两档，别混用：--cx-brand 亮粉只做"面"（实底按钮、描边、虚线、hover 边框），
+       --cx-brand-ink 深粉只做"字"（图标、链接、@提示、hover 文字）。亮粉当文字只有 2.6:1。 */
     --cx-brand: #f2769b;
     --cx-brand-deep: #e05a84;
     --cx-brand-ink: #c23b6e;
@@ -2779,20 +2601,15 @@ var OwO_demo = new OwO({
 
 /* ---------- 外壳 ---------- */
 #ctrm_ { color: var(--cx-ink); }
-/* 原来只圆了左上角，右上角是直角 */
 #ctrm_ .ctrm-container { border-top-right-radius: 2vw; }
 
 /* ---------- 标题栏 ---------- */
-/* 原来是 hsla(0,0%,90%,.85) 的中灰。换成同明度、极淡的粉灰 —— 注意亮度还是 94%，
-   跟原来的 90% 差不多，不是往白底上盖一层粉，只是把那条灰带的色温掰过来。
-   底部用 inset 画发丝线（不用 border-bottom：.ctrm-title 高度是 8%，
-   加真边框会把整体撑高 1px）。 */
+/* 底部用 inset 画发丝线，不能用 border-bottom：.ctrm-title 高度是 8%，真边框会撑高 1px。 */
 #ctrm_ .ctrm-title {
     background: hsla(345, 38%, 94%, .9);
     box-shadow: inset 0 -1px 0 var(--cx-hairline);
 }
-/* 有新消息时的闪烁底色。原来是青→粉渐变。这里必须换成暖色而不是更深的粉 ——
-   标题栏本身已经是粉的了，再闪一格粉根本看不出来；蜜色一跳就注意到。 */
+/* 有新消息时的闪烁底色。必须是暖色 —— 标题栏本身是粉的，再闪一格粉根本看不出来。 */
 #ctrm_ .ctrm-title.glow { background: #fbe6c4 !important; }
 #ctrm_ .ctrm-title-span { font-weight: 600; }
 #ctrm_ .ctrm-title-span strong { font-weight: 600; }
@@ -2808,11 +2625,7 @@ var OwO_demo = new OwO({
 #ctrm_ .ctrm-title-reconn:hover { background: var(--cx-tint); border-color: var(--cx-brand); }
 
 /* ---------- 折叠态：右下角的悬浮光球 ---------- */
-/* 原来的折叠只是把整个容器往下推（bottom:-36.8vw），留顶上那条标题栏躺在屏幕底边，
-   宽度还有 25vw —— 横着占掉四分之一个屏。这里把折叠态整个换成一颗光球。
-   观感移植自 react-ai-orb（MIT）：一层主渐变打底，上面叠四层各自以不同速度做
-   rotate3d 的径向渐变，用 soft-light / color-dodge / color 混起来，再加一圈白色
-   内高光和两颗会呼吸的白色光斑。原版是 6 个兄弟 div + 4 个 SVG blob，这边能用的
+/* 观感移植自 react-ai-orb（MIT）。原版是 6 个兄弟 div + 4 个 SVG blob，这边能用的
    只有 .ctrm-title 那一小棵树，所以压成 7 个"元素 / 伪元素"：
      .ctrm-title                球体（主渐变 + 外发光）
      .ctrm-title::before        shape-a
@@ -2825,44 +2638,32 @@ var OwO_demo = new OwO({
        ::before                 光斑 A    hard-light
        ::after                  光斑 B    plus-lighter
      .ctrm-title-countwrap      人数角标（照旧）
-   四条硬约束，以后改的时候别踩：
-   ① mix-blend-mode 只跟"最近那个层叠上下文"里已经画好的东西混。所以球体上写了
-      isolation:isolate（把混合关在球里，别去跟宿主页面的底色混），而中间两层容器
-      —— .ctrm-title-span 和它里面那个 span —— 绝对不能带 transform / opacity /
-      filter / z-index / mix-blend-mode：一带就生成层叠上下文，里面几层就只能跟容器
-      自己混，颜色立刻塌成一片死渐变。glass 那层原版写的是 opacity:.8，这里必须
-      改成把 .8 乘进 rgba 里，就是这个原因。
-   ② 球体不能 overflow:hidden —— 人数角标要露在球外面。原版是靠父级裁剪来收住光斑
-      那 15px blur 的，这里改成让 strong 当裁剪筐。会转的那四层都是 87.8% 大小、
-      偏移最多 10%，转起来也超不出球面，所以不裁也不漏。
-   ③ 原版所有 px（blur 2/1/15、阴影 4/6/5/10/1/7）都是照它默认的 82px 球调的，这颗
-      只有 42~58px，所以全部折算成 --cx-ball 的比例，缩放时观感才不变。
-   ④ 转 + 变色是两条动画：转的动的是 transform，变色动的是 filter。原版在 shape-b/c/d
-      上写的 filter:blur(...) 会被 hueShift 那条动画整条顶掉（同一个属性，动画优先），
-      所以那几层实际上是不带模糊的 —— 这里照它的实际观感写，没把 blur 补回去。
-   展开态一个字节都没动：下面每条选择器都带 .ctrm-close。点击展开也完全走原来那套 ——
-   JS 把展开的点击绑在 .ctrm-title 上，而球本身就是 .ctrm-title。 */
+   四条硬约束，改之前先看：
+   ① mix-blend-mode 只跟最近那个层叠上下文里已经画好的东西混。球体上写 isolation:isolate
+      把混合关在球里；中间两层容器 —— .ctrm-title-span 和它里面那个 span —— 绝对不能带
+      transform / opacity / filter / z-index / mix-blend-mode：一带就生成层叠上下文，
+      颜色立刻塌成一片死渐变。glass 那层原版的 opacity:.8 就是因此乘进 rgba 的 alpha 的。
+   ② 球体不能 overflow:hidden —— 人数角标要露在球外面。光斑那圈 blur 改用 strong 裁。
+   ③ 原版的 px 都是照它默认的 82px 球调的，这颗只有 42~58px，所以全部折算成 --cx-ball
+      的比例，缩放时观感才不变。
+   ④ 原版 shape-b/c/d 上的 filter:blur 会被变色那条动画整条顶掉（同一属性，动画优先），
+      所以那几层实际不带模糊，这里照它的实际观感写，没把 blur 补回去。
+   展开态一个字节都没动：下面每条选择器都带 .ctrm-close，展开的点击照旧绑在 .ctrm-title 上。 */
 #ctrm_.ctrm-close {
-    /* 全站唯一一个"聊天窗关着也一直挂在页面上"的元素，所以不跟着视口无限长大：
-       1280 的屏上 42px，1920 上 58px，再宽也停在 58px。 */
+    /* 球径。聊天窗关着它也一直挂在页面上，所以不跟着视口无限长大：1280 屏 42px，1920 屏 58px。 */
     --cx-ball: clamp(42px, 3.2vw, 58px);
-    /* position 是 CDN 那张远程样式表给的（#ctrm_{position:fixed}）。可 widget 是
-       JS 插进 DOM 的，那张表还在路上就已经画了第一帧 —— 那一帧里整条祖先链全是
-       static，于是下面所有 position:absolute 的光效层找不到定位祖先，百分比宽高
-       直接按视口算：满屏一颗横躺的大椭圆。这四条 position 就是把定位链补齐，
-       样式表没到也是右下角一颗正常的球。写的值跟 CDN 完全一样，到了也不冲突。 */
+    /* 这几条 position 是补 CDN 那张远程样式表的（值跟它写的完全一样）。widget 是 JS 插进
+       DOM 的，样式表还在路上时第一帧就已经画了，那一帧整条祖先链全是 static，下面所有
+       absolute 的光效层就按视口算百分比 —— 满屏一颗横躺的大椭圆。别删。 */
     position: fixed;
     bottom: clamp(14px, 1.1vw, 22px);
     right: clamp(14px, 1.1vw, 22px);
-    /* CDN 给 #ctrm_ 和 .ctrm-container 都写了 transition:all .3s。折叠这一下宽高要从
-       35vw/40vw 掉到 42~58px，那条过渡会把它演成"一颗占掉四分之一屏的大球慢慢缩小"，
-       刷新时和点 ▼ 时都看得见，很怪。折叠态直接把过渡关掉：球该多大就多大，一步到位。
-       展开不受影响 —— 摘掉 .ctrm-close 之后读的是基础规则里那条 transition。 */
+    /* CDN 给 #ctrm_ 和 .ctrm-container 都写了 transition:all .3s，不关掉的话折叠会被演成
+       "一颗占掉四分之一屏的大球慢慢缩小"。展开不受影响（那时读的是基础规则里那条）。 */
     transition: none;
     /* 新消息时球边上那圈光晕的颜色。默认跟着调色板走，想单独换就只改这一行。 */
     --cx-orb-ring: var(--cx-orb-b-mid);
-    /* 光球的调色板和参数：换配色只动这一段。
-       17 个色位跟 react-ai-orb 的 palette 一一对应。 */
+    /* 光球调色板：换配色只动这一段，17 个色位跟 react-ai-orb 的 palette 一一对应。 */
     --cx-orb-bg-start: rgb(236, 133, 255);
     --cx-orb-bg-end: rgb(49, 138, 255);
     --cx-orb-sh1: rgba(166, 35, 248, 0);
@@ -2894,18 +2695,15 @@ var OwO_demo = new OwO({
     width: var(--cx-ball);
     height: var(--cx-ball);
     max-height: none;
-    /* 同上：这一层也带着 CDN 那条 transition:all .3s，宽高是在它身上变的，
-       不关掉的话缩小动画照样跑。 */
+    /* 同上：宽高是在这一层身上变的，不关掉缩小动画照样跑。 */
     transition: none;
-    /* 让人数角标能挂到球外面去，涟漪那圈也要能扩到球外面。容器本来是 overflow:hidden，
-       但折叠态里 .ctrm-panel 和 .ctrm-online 都已经 display:none，没别的东西会漏。 */
+    /* 人数角标和光晕都要能露到球外面。折叠态里 .ctrm-panel / .ctrm-online 已经 display:none。 */
     overflow: visible;
 }
 #ctrm_.ctrm-close .ctrm-panel,
 #ctrm_.ctrm-close .ctrm-online { display: none; }
-/* 防御性的一条：▼ / 😜 正常是 JS 在折叠时 hide() 掉的，万一以后初始化顺序变成先挂
-   .ctrm-close 再走那段逻辑，别让这两个按钮糊在球里。展开时 JS 是先摘掉 .ctrm-close
-   再 show()，所以这条不会挡住它们。 */
+/* 防御性：▼ / 😜 正常是 JS 折叠时 hide() 掉的，这条保证它们不会糊在球里。展开时 JS 先
+   摘掉 .ctrm-close 再 show()，所以挡不住它们。 */
 #ctrm_.ctrm-close .ctrm-title-close,
 #ctrm_.ctrm-close .ctrm-title-reconn { display: none; }
 /* 标题里那颗心在球上没有意义（它是站点装饰，不是"聊天"这个语义），收掉。 */
@@ -2913,8 +2711,7 @@ var OwO_demo = new OwO({
 
 /* ---- 球体本身 = .ctrm-title ---- */
 #ctrm_.ctrm-close .ctrm-title {
-    /* position / width 同样是补 CDN 的（见上面 position 那段）：球里的光效层全都
-       absolute + 百分比，参照的就是这一层。 */
+    /* 同样是补 CDN 的：球里的光效层全是 absolute + 百分比，参照的就是这一层。 */
     position: relative;
     width: 100%;
     height: 100%;
@@ -2931,21 +2728,17 @@ var OwO_demo = new OwO({
     transition: transform .18s;
 }
 #ctrm_.ctrm-close .ctrm-title:hover { transform: scale(1.06); }
-/* 来新消息时 JS 给 #ctrm_ 加 .ctrm-ding、给 .ctrm-title 加 .glow，950ms 后一起摘掉。
-   提示只有一样东西：球边上一圈化开的光涨开又散掉（见下面 .ctrm-ding）。球本身不动、
-   不变形、也没有白色描边 —— 贴边一圈白光在任何底色上都扎眼，回弹又跟折叠时那一下撞。
-   所以这条 .glow 不负责任何视觉，它是纯防御：上面那条
-   #ctrm_ .ctrm-title.glow { background:#fbe6c4 !important }（还有 CDN 里同名那条）
+/* 新消息的提示只有球边上那一圈化开的光（见下面 .ctrm-ding），球本身不动也不变形。
+   所以这条 .glow 不负责任何视觉，纯防御：上面那条
+   #ctrm_ .ctrm-title.glow { background:#fbe6c4 !important }（CDN 里也有同名的）
    会把整颗球拍成一块死色，这条 (1,3,0) 压过它们、把球原样留住。 */
 #ctrm_.ctrm-close .ctrm-title.glow {
     background-color: transparent !important;
     background-image: radial-gradient(circle at 50% 30%, var(--cx-orb-bg-start) 0, var(--cx-orb-bg-end) 70%) !important;
 }
-/* ---- 新消息那一圈光晕。整个球的 7 个伪元素都被光效占满了，所以借 .ctrm-container 的
-   ::after —— 它一直空着，尺寸又刚好等于球（.ctrm-title 是 width/height:100%）。
-   z-index:-1 让它沉到球后面：光从球背后涨出来，不会糊住人数角标，也不会挡住点击。
-   实心到 42% 之后再化开，中间那块正好被球自己挡掉，露出来的只有球边上化开的那一圈，
-   一条硬边都没有。只涨到 1.5 倍就停，不会扩得满角都是。
+/* ---- 新消息那一圈光晕。球的 7 个伪元素都被光效占满了，所以借 .ctrm-container 的 ::after
+   （它一直空着，尺寸又刚好等于球）。z-index:-1 让它沉到球后面，不糊人数角标也不挡点击。
+   实心到 42% 再化开，中间那块正好被球自己挡掉，露出来的只有球边化开的那一圈。
    类挂在 #ctrm_ 上而不是球上，因为 CSS 选不到父级；JS 那边 950ms 后摘掉。 ---- */
 #ctrm_.ctrm-close.ctrm-ding .ctrm-container::after {
     content: "";
@@ -2985,14 +2778,11 @@ var OwO_demo = new OwO({
     animation: cxOrbSpin calc(var(--cx-orb-rot) * 1.5) linear infinite,
                cxOrbHue calc(var(--cx-orb-hue) * 1.5) linear infinite;
 }
-/* ---- glass：白色内圈高光，静止，不参与混合。挂在 .ctrm-title-span 上。
-   这个元素是 87.8% 大小、居中，所以不能用 transform 居中（见上面约束①），
-   只能算成 left/top 的百分比：(82-72)/2/82 = 6.1%。
-   原版的 opacity:.8 也是同一个原因，直接乘进了下面两条 rgba 的 alpha 里
-   （.5 × .8 = .4）。 ---- */
+/* ---- glass：白色内圈高光，静止，不参与混合。挂在 .ctrm-title-span 上，87.8% 大小居中，
+   不能用 transform 居中（见约束①），只能算成 left/top：(82-72)/2/82 = 6.1%。
+   原版的 opacity:.8 同样因此乘进了下面两条 rgba 的 alpha（.5 × .8 = .4）。 ---- */
 #ctrm_.ctrm-close .ctrm-title-span {
-    /* 这两条也是补 CDN 的（display:inline-block + position:absolute）：<span> 默认是
-       inline，inline 盒子的百分比宽高会被直接忽略，光效层就散了。 */
+    /* 也是补 CDN 的：<span> 默认 inline，inline 盒子的百分比宽高会被忽略，光效层就散了。 */
     position: absolute;
     display: block;
     left: 6.1%; top: 6.1%;
@@ -3002,16 +2792,14 @@ var OwO_demo = new OwO({
     border-radius: 50%;
     box-shadow: inset 0 calc(var(--cx-ball) * -.012) calc(var(--cx-ball) * .073) calc(var(--cx-ball) * .012) rgba(255, 255, 255, .4),
                 inset 0 calc(var(--cx-ball) * .037) calc(var(--cx-ball) * .049) 0 rgba(255, 255, 255, .4);
-    /* 标题那一串字要在球里收掉，可"聊天室"三个字是裸文本节点，没有标签可以选中 ——
-       只能 font-size:0 连锅端，再单独把要留的那个元素的字号加回来。"(在线"和"人)"
-       同理也是裸文本，于是角标里干干净净只剩一个数字。 */
+    /* "聊天室"三个字是裸文本节点，选不中，只能 font-size:0 连锅端，再把要留的那个元素的
+       字号加回来。"(在线"和"人)"同理，于是角标里干干净净只剩一个数字。 */
     font-size: 0;
     line-height: 0;
 }
-/* ---- 里面那个 span 只当容器，一笔都不画：它一旦有 transform / opacity / filter /
-   混合模式就会生成层叠上下文，下面 shape-c / shape-d 就混不到球体本身了。
-   必须写 :first-child —— 人数角标 .ctrm-title-countwrap 本身也是 .ctrm-title-span
-   的一个 span 子元素，不加就会被这条一起撑成满圈，角标那块白底直接把整颗球盖成白饼。 ---- */
+/* ---- 里面那个 span 只当容器，一笔都不画（见约束①）。必须写 :first-child —— 人数角标
+   .ctrm-title-countwrap 本身也是 .ctrm-title-span 的 span 子元素，不加会被一起撑成满圈，
+   那块白底直接把整颗球盖成白饼。 ---- */
 #ctrm_.ctrm-close .ctrm-title-span > span:first-child {
     position: absolute;
     left: 0; top: 0;
@@ -3052,11 +2840,9 @@ var OwO_demo = new OwO({
     border-radius: 50%;
     overflow: hidden;
 }
-/* ---- 两颗白色光斑。原版是两个 SVG blob（不规则形状）+ blur(15px) + scale 呼吸；
-   这边没法加 SVG，改用一个"窄而高"的椭圆渐变，模糊完就是原版那道斜着的高光条。
-   核心不能太白：原版那两团 blob 面积很小，换成满框的圆渐变会把整颗球洗成白饼，
-   所以横向只给 26%、核心 alpha 压到 .8。
-   filter 在 transform 之前生效，所以 scale(.4) 会把 blur 一起缩掉，这点跟原版一致。 ---- */
+/* ---- 两颗白色光斑。原版是 SVG blob + blur + scale 呼吸，这边没法加 SVG，改用一个
+   "窄而高"的椭圆渐变，模糊完就是原版那道斜高光。核心不能太白（横向只给 26%、alpha .8）：
+   满框的圆渐变会把整颗球洗成白饼。filter 在 transform 之前生效，scale 会把 blur 一起缩。 ---- */
 #ctrm_.ctrm-close .ctrm-title-span strong::before,
 #ctrm_.ctrm-close .ctrm-title-span strong::after {
     content: "";
@@ -3080,10 +2866,9 @@ var OwO_demo = new OwO({
     transform: scale(.6);
     animation: cxOrbShineB 5s ease-in-out infinite;
 }
-/* ---- 人数角标。定位参照是 .ctrm-title-span，它现在是 87.8% 大小、往右下偏了 6.1%，
-   所以负偏移要把这 6.1% 一起补回来：-.04 - .061 ≈ -.101（按球径算，跟框多大无关）。
-   垂直居中走 line-height 而不是 flex：这个元素的 display 是 jQuery 的 show()/hide()
-   在管的，别去跟它抢。 ---- */
+/* ---- 人数角标。定位参照是 .ctrm-title-span（87.8% 大小、往右下偏了 6.1%），所以负偏移
+   要把这 6.1% 一起补回来：-.04 - .061 ≈ -.101（按球径算）。垂直居中走 line-height 不走
+   flex：这个元素的 display 是 jQuery 的 show()/hide() 在管的，别去跟它抢。 ---- */
 #ctrm_.ctrm-close .ctrm-title-countwrap {
     position: absolute;
     top: calc(var(--cx-ball) * -.101);
@@ -3122,30 +2907,24 @@ var OwO_demo = new OwO({
     #ctrm_.ctrm-close .ctrm-title-span > span:first-child::after,
     #ctrm_.ctrm-close .ctrm-title-span strong::before,
     #ctrm_.ctrm-close .ctrm-title-span strong::after { animation: none; }
-    /* 新消息那圈光晕不是停在半路、而是整个不要：它靠动画从无到有再到无，停住等于
-       球边上永远糊着一圈光。这些人的提示是聊天窗标题栏本来那套，不缺。 */
+    /* 光晕整个不要，不能停在半路 —— 停住等于球边上永远糊着一圈光。 */
     #ctrm_.ctrm-close.ctrm-ding .ctrm-container::after { content: none; }
 }
-/* ---- 光球用到的五条动画。转的动 transform，变色的动 filter，两条并行互不干扰；
-   光斑那两条只是缩放呼吸，cxOrbHalo 是新消息时球边上那圈光。名字全部带 cxOrb 前缀，
-   跟 CDN 里的 blink / ctrm-spin 不撞。 ---- */
+/* ---- 光球的五条动画。转的动 transform，变色的动 filter，并行互不干扰。名字全带 cxOrb
+   前缀，跟 CDN 里的 blink / ctrm-spin 不撞。 ---- */
 @keyframes cxOrbSpin { 0% { transform: rotate3d(1, 1, 1, 0deg) } 100% { transform: rotate3d(1, 1, 1, 1turn) } }
 @keyframes cxOrbHue { 0% { filter: hue-rotate(0deg) } 50% { filter: hue-rotate(var(--cx-orb-hue-deg)) } 100% { filter: hue-rotate(0deg) } }
 @keyframes cxOrbShineA { 0% { transform: scale(.4) } 50% { transform: scale(.1) } 100% { transform: scale(.4) } }
 @keyframes cxOrbShineB { 0% { transform: scale(.6) } 50% { transform: scale(.1) } 100% { transform: scale(.6) } }
-/* 球边上那圈光：涨开、同时淡掉。opacity 在 18% 就到顶，所以是"亮一下再散"，
-   不是"慢慢亮起来"。scale 相对球径，所以大球小球一个观感。 */
+/* 球边上那圈光：涨开同时淡掉。opacity 在 18% 就到顶，所以是"亮一下再散"。 */
 @keyframes cxOrbHalo { 0% { transform: scale(.9); opacity: 0 } 18% { opacity: .7 } 100% { transform: scale(1.5); opacity: 0 } }
 
-/* ---------- 点 ▼ 收起来的那一下 ----------
-   这一段不在调参页那份可复制的块里（那份只管球的配色和参数），它是折叠这个动作本身。
-   要紧的是不去动宽高：宽高从 35vw/40vw 掉到 42px 的过渡，就是之前"一颗占掉四分之一屏
-   的大球慢慢缩小"的来源。这里改成面板带着 transform 往球那个位置缩着淡出（190ms），
-   然后球自己弹进来（320ms）。两个类都是 JS 临时挂的，刷新那次一个都不挂 ——
-   一进来就是一颗静止的球，跟你要的一样。 */
+/* ---------- 点 ▼ 收起来的那一下（这一段不在调参页那份可复制的块里）----------
+   不要去动宽高：宽高从 35vw/40vw 掉到 42px 的过渡就是"一颗占掉四分之一屏的大球慢慢
+   缩小"的来源。这里是面板带着 transform 缩着淡出（190ms），然后球自己弹进来（320ms）。
+   两个类都是 JS 临时挂的，刷新那次一个都不挂。 */
 #ctrm_.ctrm-folding .ctrm-container {
-    /* 收拢的落点大致对着球心（球在右下角 14~22px 处、直径 42~58px），
-       不然面板会往屏幕最角上钻，看着像掉下去了。 */
+    /* 落点大致对着球心，不然面板会往屏幕最角上钻，看着像掉下去了。 */
     transform-origin: calc(100% - 22px) calc(100% - 22px);
     animation: cxFoldOut .19s cubic-bezier(.4, 0, 1, 1) both;
 }
@@ -3171,26 +2950,17 @@ var OwO_demo = new OwO({
 #ctrm_ .ctrm-dialog-item .ctrm-dialog-sender { color: var(--cx-ink-2); }
 #ctrm_ .ctrm-dialog-item .ctrm-dialog-time { color: var(--cx-ink-3); }
 
-/* 气泡：只把靠说话人那侧的角收窄，做出朝向。底色一律不碰 —— 保持服务端按用户
-   下发的 t.color 原色（写在内联 style 上），"每人一个色"这个身份提示比统一好看重要。
-   顺手记一笔：万一以后想压一压那一屏的饱和度，别去改 background-color（内联样式
-   压不过），而是加一层 background-image: linear-gradient(rgba(255,255,255,.4) 两次)
-   —— 不同属性，能叠在内联底色上面。 */
+/* 气泡只把靠说话人那侧的角收窄。底色一律不碰 —— 那是服务端下发的 t.color，写在内联
+   style 上（真要压饱和度得叠一层 background-image 渐变，background-color 压不过它）。 */
 #ctrm_ .ctrm-dialog-item .ctrm-dialog-bubble { border-radius: 14px 14px 14px 4px; }
 #ctrm_ .ctrm-dialog-item.ctrm-me .ctrm-dialog-bubble { border-radius: 14px 14px 4px 14px; }
 #ctrm_.ctrm-mobile .ctrm-dialog-item .ctrm-dialog-bubble { border-radius: 16px 16px 16px 5px; }
 #ctrm_.ctrm-mobile .ctrm-dialog-item.ctrm-me .ctrm-dialog-bubble { border-radius: 16px 16px 5px 16px; }
 
-/* @我 的高亮。原来这里犯了两个错：
-   1) padding 是 0，配上 999px 的圆角，两头的圆弧直接切进首尾那两个字 —— 就是
-      "背景连文字都覆盖不全"。padding 用 em 而不是 px：移动端气泡是 font-size:2.8em，
-      写死 px 在手机上会小得看不见。
-   2) 底色 16% 的粉 + 粉字，两个都是粉，等于没有对比。而且气泡底色是服务端下发的
-      随机色，浅色底放在浅色气泡上可能整块消失。
-   改成深粉实底 + 白字（5:1），这样落在任何一种气泡底色上都读得出来。
-   nowrap 是防止胶囊在行尾被折断成两半。
-   font-weight 从 CDN 的 700 降到 500：实底胶囊本身已经足够抢眼了，再叠一层加粗
-   就变成"喊"。但也不降到跟正文一样的 400 —— 白字压在饱和色上视觉上本来就会显细。 */
+/* @我 的高亮：深粉实底 + 白字（5:1），落在任何一种气泡底色上都读得出来。
+   padding 必须有、且要用 em 不用 px —— 999px 圆角会切进首尾那两个字，而移动端气泡是
+   font-size:2.8em，写死 px 在手机上小得看不见。nowrap 防止胶囊在行尾折成两半。
+   font-weight 只到 500：实底胶囊再加粗就变成"喊"，但也不降到 400（白字压饱和色显细）。 */
 #ctrm_ .ctrm-dialog-item .ctrm-b {
     background: var(--cx-brand-ink);
     color: #fff;
@@ -3204,10 +2974,7 @@ var OwO_demo = new OwO({
 #ctrm_ .ctrm-dialog-item iframe { border-radius: 10px; }
 
 /* ---------- 回到底部 ---------- */
-/* 原来是 rgba(0,0,0,.2) 的圆角方块，浮在白底上像块脏印子。
-   尺寸从 3vw 收到 2.2vw：原来它比标题栏那两颗圆按钮（2.2vw）还大，而换成实底粉
-   之后同样的尺寸看着比原来的半透明黑更抢眼，所以要收。现在跟标题按钮一样大，
-   整个界面的圆形按钮就统一成一个尺寸了。字号按比例跟着收（1.75/3 ≈ .58）。 */
+/* 2.2vw = 跟标题栏那两颗圆按钮一样大，界面上的圆形按钮统一成一个尺寸。 */
 #ctrm_ .ctrm-bottom {
     width: 2.2vw;
     height: 2.2vw;
@@ -3219,10 +2986,8 @@ var OwO_demo = new OwO({
     transition: background .18s;
 }
 #ctrm_ .ctrm-bottom:hover { background: var(--cx-brand-deep); }
-/* 移动端把原值钉回去，一个像素都不动。CDN 那边用的是
-   transform: scale(2) + transform-origin: 0 40%，缩放基准是元素自己的盒子，
-   改了 width 会让整颗按钮的视觉位置跟着挪（右边界是 right:7% 定死的，盒子变窄
-   左边界就右移，而放大恰好是从左边界往右长的）。移动端本来就够小，不用收。 */
+/* 移动端把原值钉回去，一个像素都别动：CDN 那边是 transform:scale(2) + transform-origin:0 40%，
+   缩放基准是元素自己的盒子，改 width 会让整颗按钮的视觉位置跟着挪。 */
 #ctrm_.ctrm-mobile .ctrm-bottom {
     width: 3vw;
     height: 3vw;
@@ -3231,9 +2996,8 @@ var OwO_demo = new OwO({
 }
 
 /* ---------- 工具条按钮 ---------- */
-/* 只改这四个属性。height:22px / padding:2px 5px / margin / font-size 都不能碰：
-   .ctrm-dialog 的高度是 calc(75% - 22px)，按这排按钮算的；而 padding 变宽会让
-   这一行放不下，直接折成两排。 */
+/* 只改这四个属性。height:22px / padding:2px 5px / margin / font-size 一个都不能碰：
+   .ctrm-dialog 的高度是 calc(75% - 22px)，按这排按钮算的；padding 变宽会折成两排。 */
 #ctrm_ .sb {
     border-radius: var(--cx-pill);
     background: #fff;
@@ -3242,9 +3006,8 @@ var OwO_demo = new OwO({
     transition: background .18s, border-color .18s, color .18s;
 }
 #ctrm_ .sb:hover { background: var(--cx-tint); border-color: var(--cx-brand); color: var(--cx-brand-ink); }
-/* 表情按钮的 DOM 是 class="OwO-logo sb"，两个类都带，所以上面那条 .sb 也管着它。
-   面板展开时给它一个"按下去了"的状态 —— CDN 里 .OwO.OwO-open .OwO-logo 是
-   (0,3,0)，这里带 #ctrm_ 是 (1,3,0)，压得住。 */
+/* 表情按钮的 class 是 "OwO-logo sb"，上面那条 .sb 也管着它。面板展开时给个"按下去了"
+   的状态：带 #ctrm_ 是 (1,3,0)，压得住 CDN 里 (0,3,0) 的 .OwO.OwO-open .OwO-logo。 */
 #ctrm_ .OwO.OwO-open .OwO-logo { background: var(--cx-tint); border-color: var(--cx-brand); color: var(--cx-brand-ink); }
 
 /* 三颗图标各给一个色，扫一眼能分开，但都是同一套色里的 */
@@ -3260,7 +3023,7 @@ var OwO_demo = new OwO({
 }
 #ctrm_ .OwO.OwO-up .OwO-body { border-radius: 12px 12px 12px 2px; }
 #ctrm_ .OwO .OwO-body .OwO-items .OwO-item { background: #fdf8f9; border-radius: 8px; }
-/* 原来 hover 叠了三层 Material 阴影，一颗小表情格子扛不住。抖动动画是原有的，留着。 */
+/* hover 不要叠重阴影，一颗小表情格子扛不住。抖动动画是原有的，留着。 */
 #ctrm_ .OwO .OwO-body .OwO-items .OwO-item:hover { background: var(--cx-tint); box-shadow: var(--cx-shadow); }
 #ctrm_ .OwO .OwO-body .OwO-bar {
     background: #fdf8f9;
@@ -3273,8 +3036,7 @@ var OwO_demo = new OwO({
 #ctrm_ .OwO .OwO-body .OwO-bar .OwO-packages .OwO-package-active { background: var(--cx-tint-2); color: var(--cx-brand-ink); }
 
 /* ---------- 输入框 ---------- */
-/* 手绘虚线保留 —— 参考站的"手绘虚线框"就是 2px dashed + 圆角 + 主色低透明度，
-   原来那圈灰虚线本来是对的，只是没上色。这里只换颜色，宽度和虚线样式不动。 */
+/* 手绘虚线要保留：2px dashed + 圆角，宽度和虚线样式都不能动，只换颜色。 */
 #ctrm_ .ctrm-textarea textarea {
     border: 2px dashed rgba(242, 118, 155, .45);
     color: var(--cx-ink);
@@ -3319,47 +3081,6 @@ var OwO_demo = new OwO({
 .ctrm-163-btn:hover { background: var(--cx-brand-deep) !important; }
 .img-host-dropdown [data-img-host] { color: var(--cx-ink); border-radius: 8px; transition: background .16s, color .16s; }
 .img-host-dropdown [data-img-host]:hover { background: var(--cx-tint); color: var(--cx-brand-ink); }
-</style>
-<style>
-/* 这三个类没有任何标签在用（真正的语音气泡走 CTRM_VOICE_CSS 里的
-   .ctrm-voice-bubble / .ctrm-voice-play）。没删结构，只把配色带上，
-   免得以后谁接回去又冒出一块 #3742fa 的蓝。 */
-.ctrm-voice-message {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 10px;
-}
-
-.ctrm-voice-play-btn {
-    background: var(--cx-brand);
-    border: none;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.ctrm-voice-play-btn:hover {
-    background: var(--cx-brand-deep);
-}
-
-.ctrm-voice-play-btn svg {
-    fill: white;
-    margin-left: 2px;
-}
-
-.ctrm-voice-duration {
-    color: var(--cx-ink-2);
-    font-size: 14px;
-}
-
 </style>
 <!-- display:none 是初始状态，不是装饰：jQuery 的 append() 遇到 HTML 里的外链
      script 标签会走同步 XHR（jQuery._evalUrl 的 async:false），插好的 DOM 就摊在那儿
@@ -3431,11 +3152,7 @@ var OwO_demo = new OwO({
 </div>    
 
 `;
-        // 原先这里是 .replace(/\t/g,"").replace(/\n/g,"")：整个模板被压成一行。
-        // 上面 <script> 块里只要有人写一行 // 注释，压平之后这行注释就把后面全部代码
-        // （包括 </script> 之前的所有内容）注释掉，页面直接哑火。<style> 里的 // 同理。
-        // 这里的换行对 HTML 没有意义（唯一怕换行的 <textarea> 写成了紧贴的空标签），
-        // 所以直接不压，把这个地雷去掉。
+        // 别再把模板压成一行：<script> / <style> 里的 // 注释压平后会注释掉它后面的全部内容。
         e.exports = r;
     }, {}]
 }, {}, [2]);
@@ -3478,7 +3195,6 @@ var OwO_demo = new OwO({
         AUTO_COPY_URL: true,
         ALLOWED_HOSTS: ['http://localhost:3000', 'bilibili.com', '88lin.github.io', '*.88lin.eu.org', 'jasnode.github.io'],
         MAX_FILE_SIZE: 5 * 1024 * 1024,
-        USE_BASE64_PREVIEW: true, // true：使用 base64，false：使用上传后的图片 URL
     };
 
     const currentHost = location.hostname;
@@ -3513,13 +3229,13 @@ var OwO_demo = new OwO({
             border-radius: 0.5rem;
             opacity: 0;
             transition: opacity 0.3s ease, background 0.3s ease, border-color 0.3s ease;
-            box-sizing: border-box; /* 关键：让伪元素包含边框在宽度内 */
+            box-sizing: border-box;
         }
         .ctrm-textarea.dragover::after {
             background: rgba(194,59,110,0.55);
             border-color: rgba(255,255,255,0.85);
             opacity: 1;
-            backdrop-filter: blur(1px); /* 应用4px的高斯模糊 */
+            backdrop-filter: blur(1px);
         }
         .upload-warning {
             position: fixed;
@@ -3556,15 +3272,12 @@ var OwO_demo = new OwO({
         }
     `);
 
-    // 预览图片元素
     const preview = document.querySelector(".image-preview-overlay img");
 
-    // 显示通知
     function showNotification(msg, type = "info") {
         const el = document.createElement("div");
         el.textContent = msg;
-        // 跟 ctrmToast 用同一套语义色（红/绿是语义色，info 跟主色走），
-        // 免得同一个页面上冒出两种不同风格的提示条。
+        // 跟 ctrmToast 用同一套语义色，免得同一个页面上冒出两种风格的提示条。
         el.style = `position:fixed;top:10px;right:10px;padding:8px 16px;
         background:${type === "error" ? "#b8362b" : type === "success" ? "#2f7a4f" : "var(--cx-brand-ink)"};
         color:white;border-radius:16px;box-shadow:0 4px 18px rgba(47,36,41,.16);z-index:10000;font-size:14px`;
@@ -3572,7 +3285,6 @@ var OwO_demo = new OwO({
         setTimeout(() => el.remove(), CONFIG.NOTIFICATION_DURATION);
     }
 
-    // 检查文件大小
     function checkFileSize(file) {
         if (file.size > CONFIG.MAX_FILE_SIZE) {
             showNotification(`文件过大，最大 ${Math.round(CONFIG.MAX_FILE_SIZE / 1024 / 1024)}MB`, "error");
@@ -3581,7 +3293,6 @@ var OwO_demo = new OwO({
         return true;
     }
 
-    // 插入图片链接到文本框
     function insertRawUrl(url, element, filename = "") {
         if (!element || typeof element.value !== "string") {
             showNotification("插入失败，未找到输入框", "error");
@@ -3591,8 +3302,8 @@ var OwO_demo = new OwO({
             .replace("{url}", url)
             .replace("{filename}", filename.replace(/\.[^/.]+$/, ""));
 
-        // 原先是 `selectionStart || value.length`：光标在最前面时 selectionStart 是 0，
-        // 0 为假值就被 fallback 顶掉，链接插到了末尾。只有真的取不到选区（null）才该 fallback。
+        // 必须判 typeof：光标在最前面时 selectionStart 是 0，用 || 会被 fallback 顶掉，
+        // 链接插到末尾。只有真的取不到选区才 fallback。
         const start = typeof element.selectionStart === "number" ? element.selectionStart : element.value.length;
         const end = typeof element.selectionEnd === "number" ? element.selectionEnd : element.value.length;
         const text = element.value;
@@ -3609,27 +3320,19 @@ var OwO_demo = new OwO({
         }
     }
 
-    // 显示预览图片
     function showImagePreview(file) {
         const reader = new FileReader();
         reader.onload = function (e) {
-            if (CONFIG.USE_BASE64_PREVIEW) {
-                preview.src = e.target.result; // 使用 base64
-            } else {
-                preview.src = e.target.result; // 此处应根据返回的 URL 更新图片链接
-            }
-
-            // 确保预览图可见
+            preview.src = e.target.result;
             const overlay = document.querySelector(".image-preview-overlay");
-            overlay.style.display = "block";  // 显示预览图
+            overlay.style.display = "block";
         };
         reader.readAsDataURL(file);
     }
 
-    // 隐藏预览图片
     function hideImagePreview() {
         const overlay = document.querySelector(".image-preview-overlay");
-        overlay.style.display = "none";  // 隐藏预览图
+        overlay.style.display = "none";
     }
 
     // 手机端隐藏图床上传.pc
@@ -3637,7 +3340,6 @@ var OwO_demo = new OwO({
         document.querySelectorAll(".pc").forEach((el) => (el.style.display = "none"));
     }
 
-    // 上传图片
     async function uploadImage(blob, targetElement) {
         if (!isAllowed) {
             showNotification(`当前域名 ${currentHost} 不在白名单`, "error");
@@ -3681,7 +3383,6 @@ var OwO_demo = new OwO({
         });
     }
 
-    // 设置拖拽和粘贴上传事件
     const dropContainer = document.querySelector(".ctrm-textarea");
     const dropTarget = dropContainer?.querySelector("textarea");
 
@@ -3722,7 +3423,7 @@ var OwO_demo = new OwO({
         });
     }
 
-    const uploadBtn = document.querySelector(CONFIG.UPLOAD_TRIGGER_SELECTOR);
+    const uploadBtn = CONFIG.ENABLE_MANUAL_UPLOAD ? document.querySelector(CONFIG.UPLOAD_TRIGGER_SELECTOR) : null;
     if (uploadBtn) {
         const input = document.createElement("input");
         input.type = "file";
@@ -3841,9 +3542,8 @@ window.uploadToTelegram = function (file) {
     });
 
     dropdown.querySelectorAll("[data-img-host]").forEach(item => {
-        // 原来这里用 JS 在 mouseenter/mouseleave 里写 item.style.background = "#f0f0f0"。
-        // 内联样式压过任何样式表，所以 CSS 里写的 :hover 会被它顶掉；hover 现在交给
-        // .img-host-dropdown [data-img-host]:hover 管，这两个监听器删掉。
+        // hover 交给 CSS 的 .img-host-dropdown [data-img-host]:hover —— 别在这里写内联
+        // background，内联样式会压过样式表里的 :hover。
         item.addEventListener("click", () => {
             dropdown.style.display = "none";
             const hostKey = item.getAttribute("data-img-host");
@@ -3878,9 +3578,8 @@ window.uploadToTelegram = function (file) {
     let recordedMime = 'audio/webm';
     let recordedExt = 'webm';
 
-    // iOS Safari 不支持 audio/webm 录音，硬编码 webm 等于 iOS 用户的录音功能直接废掉
-    // （new MediaRecorder 抛 NotSupportedError，落到 catch 里连提示都没有）。
-    // 按支持度依次探测；一个都不支持就不传 mimeType，让浏览器自己挑默认格式。
+    // iOS Safari 不支持 audio/webm（new MediaRecorder 抛 NotSupportedError），硬编码 webm
+    // 等于 iOS 用户没有录音。按支持度依次探测；全都不支持就不传 mimeType，让浏览器自己挑。
     const VOICE_MIME_CANDIDATES = [
         ['audio/webm;codecs=opus', 'webm'],
         ['audio/webm', 'webm'],
@@ -3908,9 +3607,8 @@ window.uploadToTelegram = function (file) {
         return 'webm';
     }
 
-    // blob URL 必须显式 revoke，否则每录一次就泄漏一个（连着 blob 本体一起常驻内存）。
-    // 注意：上传成功后那个 URL 的所有权交给了 window._myVoiceBlobs（H() 里拿它当自己
-    // 语音气泡的 <audio src>，自己发的语音不重新下载），那种情况下不能 revoke。
+    // blob URL 必须显式 revoke，否则每录一次泄漏一个（连着 blob 本体常驻内存）。但上传成功后
+    // 那个 URL 的所有权归 window._myVoiceBlobs（H() 拿它当 <audio src>），那种情况下不能 revoke。
     function revokeVoiceUrl(url) {
         if (!url) return;
         try { URL.revokeObjectURL(url) } catch (err) { }
@@ -3932,26 +3630,21 @@ window.uploadToTelegram = function (file) {
         window.__ctrmToast ? window.__ctrmToast(msg, type) : alert(msg);
     }
     let audioBlob = null;
-    let audioUrl = null;
     let state = 'idle'; // idle, recording, review
     let reviewPanel = null;
     const voiceBtn = document.getElementById('ctrm-voice-btn');
     const timerDisplay = document.querySelector('.ctrm-voice-recording-indicator .ctrm-voice-timer');
     const recordingIndicator = document.querySelector('.ctrm-voice-recording-indicator');
 
-    // 主逻辑若提前 return（例如 hostname 不含点号时 chat.js 会 return），dom.js 模板
-    // 根本没被注入，voiceBtn / recordingIndicator 都是 null，
-    // 下面的 addEventListener 会抛 TypeError 并打断整个 IIFE。
+    // 主逻辑提前 return（hostname 不含点号）时 dom.js 模板没被注入，这两个都是 null，
+    // 下面的 addEventListener 会抛 TypeError 打断整个 IIFE。
     if (!voiceBtn || !recordingIndicator) {
         console.warn('[ctrm] 未找到录音按钮，语音功能未启用');
         return;
     }
 
-    // 把录音提示气泡对齐到按钮上方。原先这段写在文件末尾的顶层作用域，
-    // 通过 `const origStartRecording = startRecording` 包装 startRecording，
-    // 但 startRecording 是本 IIFE 的局部函数，顶层取不到 —— 那里会抛
-    // ReferenceError，导致它后面的 resize/scroll 监听和语音预加载全部不执行。
-    // 现在挪进闭包内，直接在显示提示后调用。
+    // 把录音提示气泡对齐到按钮上方。必须留在这个闭包里 —— startRecording 是局部函数，
+    // 顶层作用域取不到它。
     function alignRecordingIndicator() {
         if (recordingIndicator.style.display === 'none') return;
         const rect = voiceBtn.getBoundingClientRect();
@@ -3964,7 +3657,6 @@ window.uploadToTelegram = function (file) {
     window.addEventListener('resize', alignRecordingIndicator);
     window.addEventListener('scroll', alignRecordingIndicator);
 
-    // 录音按钮点击事件
     voiceBtn.addEventListener('click', async function () {
         if (state === 'idle') {
             await startRecording();
@@ -4009,8 +3701,7 @@ window.uploadToTelegram = function (file) {
             } else if (err.name === 'NotFoundError') {
                 voiceToast('未找到麦克风设备', 'error');
             } else {
-                // 原先没有这个分支：NotSupportedError（浏览器不支持所选录音格式）
-                // 之类的错误连提示都没有，按钮点下去毫无反应
+                // 兜底：NotSupportedError 之类不给提示的话，按钮点下去毫无反应
                 voiceToast('无法开始录音：' + (err && (err.message || err.name) || err), 'error');
             }
         }
@@ -4040,20 +3731,17 @@ window.uploadToTelegram = function (file) {
             state = 'idle';
             return;
         }
-        // 录完不发、直接再录一次时，旧的 blob URL 会被下面这行覆盖掉。
-        // 原先没人 revoke，它连着 blob 本体一直留在内存里，录多少次漏多少个。
+        // 录完不发、直接再录一次时旧的 blob URL 会被下面覆盖掉，先放掉它
         dropPendingVoiceBlob();
-        // 录音结束后全局保存本地blob和url
         window._lastVoiceBlob = audioBlob;
         window._lastVoiceBlobUrl = URL.createObjectURL(audioBlob);
-        showReviewPanel(durationMs); // 传递真实时长
+        showReviewPanel(durationMs);
     }
 
     function showReviewPanel(durationMs) {
         if (reviewPanel) reviewPanel.remove();
         reviewPanel = document.createElement('div');
         reviewPanel.className = 'ctrm-voice-review-panel';
-        // 试听audio标签src，使用window._lastVoiceBlobUrl
         reviewPanel.innerHTML = `
             <audio class="ctrm-voice-review-audio" src="${window._lastVoiceBlobUrl}" controls style="vertical-align:middle;width:180px;display:none;"></audio>
             <button class="ctrm-voice-review-btn play">试听</button>
@@ -4073,10 +3761,8 @@ window.uploadToTelegram = function (file) {
             }
         };
         audio.onended = () => { playBtn.textContent = '试听'; };
-        // 删除
         reviewPanel.querySelector('.ctrm-voice-review-btn.delete').onclick = function () {
-            // 原先只把两个变量置 null，createObjectURL 出来的 URL 从没 revoke 过：
-            // 录一次删一次就永久漏一个 blob，谁也再拿不到它
+            // 必须 revoke，只置 null 的话录一次删一次就永久漏一个 blob
             audio.pause();
             audio.removeAttribute('src');
             dropPendingVoiceBlob();
@@ -4084,14 +3770,11 @@ window.uploadToTelegram = function (file) {
             reviewPanel = null;
             state = 'idle';
         };
-        // 发送
         const sendBtn = reviewPanel.querySelector('.ctrm-voice-review-btn.send');
         sendBtn.onclick = async function () {
-            // 1. 按钮进入发送中动画（禁用+文字+loading）
             sendBtn.disabled = true;
             sendBtn.innerHTML = '发送中...<span class="ctrm-send-loading"></span>';
             sendBtn.classList.add('sending');
-            // 2. 动态插入loading样式（仅插入一次）
             if (!document.getElementById('ctrm-voice-send-style')) {
                 const style = document.createElement('style');
                 style.id = 'ctrm-voice-send-style';
@@ -4122,9 +3805,7 @@ window.uploadToTelegram = function (file) {
                 `;
                 document.head.appendChild(style);
             }
-            // 3. 上传并发送
-            await uploadAndSendVoice(window._lastVoiceBlob, durationMs); // 用全局blob
-            // 4. 恢复按钮状态并关闭面板
+            await uploadAndSendVoice(window._lastVoiceBlob, durationMs);
             sendBtn.disabled = false;
             sendBtn.innerHTML = '发送';
             sendBtn.classList.remove('sending');
@@ -4134,7 +3815,6 @@ window.uploadToTelegram = function (file) {
         };
     }
 
-    // 样式动态插入
     (function () {
         if (document.getElementById('ctrm-voice-review-style')) return;
         var style = document.createElement('style');
@@ -4156,20 +3836,17 @@ window.uploadToTelegram = function (file) {
             flex-wrap: wrap;
         }
         .ctrm-voice-review-btn {
-            /* color 必须显式写：面板是深底 + color:white，子元素会继承那个白，
-               而按钮自己是白底 —— 原来"试听"就是白字白底，一直看不见。 */
+            /* color 必须显式写：面板是深底 + color:white，按钮自己是白底，不写就是白字白底。 */
             color: var(--cx-ink-2);
             background: #fff; border: 1px solid rgba(47,36,41,.16); border-radius: 999px; padding: 3px 12px; cursor: pointer; font-size: 13px; transition: background 0.2s, border-color 0.2s, color 0.2s;
         }
         .ctrm-voice-review-btn:hover { background: rgba(242,118,155,.12); border-color: #f2769b; color: #c23b6e; }
-        /* 红/绿是语义色，跟提示条那边保持一致。删除是次要动作，描边款；
-           发送是主要动作，实底 —— 三颗一样白的话根本看不出该点哪个。 */
+        /* 红/绿是语义色，跟提示条一致。删除走描边、发送走实底 —— 三颗一样白看不出该点哪个。 */
         .ctrm-voice-review-btn.delete { color: #b8362b; border-color: rgba(184,54,43,.45); }
         .ctrm-voice-review-btn.delete:hover { background: rgba(184,54,43,.10); border-color: #b8362b; color: #b8362b; }
         .ctrm-voice-review-btn.send { color: #fff; background: #2f7a4f; border-color: #2f7a4f; }
         .ctrm-voice-review-btn.send:hover { color: #fff; background: #26643f; border-color: #26643f; }
-        /* 发送中那颗按钮是 disabled 的，但 disabled 的元素照样匹配 :hover ——
-           不写这条，鼠标放上去还会变深，看着像"还能再点一下"。
+        /* disabled 的元素照样匹配 :hover，不写这条鼠标放上去还会变深，像"还能再点一下"。
            :disabled:hover 是 (0,4,0)，压得住上面 .send:hover 的 (0,3,0)。 */
         .ctrm-voice-review-btn:disabled { cursor: default; }
         .ctrm-voice-review-btn.send:disabled:hover { background: #2f7a4f; border-color: #2f7a4f; }
@@ -4177,7 +3854,6 @@ window.uploadToTelegram = function (file) {
         document.head.appendChild(style);
     })();
 
-    // 工具函数 formatTime
     function formatTime(ms) {
         const seconds = Math.floor(ms / 1000);
         const minutes = Math.floor(seconds / 60);
@@ -4185,15 +3861,12 @@ window.uploadToTelegram = function (file) {
         return `${minutes.toString().padStart(2, '0')}:${displaySeconds.toString().padStart(2, '0')}`;
     }
 
-    // 上传并发送语音（修复时长问题）
     async function uploadAndSendVoice(blob, durationMs) {
         console.log('uploadAndSendVoice blob:', blob, typeof blob, blob && blob.size);
-        // 原先这里是裸 return：1 秒内重复触发的语音被静默丢弃，面板照样关掉，
-        // 录音也已经被清掉，用户完全不知道刚才那条没发出去。
+        // 不能裸 return：静默丢弃的话面板照样关、录音也没了，用户不知道那条没发出去
         if (voiceAutoSendLock) return void voiceToast('上一条语音还在发送中，请稍候再试', 'error');
         voiceAutoSendLock = true;
-        // 扩展名跟着实际录音格式走：iOS 录出来是 mp4 容器，硬写 .webm 服务端就会
-        // 返回一个 .webm 结尾的 URL，而那个文件根本不是 webm
+        // 扩展名跟着实际录音格式走：iOS 录出来是 mp4 容器，硬写 .webm 会拿到名不副实的 URL
         const filename = `voice-${Date.now()}.${recordedExt}`;
         const formData = new FormData();
         formData.append('file', blob, filename);
@@ -4204,7 +3877,7 @@ window.uploadToTelegram = function (file) {
             autoRetry: true,
             uploadNameType: 'short',
             returnFormat: 'full',
-            uploadFolder: 'v'
+            uploadFolder: VOICE_CONFIG.UPLOAD_FOLDER
         }).toString();
         try {
             const response = await fetch(`https://img.z-l.top/upload?${query}`, {
@@ -4221,15 +3894,13 @@ window.uploadToTelegram = function (file) {
             }
             if (result[0]?.src) {
                 const voiceUrl = result[0].src;
-                // 强制保证映射对象存在
                 if (!window._myVoiceBlobs || typeof window._myVoiceBlobs !== 'object') window._myVoiceBlobs = {};
                 if (window._lastVoiceBlobUrl) {
                     // 同一个 URL 又传了一次时，先把旧的那个 blob URL 放掉
                     if (window._myVoiceBlobs[voiceUrl] && window._myVoiceBlobs[voiceUrl] !== window._lastVoiceBlobUrl) {
                         revokeVoiceUrl(window._myVoiceBlobs[voiceUrl]);
                     }
-                    // 这个 blob URL 的所有权从这里起归 _myVoiceBlobs：H() 拿它当自己
-                    // 语音气泡的 <audio src>，所以不能 revoke，只把待发引用清掉
+                    // 所有权从这里起归 _myVoiceBlobs（H() 拿它当 <audio src>），所以不 revoke
                     window._myVoiceBlobs[voiceUrl] = window._lastVoiceBlobUrl;
                     window._lastVoiceBlob = null;
                     window._lastVoiceBlobUrl = null;
@@ -4242,7 +3913,6 @@ window.uploadToTelegram = function (file) {
                     // 发送仍然走主模块的 R()：若被 5 秒节流拦下，那边会提示并保留内容
                     emitBtn.click();
                 } else {
-                    // 原先这里没有 else：找不到输入框就静默丢弃，语音上传都成功了却什么也没发出去
                     voiceToast('找不到聊天输入框，语音没能发出；链接已复制到控制台\n' + voiceUrl, 'error');
                     console.warn('[ctrm] 语音已上传但无法发送:', voiceUrl);
                 }
@@ -4261,24 +3931,13 @@ window.uploadToTelegram = function (file) {
     }
 })();
 
-// 说明：原先这里还有一份 alignRecordingIndicator，以及
-//     const origStartRecording = startRecording;
-//     startRecording = async function () { ... };
-// startRecording 是上面那个 IIFE 的局部函数，顶层作用域取不到它，
-// 这两行必然抛 ReferenceError: startRecording is not defined，
-// 于是它下面的 resize / scroll 监听和 preloadAllVoiceAudios 全都没能注册。
-// 而且即使不报错，包装也是无效的 —— click 处理器捕获的是原函数引用，
-// 重新赋值影响不到它。现在对齐逻辑已挪进 IIFE 内，由 startRecording 直接调用。
-
-// 语音气泡后台预加载，提升点击体验
+// 语音气泡后台预加载
 function preloadAllVoiceAudios() {
     document.querySelectorAll('.ctrm-voice-bubble audio').forEach(audio => {
         if (!audio._preloadTried) {
             audio._preloadTried = true;
-            // 只要src有值就预加载
             if (audio.src) {
                 audio.load();
-                // 监听加载失败
                 audio.onerror = function () {
                     const bubble = audio.closest('.ctrm-voice-bubble');
                     if (bubble && !bubble.querySelector('.ctrm-voice-error')) {
@@ -4294,6 +3953,4 @@ function preloadAllVoiceAudios() {
         }
     });
 }
-// DOM更新后自动预加载
 setTimeout(preloadAllVoiceAudios, 300);
-// 也可在新消息插入后调用
