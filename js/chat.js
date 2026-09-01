@@ -1978,7 +1978,7 @@ img.playing {
                                             // （W() 手动重连有 remove，ctrmScheduleReconnect() 那条路没有）。
                                             // 只在确实要重画 history 时才清，服务端不带 history 时不会误删。
                                             b.find(".ctrm-dialog-item").remove();
-                                            t.forEach(function (t) { H(t) })
+                                            t.forEach(function (t) { H(t, !0) })
                                         }(r.history),
                                         function t(e) {
                                             e ? l = e : e = l || [];
@@ -2104,7 +2104,11 @@ img.playing {
                 o || (el.scrollTop = Math.max(0, scrollBefore - (heightBefore - el.scrollHeight)))
             }
 
-            function H(t) {
+            // quiet 为真 = 这条不算"新消息"，折叠成球时不要闪。
+            // 两个地方会传：重连后服务端重发的整份 history，和"连接已断开"那条系统提示。
+            // 从别的标签页切回来时，被节流的连接常常已经断了，于是这两件事一起发生 ——
+            // 原先每条都闪一下，球上就一直挂着一圈光。
+            function H(t, quiet) {
                 // 调用消息处理函数
                 F(t);
 
@@ -2429,13 +2433,31 @@ img.playing {
                 // 调用滚动到底部函数
                 I();
 
-                // 如果聊天窗口是关闭的状态，给窗口添加一个"glow"效果，提示有新消息
-                function showNewMessageGlow() {
-                    if (!m.hasClass("ctrm-close")) return;
+                // 折叠成球时来了新消息，给球提示一下（见上面 quiet 的说明）。
+                // .ctrm-ding 挂在 #ctrm_ 上，球边上那圈光晕靠它（借的是 .ctrm-container
+                // 的 ::after，CSS 里选不到父级，所以只能挂外层）。动画 .9s，留 950ms ——
+                // 摘类必须晚于动画本身，早了动画会被从中间掐断、直接跳回原样。
+                // .glow 不管视觉，只是把模板里那条 .glow{background:#fbe6c4!important}
+                // 顶住，不让球被拍成一块死色。
+                // 连着来消息时（群里刷屏很常见）光靠 addClass 是不行的：类已经在上面了，
+                // 浏览器认为什么都没变，动画不重跑，而且第一条的定时器到点还会把类摘掉，
+                // 后面几条等于没提示。所以先摘类、读一次 offsetWidth 强制重排、再挂回去，
+                // 定时器 id 存在 DOM 节点上（这个函数每收一条消息重新声明一次，
+                // 局部变量存不住），每次都清掉上一个。
+                function showNewMessageHalo() {
+                    if (quiet || !m.hasClass("ctrm-close")) return;
+                    var root = m[0];
+                    clearTimeout(root.cxHaloTimer);
+                    m.removeClass("ctrm-ding");
+                    void root.offsetWidth;
                     g.addClass("glow");
-                    setTimeout(function () { g.removeClass("glow"); }, 300);
+                    m.addClass("ctrm-ding");
+                    root.cxHaloTimer = setTimeout(function () {
+                        m.removeClass("ctrm-ding");
+                        g.removeClass("glow");
+                    }, 950);
                 }
-                showNewMessageGlow();
+                showNewMessageHalo();
 
                 // 发送者点击「@他」已改为 ctrmInitOnce() 里 b 上的一次性事件委托。
                 // 原先每收到一条消息都要遍历**全部**历史 .ctrm-dialog-sender 重新 off/on，
@@ -2463,7 +2485,7 @@ img.playing {
                 // 现在整段离线期只提示一次，重连交给 ctrmScheduleReconnect()。
                 if (e || offlineNoticed || unloading) return;
                 offlineNoticed = !0,
-                    H({ time: Date.now(), id: 111111111211, name: "SYSTEM", msg: "连接已断开，正在自动重连…（也可点 '😜' 立即重连）" })
+                    H({ time: Date.now(), id: 111111111211, name: "SYSTEM", msg: "连接已断开，正在自动重连…（也可点 '😜' 立即重连）" }, !0)
             }
 
 
@@ -2503,6 +2525,19 @@ img.playing {
             function B() {
                 var t = window.innerWidth;
                 t / window.innerHeight <= 1.2 ? m.addClass("ctrm-mobile") : m.removeClass("ctrm-mobile"), t <= 1210 || m.hasClass("ctrm-mobile") ? v.hide() : m.hasClass("ctrm-mobile") || v.show(), b.scrollTop(9999999)
+            }
+            // 折叠成球。animate 为真时走 CSS 那两条动画（面板缩着淡出 → 球弹进来），
+            // 两个 setTimeout 的时长必须跟 cxFoldOut / cxOrbPop 对齐。
+            // 初始化那次传 false：刷新时不该有任何动作，这套动画只属于"用户点了 ▼"。
+            function foldToBall(animate) {
+                if (m.hasClass("ctrm-close") || m.hasClass("ctrm-folding")) return;
+                S.hide(), D.hide(), v.hide(), E.show();
+                if (!animate) return void m.addClass("ctrm-close");
+                m.addClass("ctrm-folding");
+                setTimeout(function () {
+                    m.removeClass("ctrm-folding").addClass("ctrm-close ctrm-popin");
+                    setTimeout(function () { m.removeClass("ctrm-popin") }, 320);
+                }, 190);
             }
             // 用 pagehide 而不是 beforeunload：手机浏览器（尤其 iOS Safari）切走时
             // beforeunload 常常根本不触发，pagehide 稳定。
@@ -2549,7 +2584,7 @@ img.playing {
                 // 只能靠时间差挡掉"选词那一下"回车
                 return !(80 > Date.now() - ctrmComposeEndAt)
             }
-            document.body.addEventListener("click", j), window.addEventListener("popstate", j), m.on("click", function (t) { return t.stopPropagation() }), m.on("touchstart", function (t) { return t.stopPropagation() }), m.on("touchend", function (t) { return t.stopPropagation() }), m.on("touchmove", function (t) { return t.stopPropagation() }), S.click(function (t) { m.addClass("ctrm-close"), S.hide(), D.hide(), v.hide(), E.show(), t.stopPropagation() }), g.click(function () { m.hasClass("ctrm-close") && (m.removeClass("ctrm-close"), S.show(), D.show(), E.hide(), B()) }), D.click(W), x.click(R), w.on("keydown", function (t) {
+            document.body.addEventListener("click", j), window.addEventListener("popstate", j), m.on("click", function (t) { return t.stopPropagation() }), m.on("touchstart", function (t) { return t.stopPropagation() }), m.on("touchend", function (t) { return t.stopPropagation() }), m.on("touchmove", function (t) { return t.stopPropagation() }), S.click(function (t) { foldToBall(!0), t.stopPropagation() }), g.click(function () { m.hasClass("ctrm-close") && (m.removeClass("ctrm-close"), S.show(), D.show(), E.hide(), B()) }), D.click(W), x.click(R), w.on("keydown", function (t) {
                 // 组合态不 preventDefault：那一下回车要留给输入法上屏，
                 // 而组合态的回车本身也不会往 textarea 里插换行
                 ctrmIsEnterSend(t) && (t.preventDefault(), R())
@@ -2559,7 +2594,16 @@ img.playing {
                     n = t.scrollTop,
                     r = t.scrollHeight;
                 o = e + n < .9 * r ? (y.show(), !1) : (y.hide(), !0)
-            }), y.click(function () { y.hide(), o = !0, I() }), T.click(function () { m.find(".ctrm-domain-filter").hide() }), B(), p = document.querySelector("script[src*=z-l]"), h = p && null !== p.getAttribute("fold"), m.hasClass("ctrm-mobile") || h ? (setTimeout(function () { m.hide(), S.click() }, 10), setTimeout(function () { m.show() }, 100)) : m.show(), window.addEventListener("resize", B)
+            }), y.click(function () { y.hide(), o = !0, I() }), T.click(function () { m.find(".ctrm-domain-filter").hide() }), B(), p = document.querySelector("script[src*=z-l]"),
+                // 默认折叠成球。原先是反过来的：默认展开，只有移动端、或者宿主 script 标签
+                // 上写了 fold="" 才折叠。现在改成一律先折叠，宿主想让它一进来就展开，
+                // 就在引入这个脚本的 <script> 上加个 open 属性。
+                h = !(p && null !== p.getAttribute("open")),
+                // 折叠这一步改成同步做：原先是 10ms 后 hide + 点 ▼、100ms 后再 show，
+                // 那条路只有移动端会走，现在人人都走，那 90ms 空白和中间可能闪一下的
+                // 展开态就都露出来了。同一个 tick 里折叠再 show，浏览器根本没机会画
+                // 中间态，也不用等两个定时器。这里走 foldToBall(!1)：不带动画。
+                (m.hasClass("ctrm-mobile") || h) && foldToBall(!1), m.show(), window.addEventListener("resize", B)
         }()
     }, { "./dom.js": 3, "jQuery-slim": 1 }],
 
@@ -2802,8 +2846,21 @@ var OwO_demo = new OwO({
     /* 全站唯一一个"聊天窗关着也一直挂在页面上"的元素，所以不跟着视口无限长大：
        1280 的屏上 42px，1920 上 58px，再宽也停在 58px。 */
     --cx-ball: clamp(42px, 3.2vw, 58px);
+    /* position 是 CDN 那张远程样式表给的（#ctrm_{position:fixed}）。可 widget 是
+       JS 插进 DOM 的，那张表还在路上就已经画了第一帧 —— 那一帧里整条祖先链全是
+       static，于是下面所有 position:absolute 的光效层找不到定位祖先，百分比宽高
+       直接按视口算：满屏一颗横躺的大椭圆。这四条 position 就是把定位链补齐，
+       样式表没到也是右下角一颗正常的球。写的值跟 CDN 完全一样，到了也不冲突。 */
+    position: fixed;
     bottom: clamp(14px, 1.1vw, 22px);
     right: clamp(14px, 1.1vw, 22px);
+    /* CDN 给 #ctrm_ 和 .ctrm-container 都写了 transition:all .3s。折叠这一下宽高要从
+       35vw/40vw 掉到 42~58px，那条过渡会把它演成"一颗占掉四分之一屏的大球慢慢缩小"，
+       刷新时和点 ▼ 时都看得见，很怪。折叠态直接把过渡关掉：球该多大就多大，一步到位。
+       展开不受影响 —— 摘掉 .ctrm-close 之后读的是基础规则里那条 transition。 */
+    transition: none;
+    /* 新消息时球边上那圈光晕的颜色。默认跟着调色板走，想单独换就只改这一行。 */
+    --cx-orb-ring: var(--cx-orb-b-mid);
     /* 光球的调色板和参数：换配色只动这一段。
        17 个色位跟 react-ai-orb 的 palette 一一对应。 */
     --cx-orb-bg-start: rgb(236, 133, 255);
@@ -2832,10 +2889,15 @@ var OwO_demo = new OwO({
     --cx-orb-glow: 1;
 }
 #ctrm_.ctrm-close .ctrm-container {
+    /* 见上面 position 那段：这一层是光效层的定位参照，必须自己写死。 */
+    position: relative;
     width: var(--cx-ball);
     height: var(--cx-ball);
     max-height: none;
-    /* 让人数角标能挂到球外面去。容器本来是 overflow:hidden，
+    /* 同上：这一层也带着 CDN 那条 transition:all .3s，宽高是在它身上变的，
+       不关掉的话缩小动画照样跑。 */
+    transition: none;
+    /* 让人数角标能挂到球外面去，涟漪那圈也要能扩到球外面。容器本来是 overflow:hidden，
        但折叠态里 .ctrm-panel 和 .ctrm-online 都已经 display:none，没别的东西会漏。 */
     overflow: visible;
 }
@@ -2851,6 +2913,10 @@ var OwO_demo = new OwO({
 
 /* ---- 球体本身 = .ctrm-title ---- */
 #ctrm_.ctrm-close .ctrm-title {
+    /* position / width 同样是补 CDN 的（见上面 position 那段）：球里的光效层全都
+       absolute + 百分比，参照的就是这一层。 */
+    position: relative;
+    width: 100%;
     height: 100%;
     border-radius: 50%;
     background-color: transparent;
@@ -2865,23 +2931,34 @@ var OwO_demo = new OwO({
     transition: transform .18s;
 }
 #ctrm_.ctrm-close .ctrm-title:hover { transform: scale(1.06); }
-/* 来新消息时 JS 给 .ctrm-title 加 .glow，300ms 后摘掉（见上面 showNewMessageGlow）。
-   CDN 和主题里那两条 .glow 都是 background + !important，会把整颗球拍成一块死色，
-   所以这条 (1,3,0) 压过它们、把球留住。
-   只闪一圈白光是不够的：宿主页面大多是白底，白圈等于没闪。所以给三重提示 ——
-   贴边一圈白（深色底上看得见）+ 一大片调色板紫色的外扩光晕（白底上看得见）+ 一次
-   放大回弹（什么底色上都看得见）。三样都只活 300ms。 */
+/* 来新消息时 JS 给 #ctrm_ 加 .ctrm-ding、给 .ctrm-title 加 .glow，950ms 后一起摘掉。
+   提示只有一样东西：球边上一圈化开的光涨开又散掉（见下面 .ctrm-ding）。球本身不动、
+   不变形、也没有白色描边 —— 贴边一圈白光在任何底色上都扎眼，回弹又跟折叠时那一下撞。
+   所以这条 .glow 不负责任何视觉，它是纯防御：上面那条
+   #ctrm_ .ctrm-title.glow { background:#fbe6c4 !important }（还有 CDN 里同名那条）
+   会把整颗球拍成一块死色，这条 (1,3,0) 压过它们、把球原样留住。 */
 #ctrm_.ctrm-close .ctrm-title.glow {
     background-color: transparent !important;
     background-image: radial-gradient(circle at 50% 30%, var(--cx-orb-bg-start) 0, var(--cx-orb-bg-end) 70%) !important;
-    box-shadow:
-        0 0 0 calc(var(--cx-ball) * .05) rgba(255, 255, 255, .9),
-        0 0 calc(var(--cx-ball) * .34) calc(var(--cx-ball) * .06) var(--cx-orb-sh2),
-        var(--cx-orb-sh3) 0 0 calc(var(--cx-ball) * .012) 0 inset,
-        var(--cx-orb-sh4) 0 calc(var(--cx-ball) * .012) calc(var(--cx-ball) * .085) 0 inset;
-    /* 逗号后面那半截把球体自己的变色动画接回来：Multi Color 那种整颗球一起变色的
-       配置靠它，普通配置下它是 none，写着也不碍事。 */
-    animation: cxOrbPing .3s ease-out, var(--cx-orb-main-hue);
+}
+/* ---- 新消息那一圈光晕。整个球的 7 个伪元素都被光效占满了，所以借 .ctrm-container 的
+   ::after —— 它一直空着，尺寸又刚好等于球（.ctrm-title 是 width/height:100%）。
+   z-index:-1 让它沉到球后面：光从球背后涨出来，不会糊住人数角标，也不会挡住点击。
+   实心到 42% 之后再化开，中间那块正好被球自己挡掉，露出来的只有球边上化开的那一圈，
+   一条硬边都没有。只涨到 1.5 倍就停，不会扩得满角都是。
+   类挂在 #ctrm_ 上而不是球上，因为 CSS 选不到父级；JS 那边 950ms 后摘掉。 ---- */
+#ctrm_.ctrm-close.ctrm-ding .ctrm-container::after {
+    content: "";
+    position: absolute;
+    top: -12%;
+    right: -12%;
+    bottom: -12%;
+    left: -12%;
+    z-index: -1;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--cx-orb-ring) 42%, transparent 76%);
+    pointer-events: none;
+    animation: cxOrbHalo .9s ease-out both;
 }
 /* ---- shape-a：不带混合模式、不带模糊，就是一层会转的浅色球面 ---- */
 #ctrm_.ctrm-close .ctrm-title::before {
@@ -2914,6 +2991,10 @@ var OwO_demo = new OwO({
    原版的 opacity:.8 也是同一个原因，直接乘进了下面两条 rgba 的 alpha 里
    （.5 × .8 = .4）。 ---- */
 #ctrm_.ctrm-close .ctrm-title-span {
+    /* 这两条也是补 CDN 的（display:inline-block + position:absolute）：<span> 默认是
+       inline，inline 盒子的百分比宽高会被直接忽略，光效层就散了。 */
+    position: absolute;
+    display: block;
     left: 6.1%; top: 6.1%;
     right: auto; bottom: auto;
     margin: 0;
@@ -3035,24 +3116,50 @@ var OwO_demo = new OwO({
 /* ---- 系统里关了动效的人，就别让球一直转。停下来颜色一层不少，只是不动了。 ---- */
 @media (prefers-reduced-motion: reduce) {
     #ctrm_.ctrm-close .ctrm-title,
-    /* .glow 那条是 (1,3,0)，比 .ctrm-title 高一级，这里必须单独再写一遍才压得住，
-       不然新消息那下放大回弹照样会跑。白圈和光晕不受影响，提示还在。 */
-    #ctrm_.ctrm-close .ctrm-title.glow,
     #ctrm_.ctrm-close .ctrm-title::before,
     #ctrm_.ctrm-close .ctrm-title::after,
     #ctrm_.ctrm-close .ctrm-title-span > span:first-child::before,
     #ctrm_.ctrm-close .ctrm-title-span > span:first-child::after,
     #ctrm_.ctrm-close .ctrm-title-span strong::before,
     #ctrm_.ctrm-close .ctrm-title-span strong::after { animation: none; }
+    /* 新消息那圈光晕不是停在半路、而是整个不要：它靠动画从无到有再到无，停住等于
+       球边上永远糊着一圈光。这些人的提示是聊天窗标题栏本来那套，不缺。 */
+    #ctrm_.ctrm-close.ctrm-ding .ctrm-container::after { content: none; }
 }
-/* ---- 光球用到的四条动画。转的动 transform，变色的动 filter，两条并行互不干扰；
-   光斑那两条只是缩放呼吸。名字全部带 cxOrb 前缀，跟 CDN 里的 blink / ctrm-spin 不撞。 ---- */
+/* ---- 光球用到的五条动画。转的动 transform，变色的动 filter，两条并行互不干扰；
+   光斑那两条只是缩放呼吸，cxOrbHalo 是新消息时球边上那圈光。名字全部带 cxOrb 前缀，
+   跟 CDN 里的 blink / ctrm-spin 不撞。 ---- */
 @keyframes cxOrbSpin { 0% { transform: rotate3d(1, 1, 1, 0deg) } 100% { transform: rotate3d(1, 1, 1, 1turn) } }
 @keyframes cxOrbHue { 0% { filter: hue-rotate(0deg) } 50% { filter: hue-rotate(var(--cx-orb-hue-deg)) } 100% { filter: hue-rotate(0deg) } }
 @keyframes cxOrbShineA { 0% { transform: scale(.4) } 50% { transform: scale(.1) } 100% { transform: scale(.4) } }
 @keyframes cxOrbShineB { 0% { transform: scale(.6) } 50% { transform: scale(.1) } 100% { transform: scale(.6) } }
-/* 新消息那一下的放大回弹。只在 .glow 存在的 300ms 里跑一遍。 */
-@keyframes cxOrbPing { 0% { transform: scale(1) } 45% { transform: scale(1.16) } 100% { transform: scale(1) } }
+/* 球边上那圈光：涨开、同时淡掉。opacity 在 18% 就到顶，所以是"亮一下再散"，
+   不是"慢慢亮起来"。scale 相对球径，所以大球小球一个观感。 */
+@keyframes cxOrbHalo { 0% { transform: scale(.9); opacity: 0 } 18% { opacity: .7 } 100% { transform: scale(1.5); opacity: 0 } }
+
+/* ---------- 点 ▼ 收起来的那一下 ----------
+   这一段不在调参页那份可复制的块里（那份只管球的配色和参数），它是折叠这个动作本身。
+   要紧的是不去动宽高：宽高从 35vw/40vw 掉到 42px 的过渡，就是之前"一颗占掉四分之一屏
+   的大球慢慢缩小"的来源。这里改成面板带着 transform 往球那个位置缩着淡出（190ms），
+   然后球自己弹进来（320ms）。两个类都是 JS 临时挂的，刷新那次一个都不挂 ——
+   一进来就是一颗静止的球，跟你要的一样。 */
+#ctrm_.ctrm-folding .ctrm-container {
+    /* 收拢的落点大致对着球心（球在右下角 14~22px 处、直径 42~58px），
+       不然面板会往屏幕最角上钻，看着像掉下去了。 */
+    transform-origin: calc(100% - 22px) calc(100% - 22px);
+    animation: cxFoldOut .19s cubic-bezier(.4, 0, 1, 1) both;
+}
+#ctrm_.ctrm-close.ctrm-popin .ctrm-title {
+    /* 逗号后半截把球自己的变色动画接回来，跟上面 .glow 那条一个道理。 */
+    animation: cxOrbPop .32s cubic-bezier(.34, 1.5, .64, 1) both, var(--cx-orb-main-hue);
+}
+@keyframes cxFoldOut { 0% { transform: scale(1); opacity: 1 } 100% { transform: scale(.32); opacity: 0 } }
+@keyframes cxOrbPop { 0% { transform: scale(.35); opacity: 0 } 55% { transform: scale(1.1); opacity: 1 } 100% { transform: scale(1); opacity: 1 } }
+/* 关了动效的人：折叠还是一步到位，不闪不动。 */
+@media (prefers-reduced-motion: reduce) {
+    #ctrm_.ctrm-folding .ctrm-container,
+    #ctrm_.ctrm-close.ctrm-popin .ctrm-title { animation: none; }
+}
 
 /* ---------- 消息区 ---------- */
 /* .ctrm-panel / .ctrm-online 的底色一个都不动，保持原来的近白和浅灰。 */
@@ -3254,7 +3361,13 @@ var OwO_demo = new OwO({
 }
 
 </style>
-<div id="ctrm_" style="z-index:10002!important;" class=" " >
+<!-- display:none 是初始状态，不是装饰：jQuery 的 append() 遇到 HTML 里的外链
+     script 标签会走同步 XHR（jQuery._evalUrl 的 async:false），插好的 DOM 就摊在那儿
+     等一个跨域往返，浏览器完全有机会先画一帧 —— 而那时 .ctrm-close 还没挂上（在下面
+     初始化那段的末尾才挂），远程样式表也可能还没到，画出来的就是"展开态的大白板"或者
+     一坨没样式的聊天 DOM，刷新时闪一下很明显。
+     初始化收尾处 m.show() 把它放出来，那一刻折叠与否已经定了，第一帧就是最终样子。 -->
+<div id="ctrm_" style="z-index:10002!important;display:none;" class=" " >
     <div class="ctrm-container">
         <div class="ctrm-title">
             <span class="ctrm-title-span">
