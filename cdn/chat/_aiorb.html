@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>折叠态悬浮球 · AI 光球（react-ai-orb 移植）</title>
+<style>
+/* 临时预览页，选完删。上半页是移植版（用的就是 chat.js 里那一小棵 DOM，
+   零改动），下半页是 react-ai-orb 原版对照。 */
+body{margin:0;font:14px/1.65 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;color:#3a3034;background:#fff}
+.page{padding:26px 32px 150px;max-width:1000px}
+h1{font-size:20px;margin:0 0 6px}
+.lead{color:#6b5f64;font-size:13px;margin:0 0 6px}
+.lead b{color:#2f2429}
+code{font-size:12px;background:#f7f4f5;padding:1px 5px;border-radius:5px;color:#8a4a63}
+h2{font-size:13px;margin:26px 0 3px;color:#5f4f56}
+.hint{color:#8b7a81;font-size:12px;margin:0 0 12px}
+.row{display:flex;flex-wrap:wrap;gap:26px 40px;padding:10px 0 2px;align-items:flex-start}
+.cell{width:130px;text-align:center}
+.cell .stage{height:96px;display:flex;align-items:center;justify-content:center}
+.cell h3{font-size:12.5px;margin:8px 0 0;color:#2f2429;font-weight:600}
+.cell p{font-size:11px;color:#8b7a81;margin:2px 0 0;line-height:1.45}
+
+/* 控制面板 */
+.panel{border:1px solid rgba(47,36,41,.12);border-radius:14px;padding:14px 16px;margin:10px 0 0;background:#fffafb}
+.panel .grp{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center}
+.panel label{font-size:12px;color:#5f4f56;display:flex;align-items:center;gap:7px}
+.panel input[type=range]{width:118px}
+.panel select,.panel input[type=number]{font:inherit;font-size:12px;padding:3px 8px;border-radius:999px;border:1px solid rgba(47,36,41,.16);background:#fff}
+.panel .val{color:#c23b6e;font-variant-numeric:tabular-nums;min-width:34px;display:inline-block}
+.swatches{display:none;flex-wrap:wrap;gap:6px 10px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(47,36,41,.10)}
+.swatches.on{display:flex}
+.swatches label{font-size:11px;gap:5px}
+.swatches input[type=color]{width:26px;height:20px;padding:0;border:1px solid rgba(47,36,41,.16);border-radius:5px;background:#fff}
+.swatches .a{width:52px}
+.mini{font:inherit;font-size:12px;padding:4px 12px;border-radius:999px;border:1px solid rgba(47,36,41,.16);background:#fff;color:#5f4f56;cursor:pointer}
+.mini:hover{background:rgba(242,118,155,.10);border-color:#f2769b}
+textarea{width:100%;height:230px;margin-top:8px;font:12px/1.55 ui-monospace,Consolas,monospace;border:1px solid rgba(47,36,41,.14);border-radius:10px;padding:10px;color:#4a3f44;background:#fffdfd}
+.bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid rgba(47,36,41,.10);padding:10px 18px;display:flex;gap:10px;align-items:center;font-size:12px;color:#5f4f56;z-index:31}
+.bar .sp{flex:1}
+.filler{color:#cdc7c9;font-size:13px;line-height:2}
+/* 画廊里的球不要 fixed */
+.ctrm_.ctrm-close.demo{position:relative;bottom:auto;right:auto}
+/* 只是这个预览页有底部工具条，把真实那颗抬到条上面，不然被挡住看不见 */
+#ctrm_{margin-bottom:52px}
+
+/* ===== 以下是 react-ai-orb@1.0.13 自己的 CSS，逐字照抄，只用于「原版对照」那一排 ===== */
+.orb-main{animation:var(--main-hue-animation);background-image:radial-gradient(circle at 50% 30%,var(--main-bg-start) 0,var(--main-bg-end) 70%);border-radius:50%;box-shadow:var(--main-shadow);cursor:pointer;display:flex;height:var(--react-ai-orb-size);overflow:hidden;position:relative;width:var(--react-ai-orb-size)}
+.loc-a{position:absolute}.loc-b{left:10%}.loc-b,.loc-c{position:absolute;top:5%}.loc-c,.loc-d{left:5%}.loc-d{position:absolute;top:5%}
+.loc-glass{left:50%;position:absolute;top:50%;transform:translate(-50%,-50%)}
+.shape-a{animation:rotateDiagonal var(--animation-rotation-speed-base) linear infinite,hueShift var(--animation-hue-speed-base) linear infinite;background-image:radial-gradient(circle at 50% 90%,var(--shape-a-start) 0,var(--shape-a-end) 70%)}
+.shape-a,.shape-b{border-radius:50%;height:var(--shapes-size);transform-style:preserve-3d;width:var(--shapes-size)}
+.shape-b{animation:rotateDiagonal calc(var(--animation-rotation-speed-base) + var(--animation-rotation-speed-base)*.5) linear infinite,hueShift calc(var(--animation-hue-speed-base) + var(--animation-hue-speed-base)*.5) linear infinite;background:radial-gradient(circle at 33% 12%,var(--shape-b-start) 0,var(--shape-b-middle) 26%,var(--shape-b-end) 63%);filter:blur(2px);mix-blend-mode:soft-light;will-change:transform}
+.shape-c{animation:rotateDiagonal calc(var(--animation-rotation-speed-base) + var(--animation-rotation-speed-base)*1) linear infinite,hueShift calc(var(--animation-hue-speed-base) + var(--animation-hue-speed-base)*1) linear infinite;background-image:radial-gradient(circle at 31% 12%,var(--shape-c-start) 0,var(--shape-c-middle) 31%,var(--shape-c-end) 77%);mix-blend-mode:color-dodge;opacity:.65}
+.shape-c,.shape-d{border-radius:50%;filter:blur(1px);height:var(--shapes-size);transform-style:preserve-3d;width:var(--shapes-size)}
+.shape-d{animation:rotateDiagonal calc(var(--animation-rotation-speed-base) + var(--animation-rotation-speed-base)*1.5) linear infinite,hueShift calc(var(--animation-hue-speed-base) + var(--animation-hue-speed-base)*1.5) linear infinite;background-image:radial-gradient(circle at 12% 80%,var(--shape-d-start) 0,var(--shape-d-middle) 31%,var(--shape-d-end) 77%);mix-blend-mode:color;opacity:.55}
+.glass{background:transparent;border-radius:50%;box-shadow:inset 0 -1px 6px 1px hsla(0,0%,100%,.5),inset 0 3px 4px 0 hsla(0,0%,100%,.5);height:var(--shapes-size);opacity:.8;width:var(--shapes-size)}
+.blob-a{animation:rotateDiagonal calc(var(--animation-rotation-speed-base) + var(--animation-rotation-speed-base)*2) linear infinite,hueShift calc(var(--animation-hue-speed-base) + var(--animation-hue-speed-base)*2) linear infinite;mix-blend-mode:screen;opacity:var(--blob-a-opacity)}
+.blob-b{animation:rotateDiagonal calc(var(--animation-rotation-speed-base) + var(--animation-rotation-speed-base)*2.5) linear infinite,hueShift calc(var(--animation-hue-speed-base) + var(--animation-hue-speed-base)*2.5) linear infinite;mix-blend-mode:lighten;opacity:var(--blob-b-opacity)}
+.blob-b,.blob-shine{position:absolute;top:0}
+.blob-shine{fill:#fff;animation:expand 3.5s linear infinite;filter:blur(15px);mix-blend-mode:hard-light;opacity:.9;transform:scale(.4)}
+.shine-b{animation:expand-b 5s ease-in-out infinite;left:15%;mix-blend-mode:plus-lighter;opacity:.3}
+@keyframes expand{0%{transform:scale(.4)}50%{transform:scale(.1)}to{transform:scale(.4)}}
+@keyframes expand-b{0%{transform:scale(.6)}50%{transform:scale(.1)}to{transform:scale(.6)}}
+@keyframes rotateDiagonal{0%{transform:rotate3d(1,1,1,0deg)}to{transform:rotate3d(1,1,1,1turn)}}
+@keyframes hueShift{0%{filter:hue-rotate(0deg)}50%{filter:hue-rotate(var(--hue-rotation))}to{filter:hue-rotate(0deg)}}
+</style>
+<style id="cdnbase"></style>
+<style id="orbcss"></style>
+</head>
+<body>
+<div class="page">
+  <h1>折叠态悬浮球 · AI 光球</h1>
+  <p class="lead">
+    照 <b>react-ai-orb</b> 的做法重做的：一层主渐变打底，上面叠四层各自以不同速度做 3D 旋转的径向渐变，
+    用 <code>soft-light</code> / <code>color-dodge</code> / <code>color</code> 混在一起，再加一圈白色内高光和两颗会呼吸的白色光斑。
+  </p>
+  <p class="lead">
+    关键是：<b>纯 CSS，一行 DOM 都没加</b>。原版是 6 个 div + 4 个 SVG，这里全塞进 <code>.ctrm-title</code> 现成那几个元素的伪元素里，
+    所以能直接落到 <code>chat.js</code>，点击展开的逻辑一个字节都不用改。下面每颗球用的都是聊天室真实的那段 HTML。
+  </p>
+
+  <h2>三款 · 58px（1900 宽屏上的实际大小）</h2>
+  <p class="hint">鼠标放上去会轻轻放大一点。右上角白色的是在线人数角标，真实存在的那个。</p>
+  <div class="row" id="rowA"></div>
+
+  <h2>同三款 · 42px（窄屏下限，压力测试）</h2>
+  <p class="hint">这一档看会不会糊。所有模糊、阴影、角标都是按球径等比缩的，不是写死的 px。</p>
+  <div class="row" id="rowB"></div>
+
+  <h2>原版对照 · react-ai-orb 自己的 DOM + CSS（82px，它的默认尺寸）</h2>
+  <p class="hint">这排是把 npm 包里的 CSS 和 SVG 原封不动搬过来跑的，用来对比移植版差多少。</p>
+  <div class="row" id="rowC"></div>
+
+  <h2>自己调</h2>
+  <p class="hint">下面这些旋钮对应原库的 props，调的是这一颗和右下角那颗真实位置的球。定下来我就照这套参数落进 <code>chat.js</code>。</p>
+  <div class="row" id="rowD"></div>
+  <div class="panel">
+    <div class="grp">
+      <label>款式
+        <select id="k-preset"></select>
+      </label>
+      <label>球径 <input type="range" id="k-size" min="34" max="90" step="1" value="58"><span class="val" id="v-size">58</span>px</label>
+      <label>转速 <input type="range" id="k-sb" min="0.1" max="2" step="0.05" value="1"><span class="val" id="v-sb">1</span></label>
+      <label>变色速度 <input type="range" id="k-sh" min="0.05" max="2" step="0.05" value="1"><span class="val" id="v-sh">1</span></label>
+      <label>变色幅度 <input type="range" id="k-hue" min="0" max="360" step="10" value="120"><span class="val" id="v-hue">120</span>°</label>
+      <label><input type="checkbox" id="k-mainhue"> 整颗球一起变色</label>
+    </div>
+    <div class="grp" style="margin-top:10px">
+      <label>光斑 A <input type="range" id="k-sa" min="0" max="1" step="0.05" value="0.9"><span class="val" id="v-sa">0.9</span></label>
+      <label>光斑 B <input type="range" id="k-sbb" min="0" max="1" step="0.05" value="0.3"><span class="val" id="v-sbb">0.3</span></label>
+      <label>外发光 <input type="range" id="k-glow" min="0" max="2" step="0.1" value="1"><span class="val" id="v-glow">1</span></label>
+      <button class="mini" id="k-toggle">展开 / 收起 17 个色位</button>
+    </div>
+    <div class="swatches" id="sw"></div>
+  </div>
+
+  <h2>落进 chat.js 的 CSS（就是下面这段，跟着旋钮变）</h2>
+  <textarea id="out" spellcheck="false" readonly></textarea>
+
+  <p class="filler">这段是拿来当宿主页面正文的占位字。球悬在页面右下角，底下可能是任何颜色。</p>
+</div>
+<div id="ctrm_" class="ctrm-close"></div>
+
+<div class="bar">
+  <span>右下角那颗是真实位置、真实尺寸（<code>clamp(42px,3.2vw,58px)</code>，会跟着窗口宽度走）</span>
+  <span class="sp"></span>
+  <button class="mini" id="b-flash">新消息闪一下</button>
+  <button class="mini" id="b-toggle">展开 / 折叠</button>
+  <button class="mini" id="b-mobile">切移动端尺寸</button>
+</div>
+
+<script>
+/* ---------------- 原库的 8 套调色板，逐字来自 dist ---------------- */
+const PAL = {
+  cosmicNebula:{mainBgStart:"rgb(236, 133, 255)",mainBgEnd:"rgb(49, 138, 255)",shadowColor1:"rgba(166, 35, 248, 0)",shadowColor2:"rgba(121, 19, 255, 0.5)",shadowColor3:"rgba(255, 255, 255, 0.9)",shadowColor4:"rgb(253, 164, 250)",shapeAStart:"rgb(133, 210, 255)",shapeAEnd:"rgba(115, 49, 255, 0)",shapeBStart:"rgb(254, 245, 254)",shapeBMiddle:"rgb(253, 109, 255)",shapeBEnd:"rgba(203, 56, 255, 0)",shapeCStart:"rgba(254, 254, 254, 0)",shapeCMiddle:"rgba(254, 111, 255, 0)",shapeCEnd:"#7006fe",shapeDStart:"rgba(254, 254, 254, 0)",shapeDMiddle:"rgba(142, 111, 255, 0)",shapeDEnd:"#00eeff"},
+  cherryBlossom:{mainBgStart:"rgb(255, 204, 229)",mainBgEnd:"rgb(255, 102, 153)",shadowColor1:"rgba(255, 153, 204, 0)",shadowColor2:"rgba(255, 102, 178, 0.5)",shadowColor3:"rgba(255, 255, 255, 0.9)",shadowColor4:"rgb(255, 183, 197)",shapeAStart:"rgb(255, 228, 240)",shapeAEnd:"rgba(255, 140, 189, 0)",shapeBStart:"rgb(255, 240, 245)",shapeBMiddle:"rgb(255, 105, 180)",shapeBEnd:"rgba(255, 20, 147, 0)",shapeCStart:"rgba(255, 250, 250, 0)",shapeCMiddle:"rgba(255, 182, 193, 0)",shapeCEnd:"#FF69B4",shapeDStart:"rgba(255, 245, 247, 0)",shapeDMiddle:"rgba(255, 92, 143, 0)",shapeDEnd:"#FF1493"},
+  caribean:{mainBgStart:"rgb(64, 224, 208)",mainBgEnd:"rgb(76, 189, 255)",shadowColor1:"rgba(8, 226, 255, 0)",shadowColor2:"rgba(43, 173, 216, 0.5)",shadowColor3:"rgba(255, 255, 255, 0.9)",shadowColor4:"rgb(72, 209, 204)",shapeAStart:"rgb(127, 255, 212)",shapeAEnd:"rgba(0, 105, 148, 0)",shapeBStart:"rgb(240, 241, 255)",shapeBMiddle:"rgb(64, 224, 208)",shapeBEnd:"rgba(0, 128, 128, 0)",shapeCStart:"rgba(224, 255, 255, 0)",shapeCMiddle:"rgba(32, 178, 170, 0)",shapeCEnd:"#006064",shapeDStart:"rgba(224, 255, 255, 0)",shapeDMiddle:"rgba(45, 8, 255, 0)",shapeDEnd:"#00838f"},
+  emerald:{mainBgStart:"rgb(46, 204, 113)",mainBgEnd:"rgb(39, 174, 96)",shadowColor1:"rgba(0, 128, 64, 0)",shadowColor2:"rgba(46, 204, 113, 0.5)",shadowColor3:"rgba(255, 255, 255, 0.8)",shadowColor4:"rgb(88, 214, 141)",shapeAStart:"rgb(102, 255, 178)",shapeAEnd:"rgba(39, 174, 96, 0)",shapeBStart:"rgb(153, 255, 204)",shapeBMiddle:"rgb(46, 204, 113)",shapeBEnd:"rgba(0, 128, 64, 0)",shapeCStart:"rgba(230, 255, 240, 0)",shapeCMiddle:"rgba(102, 255, 178, 0.3)",shapeCEnd:"#2ECC71",shapeDStart:"rgba(240, 255, 250, 0)",shapeDMiddle:"rgba(88, 214, 141, 0.4)",shapeDEnd:"#1E8449"},
+  goldenGlow:{mainBgStart:"rgb(255, 204, 0)",mainBgEnd:"rgb(255, 165, 0)",shadowColor1:"rgba(255, 215, 0, 0)",shadowColor2:"rgba(255, 215, 0, 0.5)",shadowColor3:"rgba(255, 255, 255, 0.8)",shadowColor4:"rgb(255, 140, 0)",shapeAStart:"rgb(255, 233, 100)",shapeAEnd:"rgba(255, 215, 0, 0)",shapeBStart:"rgb(255, 210, 80)",shapeBMiddle:"rgb(255, 180, 50)",shapeBEnd:"rgba(255, 140, 0, 0)",shapeCStart:"rgba(255, 255, 255, 0)",shapeCMiddle:"rgba(255, 245, 100, 0.5)",shapeCEnd:"#FFD700",shapeDStart:"rgba(255, 255, 255, 0)",shapeDMiddle:"rgba(255, 215, 0, 0.5)",shapeDEnd:"#FFB800"}
+};
+/* 樱花粉配色的另一版：把原版 cherryBlossom 往这套 UI 的粉上靠一点（#f2769b / #c23b6e） */
+PAL.sakura = Object.assign({}, PAL.cherryBlossom, {
+  mainBgStart:"rgb(255, 214, 231)", mainBgEnd:"rgb(242, 118, 155)",
+  shadowColor2:"rgba(224, 90, 132, 0.45)", shadowColor4:"rgb(255, 194, 212)",
+  shapeBMiddle:"rgb(242, 118, 155)", shapeBEnd:"rgba(194, 59, 110, 0)",
+  shapeCEnd:"#e05a84", shapeDEnd:"#c23b6e"
+});
+
+const PRESETS = {
+  "Cosmic Nebula":{pal:"cosmicNebula",hue:120,mainHue:false,sb:1,sh:1},
+  "Cherry Blossom":{pal:"cherryBlossom",hue:0,mainHue:false,sb:1,sh:1},
+  "Multi Color":{pal:"cosmicNebula",hue:120,mainHue:true,sb:1,sh:0.25},
+  "Cherry Blossom · 慢转":{pal:"cherryBlossom",hue:0,mainHue:false,sb:0.35,sh:1},
+  "樱花粉（配这套 UI）":{pal:"sakura",hue:0,mainHue:false,sb:0.35,sh:1},
+  "Caribean":{pal:"caribean",hue:120,mainHue:false,sb:1,sh:1},
+  "Emerald":{pal:"emerald",hue:0,mainHue:false,sb:1,sh:1},
+  "Golden Glow":{pal:"goldenGlow",hue:0,mainHue:false,sb:1,sh:1}
+};
+/* ---------------- 宿主 CDN 样式表里跟标题栏有关的那几条，逐字照抄。
+   预览页必须带上它们，否则「移植版盖不盖得住原样式」这件事就没验到。 ---------------- */
+const CDN_TPL = `
+@R@{position:fixed;z-index:4;bottom:0;right:0;transition:all .3s;color:#444;line-height:1.3}
+@R@ .ctrm-container{position:relative;width:35vw;height:40vw;max-height:85vh;font-size:0;border-top-left-radius:2vw;overflow:hidden;transition:all .3s}
+@R@.ctrm-close{bottom:-36.8vw}
+@R@.ctrm-close .ctrm-container{width:25vw}
+@R@.ctrm-close.ctrm-mobile .ctrm-container{width:65vw}
+@R@.ctrm-mobile .ctrm-container{width:96vw;height:96vw}
+@R@ .ctrm-title{position:relative;width:100%;background:hsla(0,0%,90%,.85);font-size:1.1vw;height:8%;transition:background .2s}
+@R@.ctrm-close .ctrm-title{cursor:pointer}
+@R@ .ctrm-title-span{position:absolute;display:inline-block;top:0;bottom:0;left:1.8vw;margin:auto 0;height:3vw;line-height:3vw}
+@R@ .ctrm-title-close,@R@ .ctrm-title-reconn{position:absolute;top:0;bottom:0;margin:auto 0;width:2.2vw;height:2.2vw;line-height:2.2vw;font-size:1.5vw;text-align:center;border-radius:50%;border:1px solid #999;cursor:pointer;background:#f4f4f4}
+@R@ .ctrm-title-close{right:1vw}
+@R@ .ctrm-title-reconn{right:4vw}
+@R@ .ctrm-panel{position:relative;display:inline-block;float:left;width:70%;height:92%;font-size:1.2vw;background:hsla(0,0%,99%,.85)}
+@R@ .ctrm-online{position:relative;display:inline-block;float:left;width:30%;height:92%;font-size:1vw;background:hsla(0,0%,94%,.85)}
+@R@ .ctrm-title.glow{background:linear-gradient(90deg,#b5fffc,#ffdee9)!important}
+/* 再加上 chat.js 现在这版主题里跟标题栏有关的两条 */
+@R@ .ctrm-title{background:hsla(345,38%,94%,.9);box-shadow:inset 0 -1px 0 rgba(47,36,41,.10)}
+@R@ .ctrm-title.glow{background:#fbe6c4!important}
+@R@ .ctrm-title-span{font-weight:700}
+`;
+/* ---------------- 这一段就是要落进 chat.js 的 CSS。@R@ 会换成 #ctrm_ ---------------- */
+const ORB_TPL = `
+/* ---------- 折叠态：右下角的悬浮光球 ---------- */
+/* 观感移植自 react-ai-orb（MIT）。原版是 6 个兄弟 div + 4 个 SVG blob，这边能用的
+   只有 .ctrm-title 那一小棵树，所以压成 7 个"元素 / 伪元素"：
+     .ctrm-title                球体（主渐变 + 外发光）
+     .ctrm-title::before        shape-a
+     .ctrm-title::after         shape-b   soft-light
+     .ctrm-title-span           glass     白色内圈高光（静止）
+     .ctrm-title-span>span:first-child  纯容器，不画东西
+       ::before                 shape-c   color-dodge
+       ::after                  shape-d   color
+     .ctrm-title-span strong    裁剪筐，收住光斑的 blur
+       ::before                 光斑 A    hard-light
+       ::after                  光斑 B    plus-lighter
+     .ctrm-title-countwrap      人数角标（照旧）
+   四条硬约束，改之前先看：
+   ① mix-blend-mode 只跟最近那个层叠上下文里已经画好的东西混。球体上写 isolation:isolate
+      把混合关在球里；中间两层容器 —— .ctrm-title-span 和它里面那个 span —— 绝对不能带
+      transform / opacity / filter / z-index / mix-blend-mode：一带就生成层叠上下文，
+      颜色立刻塌成一片死渐变。glass 那层原版的 opacity:.8 就是因此乘进 rgba 的 alpha 的。
+   ② 球体不能 overflow:hidden —— 人数角标要露在球外面。光斑那圈 blur 改用 strong 裁。
+   ③ 原版的 px 都是照它默认的 82px 球调的，这颗只有 42~58px，所以全部折算成 --cx-ball
+      的比例，缩放时观感才不变。
+   ④ 原版 shape-b/c/d 上的 filter:blur 会被变色那条动画整条顶掉（同一属性，动画优先），
+      所以那几层实际不带模糊，这里照它的实际观感写，没把 blur 补回去。
+   展开态一个字节都没动：下面每条选择器都带 .ctrm-close，展开的点击照旧绑在 .ctrm-title 上。 */
+@R@.ctrm-close {
+    /* 球径。聊天窗关着它也一直挂在页面上，所以不跟着视口无限长大：1280 屏 42px，1920 屏 58px。 */
+    --cx-ball: clamp(42px, 3.2vw, 58px);
+    /* 这几条 position 是补 CDN 那张远程样式表的（值跟它写的完全一样）。widget 是 JS 插进
+       DOM 的，样式表还在路上时第一帧就已经画了，那一帧整条祖先链全是 static，下面所有
+       absolute 的光效层就按视口算百分比 —— 满屏一颗横躺的大椭圆。别删。 */
+    position: fixed;
+    bottom: clamp(14px, 1.1vw, 22px);
+    right: clamp(14px, 1.1vw, 22px);
+    /* CDN 给 @R@ 和 .ctrm-container 都写了 transition:all .3s，不关掉的话折叠会被演成
+       "一颗占掉四分之一屏的大球慢慢缩小"。展开不受影响（那时读的是基础规则里那条）。 */
+    transition: none;
+    /* 新消息时球边上那圈光晕的颜色。默认跟着调色板走，想单独换就只改这一行。 */
+    --cx-orb-ring: var(--cx-orb-b-mid);
+@VARS@
+}
+@R@.ctrm-close .ctrm-container {
+    /* 见上面 position 那段：这一层是光效层的定位参照，必须自己写死。 */
+    position: relative;
+    width: var(--cx-ball);
+    height: var(--cx-ball);
+    max-height: none;
+    /* 同上：宽高是在这一层身上变的，不关掉缩小动画照样跑。 */
+    transition: none;
+    /* 人数角标和光晕都要能露到球外面。折叠态里 .ctrm-panel / .ctrm-online 已经 display:none。 */
+    overflow: visible;
+}
+@R@.ctrm-close .ctrm-panel,
+@R@.ctrm-close .ctrm-online { display: none; }
+/* 防御性：▼ / 😜 正常是 JS 折叠时 hide() 掉的，这条保证它们不会糊在球里。展开时 JS 先
+   摘掉 .ctrm-close 再 show()，所以挡不住它们。 */
+@R@.ctrm-close .ctrm-title-close,
+@R@.ctrm-close .ctrm-title-reconn { display: none; }
+/* 标题里那颗心在球上没有意义（它是站点装饰，不是"聊天"这个语义），收掉。 */
+@R@.ctrm-close .ctrm-title-span img { display: none; }
+
+/* ---- 球体本身 = .ctrm-title ---- */
+@R@.ctrm-close .ctrm-title {
+    /* 同样是补 CDN 的：球里的光效层全是 absolute + 百分比，参照的就是这一层。 */
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: transparent;
+    background-image: radial-gradient(circle at 50% 30%, var(--cx-orb-bg-start) 0, var(--cx-orb-bg-end) 70%);
+    box-shadow:
+        var(--cx-orb-sh1) 0 calc(var(--cx-ball) * .049 * var(--cx-orb-glow)) calc(var(--cx-ball) * .073 * var(--cx-orb-glow)) 0,
+        var(--cx-orb-sh2) 0 calc(var(--cx-ball) * .061 * var(--cx-orb-glow)) calc(var(--cx-ball) * .122 * var(--cx-orb-glow)) 0,
+        var(--cx-orb-sh3) 0 0 calc(var(--cx-ball) * .012) 0 inset,
+        var(--cx-orb-sh4) 0 calc(var(--cx-ball) * .012) calc(var(--cx-ball) * .085) 0 inset;
+    isolation: isolate;
+    animation: var(--cx-orb-main-hue);
+    transition: transform .18s;
+}
+@R@.ctrm-close .ctrm-title:hover { transform: scale(1.06); }
+/* 新消息的提示只有球边上那一圈化开的光（见下面 .ctrm-ding），球本身不动也不变形。
+   所以这条 .glow 不负责任何视觉，纯防御：上面那条
+   @R@ .ctrm-title.glow { background:#fbe6c4 !important }（CDN 里也有同名的）
+   会把整颗球拍成一块死色，这条 (1,3,0) 压过它们、把球原样留住。 */
+@R@.ctrm-close .ctrm-title.glow {
+    background-color: transparent !important;
+    background-image: radial-gradient(circle at 50% 30%, var(--cx-orb-bg-start) 0, var(--cx-orb-bg-end) 70%) !important;
+}
+/* ---- 新消息那一圈光晕。球的 7 个伪元素都被光效占满了，所以借 .ctrm-container 的 ::after
+   （它一直空着，尺寸又刚好等于球）。z-index:-1 让它沉到球后面，不糊人数角标也不挡点击。
+   实心到 42% 再化开，中间那块正好被球自己挡掉，露出来的只有球边化开的那一圈。
+   类挂在 @R@ 上而不是球上，因为 CSS 选不到父级；JS 那边 950ms 后摘掉。 ---- */
+@R@.ctrm-close.ctrm-ding .ctrm-container::after {
+    content: "";
+    position: absolute;
+    top: -12%;
+    right: -12%;
+    bottom: -12%;
+    left: -12%;
+    z-index: -1;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--cx-orb-ring) 42%, transparent 76%);
+    pointer-events: none;
+    animation: cxOrbHalo .9s ease-out both;
+}
+/* ---- shape-a：不带混合模式、不带模糊，就是一层会转的浅色球面 ---- */
+@R@.ctrm-close .ctrm-title::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0;
+    width: 87.8%; height: 87.8%;
+    border-radius: 50%;
+    background-image: radial-gradient(circle at 50% 90%, var(--cx-orb-a-start) 0, var(--cx-orb-a-end) 70%);
+    transform-style: preserve-3d;
+    animation: cxOrbSpin var(--cx-orb-rot) linear infinite,
+               cxOrbHue var(--cx-orb-hue) linear infinite;
+}
+/* ---- shape-b：soft-light，偏右下一点，转得比 a 慢 1.5 倍 ---- */
+@R@.ctrm-close .ctrm-title::after {
+    content: "";
+    position: absolute;
+    left: 10%; top: 5%;
+    width: 87.8%; height: 87.8%;
+    border-radius: 50%;
+    background-image: radial-gradient(circle at 33% 12%, var(--cx-orb-b-start) 0, var(--cx-orb-b-mid) 26%, var(--cx-orb-b-end) 63%);
+    mix-blend-mode: soft-light;
+    transform-style: preserve-3d;
+    animation: cxOrbSpin calc(var(--cx-orb-rot) * 1.5) linear infinite,
+               cxOrbHue calc(var(--cx-orb-hue) * 1.5) linear infinite;
+}
+/* ---- glass：白色内圈高光，静止，不参与混合。挂在 .ctrm-title-span 上，87.8% 大小居中，
+   不能用 transform 居中（见约束①），只能算成 left/top：(82-72)/2/82 = 6.1%。
+   原版的 opacity:.8 同样因此乘进了下面两条 rgba 的 alpha（.5 × .8 = .4）。 ---- */
+@R@.ctrm-close .ctrm-title-span {
+    /* 也是补 CDN 的：<span> 默认 inline，inline 盒子的百分比宽高会被忽略，光效层就散了。 */
+    position: absolute;
+    display: block;
+    left: 6.1%; top: 6.1%;
+    right: auto; bottom: auto;
+    margin: 0;
+    width: 87.8%; height: 87.8%;
+    border-radius: 50%;
+    box-shadow: inset 0 calc(var(--cx-ball) * -.012) calc(var(--cx-ball) * .073) calc(var(--cx-ball) * .012) rgba(255, 255, 255, .4),
+                inset 0 calc(var(--cx-ball) * .037) calc(var(--cx-ball) * .049) 0 rgba(255, 255, 255, .4);
+    /* "聊天室"三个字是裸文本节点，选不中，只能 font-size:0 连锅端，再把要留的那个元素的
+       字号加回来。"(在线"和"人)"同理，于是角标里干干净净只剩一个数字。 */
+    font-size: 0;
+    line-height: 0;
+}
+/* ---- 里面那个 span 只当容器，一笔都不画（见约束①）。必须写 :first-child —— 人数角标
+   .ctrm-title-countwrap 本身也是 .ctrm-title-span 的 span 子元素，不加会被一起撑成满圈，
+   那块白底直接把整颗球盖成白饼。 ---- */
+@R@.ctrm-close .ctrm-title-span > span:first-child {
+    position: absolute;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+}
+/* shape-c / shape-d：原版是相对球体 (5%,5%)，这里的参照系是上面那个 87.8% 的框，
+   所以要减掉框自己的 6.1% 偏移：(5% - 6.1%) × 82/72 ≈ -1.25%。 */
+@R@.ctrm-close .ctrm-title-span > span:first-child::before,
+@R@.ctrm-close .ctrm-title-span > span:first-child::after {
+    content: "";
+    position: absolute;
+    left: -1.25%; top: -1.25%;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    transform-style: preserve-3d;
+}
+@R@.ctrm-close .ctrm-title-span > span:first-child::before {
+    background-image: radial-gradient(circle at 31% 12%, var(--cx-orb-c-start) 0, var(--cx-orb-c-mid) 31%, var(--cx-orb-c-end) 77%);
+    mix-blend-mode: color-dodge;
+    opacity: .65;
+    animation: cxOrbSpin calc(var(--cx-orb-rot) * 2) linear infinite,
+               cxOrbHue calc(var(--cx-orb-hue) * 2) linear infinite;
+}
+@R@.ctrm-close .ctrm-title-span > span:first-child::after {
+    background-image: radial-gradient(circle at 12% 80%, var(--cx-orb-d-start) 0, var(--cx-orb-d-mid) 31%, var(--cx-orb-d-end) 77%);
+    mix-blend-mode: color;
+    opacity: .55;
+    animation: cxOrbSpin calc(var(--cx-orb-rot) * 2.5) linear infinite,
+               cxOrbHue calc(var(--cx-orb-hue) * 2.5) linear infinite;
+}
+/* ---- strong 当裁剪筐：两颗光斑带着 blur，不收一下会糊到球外面去。
+   它要撑回整颗球那么大（82/72 = 113.9%，左上各退 5/72 = 6.94%）。 ---- */
+@R@.ctrm-close .ctrm-title-span strong {
+    display: block;
+    position: absolute;
+    left: -6.94%; top: -6.94%;
+    width: 113.9%; height: 113.9%;
+    border-radius: 50%;
+    overflow: hidden;
+}
+/* ---- 两颗白色光斑。原版是 SVG blob + blur + scale 呼吸，这边没法加 SVG，改用一个
+   "窄而高"的椭圆渐变，模糊完就是原版那道斜高光。核心不能太白（横向只给 26%、alpha .8）：
+   满框的圆渐变会把整颗球洗成白饼。filter 在 transform 之前生效，scale 会把 blur 一起缩。 ---- */
+@R@.ctrm-close .ctrm-title-span strong::before,
+@R@.ctrm-close .ctrm-title-span strong::after {
+    content: "";
+    position: absolute;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    background-image: radial-gradient(ellipse 26% 52% at 44% 40%, rgba(255, 255, 255, .8) 0, rgba(255, 255, 255, .45) 34%, rgba(255, 255, 255, 0) 72%);
+    filter: blur(calc(var(--cx-ball) * .183));
+}
+@R@.ctrm-close .ctrm-title-span strong::before {
+    mix-blend-mode: hard-light;
+    opacity: var(--cx-orb-shine-a);
+    transform: scale(.4);
+    animation: cxOrbShineA 3.5s linear infinite;
+}
+@R@.ctrm-close .ctrm-title-span strong::after {
+    left: 15%;
+    mix-blend-mode: plus-lighter;
+    opacity: var(--cx-orb-shine-b);
+    transform: scale(.6);
+    animation: cxOrbShineB 5s ease-in-out infinite;
+}
+/* ---- 人数角标。定位参照是 .ctrm-title-span（87.8% 大小、往右下偏了 6.1%），所以负偏移
+   要把这 6.1% 一起补回来：-.04 - .061 ≈ -.101（按球径算）。垂直居中走 line-height 不走
+   flex：这个元素的 display 是 jQuery 的 show()/hide() 在管的，别去跟它抢。 ---- */
+@R@.ctrm-close .ctrm-title-countwrap {
+    position: absolute;
+    top: calc(var(--cx-ball) * -.101);
+    right: calc(var(--cx-ball) * -.101);
+    min-width: calc(var(--cx-ball) * .4);
+    height: calc(var(--cx-ball) * .4);
+    line-height: calc(var(--cx-ball) * .4);
+    padding: 0 calc(var(--cx-ball) * .07);
+    box-sizing: border-box;
+    border-radius: var(--cx-pill);
+    background: #fff;
+    color: var(--cx-brand-ink);
+    font-weight: 700;
+    text-align: center;
+    box-shadow: 0 1px 4px rgba(47, 36, 41, .16);
+}
+@R@.ctrm-close .ctrm-title-count { font-size: calc(var(--cx-ball) * .24); }
+/* ---- 移动端：球给大一点好点，位置也让开一点边。
+   这条必须显式写 width/height —— CDN 那边 @R@.ctrm-close.ctrm-mobile .ctrm-container
+   是 (1,3,0)，比上面那条 (1,2,0) 高一级，不重写的话宽度会被它的 65vw 拽回去。 ---- */
+@R@.ctrm-close.ctrm-mobile {
+    --cx-ball: clamp(48px, 13vw, 64px);
+    bottom: clamp(14px, 3.5vw, 24px);
+    right: clamp(14px, 3.5vw, 24px);
+}
+@R@.ctrm-close.ctrm-mobile .ctrm-container {
+    width: var(--cx-ball);
+    height: var(--cx-ball);
+}
+/* ---- 系统里关了动效的人，就别让球一直转。停下来颜色一层不少，只是不动了。 ---- */
+@media (prefers-reduced-motion: reduce) {
+    @R@.ctrm-close .ctrm-title,
+    @R@.ctrm-close .ctrm-title::before,
+    @R@.ctrm-close .ctrm-title::after,
+    @R@.ctrm-close .ctrm-title-span > span:first-child::before,
+    @R@.ctrm-close .ctrm-title-span > span:first-child::after,
+    @R@.ctrm-close .ctrm-title-span strong::before,
+    @R@.ctrm-close .ctrm-title-span strong::after { animation: none; }
+    /* 光晕整个不要，不能停在半路 —— 停住等于球边上永远糊着一圈光。 */
+    @R@.ctrm-close.ctrm-ding .ctrm-container::after { content: none; }
+}
+`;
+/* 关键帧只出一份，不跟着选择器复制 */
+const KF_TPL = `
+@keyframes cxOrbSpin { 0% { transform: rotate3d(1, 1, 1, 0deg) } 100% { transform: rotate3d(1, 1, 1, 1turn) } }
+@keyframes cxOrbHue { 0% { filter: hue-rotate(0deg) } 50% { filter: hue-rotate(var(--cx-orb-hue-deg)) } 100% { filter: hue-rotate(0deg) } }
+@keyframes cxOrbShineA { 0% { transform: scale(.4) } 50% { transform: scale(.1) } 100% { transform: scale(.4) } }
+@keyframes cxOrbShineB { 0% { transform: scale(.6) } 50% { transform: scale(.1) } 100% { transform: scale(.6) } }
+/* 球边上那圈光：涨开同时淡掉。opacity 在 18% 就到顶，所以是"亮一下再散"。 */
+@keyframes cxOrbHalo { 0% { transform: scale(.9); opacity: 0 } 18% { opacity: .7 } 100% { transform: scale(1.5); opacity: 0 } }
+`;
+
+/* ---------------- 把一套参数摊成 CSS 变量（等价于原库 Orb 组件里那个 useMemo） ---------------- */
+const SLOTS = [
+  ["mainBgStart","--cx-orb-bg-start","主渐变 内"],["mainBgEnd","--cx-orb-bg-end","主渐变 外"],
+  ["shadowColor1","--cx-orb-sh1","外发光 1"],["shadowColor2","--cx-orb-sh2","外发光 2"],
+  ["shadowColor3","--cx-orb-sh3","内圈 1"],["shadowColor4","--cx-orb-sh4","内圈 2"],
+  ["shapeAStart","--cx-orb-a-start","A 内"],["shapeAEnd","--cx-orb-a-end","A 外"],
+  ["shapeBStart","--cx-orb-b-start","B 内"],["shapeBMiddle","--cx-orb-b-mid","B 中"],["shapeBEnd","--cx-orb-b-end","B 外"],
+  ["shapeCStart","--cx-orb-c-start","C 内"],["shapeCMiddle","--cx-orb-c-mid","C 中"],["shapeCEnd","--cx-orb-c-end","C 外"],
+  ["shapeDStart","--cx-orb-d-start","D 内"],["shapeDMiddle","--cx-orb-d-mid","D 中"],["shapeDEnd","--cx-orb-d-end","D 外"]
+];
+function orbVars(c){
+  const p = c.palette, o = {};
+  SLOTS.forEach(([k, v]) => o[v] = p[k]);
+  o["--cx-orb-rot"] = (1 / (c.sb * 0.5)) + "s";
+  o["--cx-orb-hue"] = (1 / (c.sh * 0.5)) + "s";
+  o["--cx-orb-hue-deg"] = c.hue + "deg";
+  o["--cx-orb-main-hue"] = c.mainHue ? "cxOrbHue var(--cx-orb-hue) linear infinite" : "none";
+  o["--cx-orb-shine-a"] = c.shineA;
+  o["--cx-orb-shine-b"] = c.shineB;
+  o["--cx-orb-glow"] = c.glow;
+  return o;
+}
+/* ---------------- 注入 CSS：预览页里画廊用 .ctrm_ 类、右下角那颗用 #ctrm_ 的 id，
+   两份都出一遍，这样两边面对的层叠关系是一样的。 ---------------- */
+const dual = t => t.replace(/@R@/g, "#ctrm_") + t.replace(/@R@/g, ".ctrm_");
+
+document.getElementById("cdnbase").textContent =
+  ":root{--cx-brand:#f2769b;--cx-brand-deep:#e05a84;--cx-brand-ink:#c23b6e;--cx-pill:999px}"
+  + dual(CDN_TPL);
+document.getElementById("orbcss").textContent = KF_TPL + dual(ORB_TPL.replace("@VARS@", ""));
+
+/* ---------------- 聊天室折叠态真实的那段 HTML，一个标签都没改 ---------------- */
+const HEART = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+function inner(n){
+  return '<div class="ctrm-container"><div class="ctrm-title">'
+    + '<span class="ctrm-title-span"><span>茉灵智库 の</span>'
+    + '<strong style="color:var(--cx-brand-ink);">匿名</strong>聊天室'
+    + '<img width="19px" src="' + HEART + '" alt="">'
+    + '<span class="ctrm-title-countwrap">(在线<span class="ctrm-title-count">' + n + '</span>人)</span>'
+    + '</span>'
+    + '<div class="ctrm-title-close" title="下拉">▼</div>'
+    + '<div class="ctrm-title-reconn" title="点我刷新">😜</div>'
+    + '</div><div class="ctrm-panel"></div><div class="ctrm-online"></div></div>';
+}
+function widget(cls, style, n){
+  return '<div class="' + cls + '" style="' + style + '">' + inner(n) + '</div>';
+}
+function styleOf(vars){ return Object.entries(vars).map(([k, v]) => k + ":" + v).join(";"); }
+function cfg(name, over){
+  const p = PRESETS[name];
+  return Object.assign({ palette: PAL[p.pal], sb: p.sb, sh: p.sh, hue: p.hue,
+    mainHue: p.mainHue, shineA: 0.9, shineB: 0.3, glow: 1 }, over || {});
+}
+
+/* 上面两排：三款固定的，58px 和 42px */
+const THREE = ["Cosmic Nebula", "Cherry Blossom", "Multi Color"];
+const NOTE = {
+  "Cosmic Nebula": "紫蓝，最像 AI",
+  "Cherry Blossom": "粉，最配这套 UI",
+  "Multi Color": "整颗球在慢慢换色"
+};
+["rowA", "rowB"].forEach((id, i) => {
+  const px = i === 0 ? 58 : 42;
+  document.getElementById(id).innerHTML = THREE.map(n =>
+    '<div class="cell"><div class="stage">'
+    + widget("ctrm_ ctrm-close demo", styleOf(orbVars(cfg(n))) + ";--cx-ball:" + px + "px", 12)
+    + '</div><h3>' + n + '</h3><p>' + NOTE[n] + '</p></div>').join("");
+});
+/* ---------------- 原版对照那一排：用 react-ai-orb 自己的 DOM + SVG ---------------- */
+const B_A = "M23.3,-31.9C28.4,-28.4,29.5,-19.2,31.1,-10.9C32.6,-2.6,34.7,4.7,33.5,11.7C32.3,18.6,27.8,25.3,21.6,28.8C15.5,32.3,7.8,32.6,-0.6,33.5C-9,34.4,-18.1,35.8,-24.8,32.5C-31.5,29.2,-35.9,21.2,-36.5,13.3C-37.2,5.4,-34.1,-2.4,-31.6,-10.4C-29.1,-18.3,-27.2,-26.6,-22.1,-30.1C-16.9,-33.6,-8.4,-32.3,0.3,-32.8C9.1,-33.3,18.2,-35.4,23.3,-31.9Z";
+const B_B = "M19.2,-27.1C25.6,-29.4,32.3,-26,33.8,-20.5C35.3,-15,31.7,-7.5,27.8,-2.2C23.9,3,19.8,6,16.8,8.9C13.8,11.8,11.9,14.6,9.3,18.8C6.7,23,3.3,28.6,-0.7,29.8C-4.7,31,-9.4,27.8,-16.7,26.2C-23.9,24.7,-33.6,24.8,-39.3,20.7C-45.1,16.7,-47,8.3,-45.4,0.9C-43.8,-6.5,-38.8,-13,-32.6,-16.3C-26.4,-19.6,-18.9,-19.7,-13.3,-17.9C-7.6,-16,-3.8,-12.2,1.3,-14.4C6.3,-16.6,12.7,-24.8,19.2,-27.1Z";
+const B_S = "M12.3,-22.8C17.4,-18.4,23.8,-17.9,26.8,-14.8C29.8,-11.6,29.5,-5.8,29,-0.3C28.6,5.3,28,10.6,26.9,17.1C25.9,23.7,24.3,31.5,19.7,32.2C15.2,32.8,7.6,26.3,0.6,25.3C-6.4,24.3,-12.9,28.9,-16.8,27.9C-20.8,26.9,-22.3,20.3,-23.8,14.7C-25.3,9.2,-26.9,4.6,-30.1,-1.8C-33.3,-8.3,-38.1,-16.5,-35.4,-20.1C-32.7,-23.6,-22.5,-22.4,-15.3,-25.5C-8.2,-28.6,-4.1,-36,-0.2,-35.6C3.6,-35.2,7.3,-27.1,12.3,-22.8Z";
+function blob(cls, id, c1, c2, d){
+  return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="' + cls + '">'
+    + '<defs><linearGradient id="' + id + '" x1="0" x2="1" y1="1" y2="0">'
+    + '<stop stop-color="' + c1 + '" offset="0%"></stop>'
+    + (c2 ? '<stop stop-color="' + c2 + '" offset="100%"></stop>' : "")
+    + '</linearGradient></defs><path fill="url(#' + id + ')" d="' + d
+    + '" width="100%" height="100%" transform="translate(50 50)" stroke-width="0"></path></svg>';
+}
+function libOrb(c, px){
+  const p = c.palette, uid = Math.random().toString(36).slice(2, 7);
+  const v = {
+    "--react-ai-orb-size": px + "px", "--shapes-size": (px * 72 / 82) + "px",
+    "--main-bg-start": p.mainBgStart, "--main-bg-end": p.mainBgEnd,
+    "--main-shadow": p.shadowColor1 + " 0 4px 6px 0," + p.shadowColor2 + " 0 5px 10px 0,"
+      + p.shadowColor3 + " 0 0 1px 0 inset," + p.shadowColor4 + " 0 1px 7px 0 inset",
+    "--shape-a-start": p.shapeAStart, "--shape-a-end": p.shapeAEnd,
+    "--shape-b-start": p.shapeBStart, "--shape-b-middle": p.shapeBMiddle, "--shape-b-end": p.shapeBEnd,
+    "--shape-c-start": p.shapeCStart, "--shape-c-middle": p.shapeCMiddle, "--shape-c-end": p.shapeCEnd,
+    "--shape-d-start": p.shapeDStart, "--shape-d-middle": p.shapeDMiddle, "--shape-d-end": p.shapeDEnd,
+    "--blob-a-opacity": 0.3, "--blob-b-opacity": 0.8,
+    "--animation-rotation-speed-base": (1 / (c.sb * 0.5)) + "s",
+    "--animation-hue-speed-base": (1 / (c.sh * 0.5)) + "s",
+    "--hue-rotation": c.hue + "deg",
+    "--main-hue-animation": c.mainHue ? "hueShift var(--animation-hue-speed-base) linear infinite" : "none"
+  };
+  return '<div style="' + styleOf(v) + '"><div class="orb-main">'
+    + '<div class="glass loc-glass"></div><div class="shape-a loc-a"></div><div class="shape-b loc-b"></div>'
+    + '<div class="shape-c loc-c"></div><div class="shape-d loc-d"></div>'
+    + blob("blob-a", "ba" + uid, p.mainBgStart, p.mainBgEnd, B_A)
+    + blob("blob-b", "bb" + uid, p.mainBgStart, p.mainBgEnd, B_B)
+    + blob("blob-shine", "bs" + uid, "white", null, B_S)
+    + blob("blob-shine shine-b", "bt" + uid, "white", null, B_S)
+    + '</div></div>';
+}
+document.getElementById("rowC").innerHTML = THREE.map(n =>
+  '<div class="cell"><div class="stage">' + libOrb(cfg(n), 82) + '</div><h3>' + n + ' 原版</h3></div>').join("");
+/* ---------------- 控制面板 ---------------- */
+const $ = id => document.getElementById(id);
+const sel = $("k-preset");
+Object.keys(PRESETS).forEach(n => sel.add(new Option(n, n)));
+sel.add(new Option("自定义", "自定义"));
+sel.value = "Cherry Blossom";
+
+/* 色位编辑器：type=color 出不了透明度，所以每个色位配一个 alpha 输入框 */
+function parseColor(s){
+  let m = s.match(/^rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)(?:[,\s/]+([\d.]+))?\s*\)$/i);
+  if (m) return { hex: "#" + [1,2,3].map(i => (+m[i]).toString(16).padStart(2, "0")).join(""),
+                  a: m[4] === undefined ? 1 : +m[4] };
+  m = s.match(/^#([0-9a-f]{6})$/i);
+  if (m) return { hex: "#" + m[1].toLowerCase(), a: 1 };
+  return { hex: "#ffffff", a: 1 };
+}
+function toColor(hex, a){
+  const n = parseInt(hex.slice(1), 16);
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  return +a >= 1 ? "rgb(" + r + ", " + g + ", " + b + ")"
+                 : "rgba(" + r + ", " + g + ", " + b + ", " + (+a) + ")";
+}
+$("sw").innerHTML = SLOTS.map(([k, v, label]) =>
+  '<label title="' + v + '">' + label
+  + '<input type="color" data-k="' + k + '">'
+  + '<input type="number" class="a" data-a="' + k + '" min="0" max="1" step="0.05">'
+  + '</label>').join("");
+$("k-toggle").onclick = () => $("sw").classList.toggle("on");
+
+function fillSwatches(p){
+  SLOTS.forEach(([k]) => {
+    const c = parseColor(p[k]);
+    document.querySelector('[data-k="' + k + '"]').value = c.hex;
+    document.querySelector('[data-a="' + k + '"]').value = c.a;
+  });
+}
+function paletteFromSwatches(){
+  const p = {};
+  SLOTS.forEach(([k]) => p[k] = toColor(
+    document.querySelector('[data-k="' + k + '"]').value,
+    document.querySelector('[data-a="' + k + '"]').value));
+  return p;
+}
+let custom = null;   /* 手调过色位之后就用这份 */
+
+function readKnobs(){
+  const c = {
+    palette: custom || PAL[(PRESETS[sel.value] || PRESETS["Cherry Blossom"]).pal],
+    sb: +$("k-sb").value, sh: +$("k-sh").value, hue: +$("k-hue").value,
+    mainHue: $("k-mainhue").checked,
+    shineA: +$("k-sa").value, shineB: +$("k-sbb").value, glow: +$("k-glow").value
+  };
+  ["size","sb","sh","hue","sa","sbb","glow"].forEach(k => {
+    const el = $("k-" + k); if (el) $("v-" + k).textContent = el.value;
+  });
+  return c;
+}
+function applyPreset(){
+  const p = PRESETS[sel.value];
+  if (!p) return;
+  custom = null;
+  $("k-sb").value = p.sb; $("k-sh").value = p.sh;
+  $("k-hue").value = p.hue; $("k-mainhue").checked = p.mainHue;
+  $("k-sa").value = 0.9; $("k-sbb").value = 0.3; $("k-glow").value = 1;
+  fillSwatches(PAL[p.pal]);
+}
+function render(){
+  const c = readKnobs(), px = +$("k-size").value, vars = orbVars(c);
+  /* 自己调那一排 */
+  $("rowD").innerHTML =
+    '<div class="cell"><div class="stage">'
+    + widget("ctrm_ ctrm-close demo", styleOf(vars) + ";--cx-ball:" + px + "px", 12)
+    + '</div><h3>移植版 ' + px + 'px</h3></div>'
+    + '<div class="cell"><div class="stage">' + libOrb(c, px) + '</div><h3>原版同参数</h3>'
+    + '<p>原版多两层 SVG blob</p></div>';
+  /* 右下角真实那颗：尺寸不写死，走 clamp */
+  const live = $("ctrm_");
+  live.innerHTML = inner(12);
+  Object.entries(vars).forEach(([k, v]) => live.style.setProperty(k, v));
+  /* 落地用的 CSS */
+  const block = Object.entries(vars).map(([k, v]) => "    " + k + ": " + v + ";").join("\n");
+  $("out").value = ORB_TPL.replace(/@R@/g, "#ctrm_").replace("@VARS@",
+    "    /* 光球调色板：换配色只动这一段，17 个色位跟 react-ai-orb 的 palette 一一对应。 */\n" + block)
+    /* 关键帧一起给出来 —— 少了它球是静止的。这两段注释跟 chat.js 里那份逐字一致 */
+    + "/* ---- 光球的五条动画。转的动 transform，变色的动 filter，并行互不干扰。名字全带 cxOrb\n"
+    + "   前缀，跟 CDN 里的 blink / ctrm-spin 不撞。 ---- */" + KF_TPL;
+}
+sel.onchange = () => { applyPreset(); render(); };
+document.querySelectorAll(".panel input").forEach(el => el.oninput = () => {
+  if (el.dataset.k || el.dataset.a) { custom = paletteFromSwatches(); sel.value = "自定义"; }
+  render();
+});
+$("b-flash").onclick = () => {
+  /* 跟 chat.js 里 showNewMessageHalo() 一模一样：.ctrm-ding 挂外层（光晕借的是
+     .ctrm-container 的 ::after，CSS 里选不到父级），.glow 挂球上，950ms 后一起摘。
+     先摘再挂 + 读一次 offsetWidth，是为了连点两次也能重新触发动画。 */
+  const w = $("ctrm_"), t = w.querySelector(".ctrm-title");
+  clearTimeout(w.cxHaloTimer);
+  w.classList.remove("ctrm-ding");
+  t.classList.remove("glow");
+  void w.offsetWidth;
+  t.classList.add("glow");
+  w.classList.add("ctrm-ding");
+  w.cxHaloTimer = setTimeout(() => {
+    w.classList.remove("ctrm-ding");
+    t.classList.remove("glow");
+  }, 950);
+};
+$("b-toggle").onclick = () => $("ctrm_").classList.toggle("ctrm-close");
+$("b-mobile").onclick = () => $("ctrm_").classList.toggle("ctrm-mobile");
+applyPreset();
+render();
+</script>
+</body>
+</html>
