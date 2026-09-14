@@ -22,7 +22,6 @@
                     Object.defineProperty(target, descriptor.key, descriptor);
                 }
             }
-
             return function (Constructor, protoProps, staticProps) {
                 if (protoProps) defineProperties(Constructor.prototype, protoProps);
                 if (staticProps) defineProperties(Constructor, staticProps);
@@ -38,10 +37,7 @@
             var OwO = function () {
                 function OwO(option) {
                     var _this = this;
-
                     _classCallCheck(this, OwO);
-
-                    
                     var defaultOption = {
                         logo: 'OwO表情',
                         container: document.getElementsByClassName('OwO')[0],
@@ -51,20 +47,16 @@
                         maxHeight: '235px',
                         api: 'js/owo.json'
                     };
-
                     for (var defaultKey in defaultOption) {
                         if (defaultOption.hasOwnProperty(defaultKey) && !option.hasOwnProperty(defaultKey)) {
                             option[defaultKey] = defaultOption[defaultKey];
                         }
                     }
-
                     this.container = option.container;
                     this.target = option.target;
-
                     if (option.position === 'up') {
                         this.container.classList.add('OwO-up');
                     }
-
                     var xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = function () {
                         if (xhr.readyState === 4) {
@@ -75,37 +67,26 @@
                                         delete _this.odata[key];
                                     }
                                 });
-
                                 _this.init(option);
                             } else {
                                 console.log('OwO data request was unsuccessful: ' + xhr.status);
                             }
                         }
                     };
-
                     xhr.open('get', option.api, true);
                     xhr.send(null);
                 }
-
                 _createClass(OwO, [{
                     key: 'init',
                     value: function init(option) {
                         var _this2 = this;
-
                         this.area = option.target;
                         this.packages = Object.keys(this.odata);
-
                         var html = '\n <div class="OwO-logo sb">' + option.logo + '</div>\n <div class="OwO-body" style="width: ' + option.width + '">';
-
-                        
-                        
-                        
                         var ctSmojiBigPreviewRem = 5;
-
                         for (var i = 0; i < this.packages.length; i++) {
                             html += '\n <ul class="OwO-items OwO-' + this.odata[this.packages[i]].name + ' OwO-items-' + this.odata[this.packages[i]].type + (this.odata[this.packages[i]].container[0] && this.odata[this.packages[i]].container[0].big === true ? ' OwO-items-big' : '') + '" style="max-height: ' + (parseInt(option.maxHeight) - 53 + 'px') + ';">';
                             var opackage = this.odata[this.packages[i]].container;
-
                             for (var _i = 0; _i < opackage.length; _i++) {
                                 if (this.odata[this.packages[i]].type === 'smoji') {
                                     html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '">' + '<img data-original="' + 'https://s3-cdn.zsh.moe/smoji/' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '.webp" src="" icon="' + opackage[_i].text + '"' + (opackage[_i].big ? ' style="height:var(--ct-smoji-big-preview,' + ctSmojiBigPreviewRem + 'rem);min-height:var(--ct-smoji-big-preview,' + ctSmojiBigPreviewRem + 'rem);width:auto;"' : '') + ' referrerpolicy="no-referrer"></li>';
@@ -123,46 +104,35 @@
                                     html += '\n <li class="OwO-item" title="' + opackage[_i].text + '">' + opackage[_i].icon + '</li>';
                                 }
                             }
-
-
                             html += '\n </ul>';
                         }
-
                         html += '\n <div class="OwO-bar">\n <ul class="OwO-packages">';
-
                         for (var _i2 = 0; _i2 < this.packages.length; _i2++) {
                             html += '\n <li><span>' + this.packages[_i2] + '</span></li>';
                         }
-
                         html += '\n </ul>\n </div>\n </div>\n ';
                         this.container.innerHTML = html;
-
                         this.logo = this.container.getElementsByClassName('OwO-logo')[0];
                         this.logo.addEventListener('click', function () {
                             _this2.toggle();
                         });
-
                         this.container.getElementsByClassName('OwO-body')[0].addEventListener('click', function (e) {
                             var target = null;
-
                             if (e.target.classList.contains('OwO-item')) {
                                 target = e.target;
                             } else if (e.target.parentNode.classList.contains('OwO-item')) {
                                 target = e.target.parentNode;
                             }
-
                             if (target) {
                                 var startPos = _this2.area.selectionStart;
                                 var endPos = _this2.area.selectionEnd;
                                 var areaValue = _this2.area.value;
                                 var insertContent;
-
                                 if (target.dataset.hasOwnProperty("input")) {
                                     insertContent = "【" + target.dataset.input + "】";
                                 } else {
                                     insertContent = target.innerHTML;
                                 }
-
                                 _this2.area.value = areaValue.slice(0, startPos) + insertContent + areaValue.slice(endPos);
                                 _this2.area.selectionStart = startPos + insertContent.length;
                                 _this2.area.selectionEnd = startPos + insertContent.length;
@@ -170,14 +140,7 @@
                                 _this2.toggle();
                             }
                         });
-
                         this.packagesEle = this.container.getElementsByClassName('OwO-packages')[0];
-
-                        
-                        
-                        
-                        
-                        
                         (function (ctBar) {
                             if (ctBar) {
                                 ctBar.addEventListener('wheel', function (ctEvt) {
@@ -189,14 +152,11 @@
                                     if (ctEvt.deltaMode === 1) ctStep = ctStep * 16;
                                     else if (ctEvt.deltaMode === 2) ctStep = ctStep * ctBar.clientWidth;
                                     if (!ctStep) return;
-                                    
-                                    
                                     ctEvt.preventDefault();
                                     ctBar.scrollLeft = Math.max(0, Math.min(ctMax, ctBar.scrollLeft + ctStep));
                                 }, { passive: false });
                             }
                         })(this.packagesEle);
-
                         var _loop = function _loop(_i3) {
                             (function (index) {
                                 _this2.packagesEle.children[_i3].addEventListener('click', function () {
@@ -204,11 +164,9 @@
                                 });
                             })(_i3);
                         };
-
                         for (var _i3 = 0; _i3 < this.packagesEle.children.length; _i3++) {
                             _loop(_i3);
                         }
-
                         this.tab(0);
                     }
                 }, {
@@ -219,7 +177,6 @@
                         } else {
                             this.container.classList.add('OwO-open');
                         }
-
                         try {
                             $("img").lazyload({
                                 effect: "fadeIn"
@@ -238,21 +195,15 @@
                     key: 'tab',
                     value: function tab(index) {
                         var itemsShow = this.container.getElementsByClassName('OwO-items-show')[0];
-
                         if (itemsShow) {
                             itemsShow.classList.remove('OwO-items-show');
                         }
-
                         this.container.getElementsByClassName('OwO-items')[index].classList.add('OwO-items-show');
-
                         var packageActive = this.container.getElementsByClassName('OwO-package-active')[0];
-
                         if (packageActive) {
                             packageActive.classList.remove('OwO-package-active');
                         }
-
                         this.packagesEle.getElementsByTagName('li')[index].classList.add('OwO-package-active');
-
                         try {
                             $("img").lazyload({
                                 effect: "fadeIn"
@@ -268,10 +219,8 @@
                         }
                     }
                 }]);
-
                 return OwO;
             }();
-
             if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
                 module.exports = OwO;
             } else {
@@ -295,19 +244,16 @@
                 a = v.toString,
                 l = a.call(Object),
                 y = {};
-
             function b(t, e) {
                 var n = (e = e || m).createElement("script");
                 n.text = t, e.head.appendChild(n).parentNode.removeChild(n)
             }
-
             function u(t, e) { return e.toUpperCase() }
             var d = "3.0.0 -ajax,-ajax/jsonp,-ajax/load,-ajax/parseXML,-ajax/script,-ajax/var/location,-ajax/var/nonce,-ajax/var/rquery,-ajax/xhr,-manipulation/_evalUrl,-event/ajax,-effects,-effects/Tween,-effects/animatedSelector,-deprecated",
                 w = function (t, e) { return new w.fn.init(t, e) },
                 f = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g,
                 p = /^-ms-/,
                 x = /-([a-z])/g;
-
             function C(t) {
                 var e = !!t && "length" in t && t.length,
                     n = w.type(t);
@@ -387,7 +333,6 @@
             }), "function" == typeof Symbol && (w.fn[Symbol.iterator] = e[Symbol.iterator]), w.each("Boolean Number String Function Array Date RegExp Object Error Symbol".split(" "), function (t, e) { n["[object " + e + "]"] = e.toLowerCase() });
             var k = function (n) {
                 function d(t, e, n) { var r = "0x" + e - 65536; return r != r || n ? e : r < 0 ? String.fromCharCode(65536 + r) : String.fromCharCode(r >> 10 | 55296, 1023 & r | 56320) }
-
                 function i() { C() }
                 var t, p, w, o, a, h, f, m, x, c, l, C, k, s, T, g, u, v, y, E = "sizzle" + 1 * new Date,
                     b = n.document,
@@ -438,7 +383,6 @@
                         }
                     }
                 }
-
                 function ot(t, e, n, r) {
                     var i, o, a, s, c, l, u, d = e && e.ownerDocument,
                         f = e ? e.nodeType : 9;
@@ -457,15 +401,10 @@
                     }
                     return m(t.replace(M, "$1"), e, n, r)
                 }
-
                 function at() { var r = []; return function t(e, n) { return r.push(e + " ") > w.cacheLength && delete t[r.shift()], t[e + " "] = n } }
-
                 function st(t) { return t[E] = !0, t }
-
                 function ct(t) { var e = k.createElement("fieldset"); try { return !!t(e) } catch (t) { return !1 } finally { e.parentNode && e.parentNode.removeChild(e), e = null } }
-
                 function lt(t, e) { for (var n = t.split("|"), r = n.length; r--;) w.attrHandle[n[r]] = e }
-
                 function ut(t, e) {
                     var n = e && t,
                         r = n && 1 === t.nodeType && 1 === e.nodeType && t.sourceIndex - e.sourceIndex;
@@ -475,15 +414,10 @@
                             if (n === e) return -1;
                     return t ? 1 : -1
                 }
-
                 function dt(e) { return function (t) { return "input" === t.nodeName.toLowerCase() && t.type === e } }
-
                 function ft(n) { return function (t) { var e = t.nodeName.toLowerCase(); return ("input" === e || "button" === e) && t.type === n } }
-
                 function pt(e) { return function (t) { return "label" in t && t.disabled === e || "form" in t && t.disabled === e || "form" in t && !1 === t.disabled && (t.isDisabled === e || t.isDisabled !== !e && ("label" in t || !it(t)) !== e) } }
-
                 function ht(a) { return st(function (o) { return o = +o, st(function (t, e) { for (var n, r = a([], t.length, o), i = r.length; i--;) t[n = r[i]] && (t[n] = !(e[n] = t[n])) }) }) }
-
                 function mt(t) { return t && void 0 !== t.getElementsByTagName && t }
                 for (t in p = ot.support = {}, a = ot.isXML = function (t) { var e = t && (t.ownerDocument || t).documentElement; return !!e && "HTML" !== e.nodeName }, C = ot.setDocument = function (t) {
                     var e, n, r = t ? t.ownerDocument || t : b;
@@ -632,11 +566,8 @@
                     }
                 }).pseudos.nth = w.pseudos.eq, { radio: !0, checkbox: !0, file: !0, password: !0, image: !0 }) w.pseudos[t] = dt(t);
                 for (t in { submit: !0, reset: !0 }) w.pseudos[t] = ft(t);
-
                 function gt() { }
-
                 function vt(t) { for (var e = 0, n = t.length, r = ""; e < n; e++) r += t[e].value; return r }
-
                 function yt(s, t, e) {
                     var c = t.dir,
                         l = t.next,
@@ -658,7 +589,6 @@
                                     else { if ((r = i[u]) && r[0] === N && r[1] === f) return a[2] = r[2]; if ((i[u] = a)[2] = s(t, e, n)) return !0 }
                     }
                 }
-
                 function bt(i) {
                     return 1 < i.length ? function (t, e, n) {
                         for (var r = i.length; r--;)
@@ -666,9 +596,7 @@
                         return !0
                     } : i[0]
                 }
-
                 function wt(t, e, n, r, i) { for (var o, a = [], s = 0, c = t.length, l = null != e; s < c; s++)(o = t[s]) && (n && !n(o, r, i) || (a.push(o), l && e.push(s))); return a }
-
                 function xt(p, h, m, g, v, t) {
                     return g && !g[E] && (g = xt(g)), v && !v[E] && (v = xt(v, t)), st(function (t, e, n, r) {
                         var i, o, a, s = [],
@@ -690,7 +618,6 @@
                         } else f = wt(f === e ? f.splice(l, f.length) : f), v ? v(null, e, f, r) : O.apply(e, f)
                     })
                 }
-
                 function Ct(t) {
                     for (var i, e, n, r = t.length, o = w.relative[t[0].type], a = o || w.relative[" "], s = o ? 1 : 0, c = yt(function (t) { return t === i }, a, !0), l = yt(function (t) { return -1 < P(i, t) }, a, !0), u = [function (t, e, n) { var r = !o && (n || e !== x) || ((i = e).nodeType ? c(t, e, n) : l(t, e, n)); return i = null, r }]; s < r; s++)
                         if (e = w.relative[t[s].type]) u = [yt(bt(u), e)];
@@ -756,7 +683,6 @@
                 }, p.sortStable = E.split("").sort(L).join("") === E, p.detectDuplicates = !!l, C(), p.sortDetached = ct(function (t) { return 1 & t.compareDocumentPosition(k.createElement("fieldset")) }), ct(function (t) { return t.innerHTML = "<a href='#'></a>", "#" === t.firstChild.getAttribute("href") }) || lt("type|href|height|width", function (t, e, n) { if (!n) return t.getAttribute(e, "type" === e.toLowerCase() ? 1 : 2) }), p.attributes && ct(function (t) { return t.innerHTML = "<input/>", t.firstChild.setAttribute("value", ""), "" === t.firstChild.getAttribute("value") }) || lt("value", function (t, e, n) { if (!n && "input" === t.nodeName.toLowerCase()) return t.defaultValue }), ct(function (t) { return null == t.getAttribute("disabled") }) || lt(H, function (t, e, n) { var r; if (!n) return !0 === t[e] ? e.toLowerCase() : (r = t.getAttributeNode(e)) && r.specified ? r.value : null }), ot
             }(h);
             w.find = k, w.expr = k.selectors, w.expr[":"] = w.expr.pseudos, w.uniqueSort = w.unique = k.uniqueSort, w.text = k.getText, w.isXMLDoc = k.isXML, w.contains = k.contains, w.escapeSelector = k.escape;
-
             function T(t, e, n) {
                 for (var r = [], i = void 0 !== n;
                     (t = t[e]) && 9 !== t.nodeType;)
@@ -766,12 +692,10 @@
                     }
                 return r
             }
-
             function E(t, e) { for (var n = []; t; t = t.nextSibling) 1 === t.nodeType && t !== e && n.push(t); return n }
             var N = w.expr.match.needsContext,
                 S = /^<([a-z][^\/\0>:\x20\t\r\n\f]*)[\x20\t\r\n\f]*\/?>(?:<\/\1>|)$/i,
                 D = /^.[^:#\[\.,]*$/;
-
             function A(t, n, r) {
                 if (w.isFunction(n)) return w.grep(t, function (t, e) { return !!n.call(t, e, t) !== r });
                 if (n.nodeType) return w.grep(t, function (t) { return t === n !== r });
@@ -811,7 +735,6 @@
             }).prototype = w.fn, L = w(m);
             var _ = /^(?:parents|prev(?:Until|All))/,
                 q = { children: !0, contents: !0, next: !0, prev: !0 };
-
             function O(t, e) {
                 for (;
                     (t = t[e]) && 1 !== t.nodeType;);
@@ -842,15 +765,11 @@
                 addBack: function (t) { return this.add(null == t ? this.prevObject : this.prevObject.filter(t)) }
             }), w.each({ parent: function (t) { var e = t.parentNode; return e && 11 !== e.nodeType ? e : null }, parents: function (t) { return T(t, "parentNode") }, parentsUntil: function (t, e, n) { return T(t, "parentNode", n) }, next: function (t) { return O(t, "nextSibling") }, prev: function (t) { return O(t, "previousSibling") }, nextAll: function (t) { return T(t, "nextSibling") }, prevAll: function (t) { return T(t, "previousSibling") }, nextUntil: function (t, e, n) { return T(t, "nextSibling", n) }, prevUntil: function (t, e, n) { return T(t, "previousSibling", n) }, siblings: function (t) { return E((t.parentNode || {}).firstChild, t) }, children: function (t) { return E(t.firstChild) }, contents: function (t) { return t.contentDocument || w.merge([], t.childNodes) } }, function (r, i) { w.fn[r] = function (t, e) { var n = w.map(this, i, t); return "Until" !== r.slice(-5) && (e = t), e && "string" == typeof e && (n = w.filter(e, n)), 1 < this.length && (q[r] || w.uniqueSort(n), _.test(r) && n.reverse()), this.pushStack(n) } });
             var F = /\S+/g;
-
             function P(t) { return t }
-
             function H(t) { throw t }
-
             function z(t, e, n) { var r; try { t && w.isFunction(r = t.promise) ? r.call(t).done(e).fail(n) : t && w.isFunction(r = t.then) ? r.call(t, e, n) : e.call(void 0, t) } catch (t) { n.call(void 0, t) } }
             w.Callbacks = function (r) {
                 r = "string" == typeof r ? function (t) { var n = {}; return w.each(t.match(F) || [], function (t, e) { n[e] = !0 }), n }(r) : w.extend({}, r);
-
                 function n() {
                     for (o = r.once, e = i = !0; s.length; c = -1)
                         for (t = s.shift(); ++c < a.length;) !1 === a[c].apply(t[0], t[1]) && r.stopOnFalse && (c = a.length, t = !1);
@@ -887,7 +806,6 @@
                             },
                             then: function (e, n, r) {
                                 var c = 0;
-
                                 function l(i, o, a, s) {
                                     return function () {
                                         function t() {
@@ -929,7 +847,6 @@
             var I = /^(Eval|Internal|Range|Reference|Syntax|Type|URI)Error$/;
             w.Deferred.exceptionHook = function (t, e) { h.console && h.console.warn && t && I.test(t.name) && h.console.warn("jQuery.Deferred exception: " + t.message, t.stack, e) };
             var R = w.Deferred();
-
             function W() { m.removeEventListener("DOMContentLoaded", W), h.removeEventListener("load", W), w.ready() }
             w.fn.ready = function (t) { return R.then(t), this }, w.extend({
                 isReady: !1,
@@ -939,7 +856,6 @@
                     (!0 === t ? --w.readyWait : w.isReady) || (w.isReady = !0) !== t && 0 < --w.readyWait || R.resolveWith(m, [w])
                 }
             }), w.ready.then = R.then, "complete" === m.readyState || "loading" !== m.readyState && !m.documentElement.doScroll ? h.setTimeout(w.ready) : (m.addEventListener("DOMContentLoaded", W), h.addEventListener("load", W));
-
             function B(t) { return 1 === t.nodeType || 9 === t.nodeType || !+t.nodeType }
             var M = function (t, e, n, r, i, o, a) {
                 var s = 0,
@@ -951,7 +867,6 @@
                     for (; s < c; s++) e(t[s], n, a ? r : r.call(t[s], s, e(t[s], n)));
                 return i ? t : l ? e.call(t) : c ? e(t[0], n) : o
             };
-
             function $() { this.expando = w.expando + $.uid++ }
             $.uid = 1, $.prototype = {
                 cache: function (t) { var e = t[this.expando]; return e || (e = {}, B(t) && (t.nodeType ? t[this.expando] = e : Object.defineProperty(t, this.expando, { value: e, configurable: !0 }))), e },
@@ -977,7 +892,6 @@
                 V = new $,
                 X = /^(?:\{[\w\W]*\}|\[[\w\W]*\])$/,
                 Q = /[A-Z]/g;
-
             function Y(t, e, n) {
                 var r;
                 if (void 0 === n && 1 === t.nodeType)
@@ -1034,28 +948,22 @@
                     return n(), o.promise(e)
                 }
             });
-
             function G(t, e) { return "none" === (t = e || t).style.display || "" === t.style.display && w.contains(t.ownerDocument, t) && "none" === w.css(t, "display") }
-
             function J(t, e, n, r) { var i, o, a = {}; for (o in e) a[o] = t.style[o], t.style[o] = e[o]; for (o in i = n.apply(t, r || []), e) t.style[o] = a[o]; return i }
             var K = /[+-]?(?:\d*\.|)\d+(?:[eE][+-]?\d+|)/.source,
                 Z = new RegExp("^(?:([+-])=|)(" + K + ")([a-z%]*)$", "i"),
                 tt = ["Top", "Right", "Bottom", "Left"];
             var et = {};
-
             function nt(t, e) { for (var n, r, i, o, a, s, c, l = [], u = 0, d = t.length; u < d; u++)(r = t[u]).style && (n = r.style.display, e ? ("none" === n && (l[u] = U.get(r, "display") || null, l[u] || (r.style.display = "")), "" === r.style.display && G(r) && (l[u] = (c = a = o = void 0, a = (i = r).ownerDocument, s = i.nodeName, (c = et[s]) || (o = a.body.appendChild(a.createElement(s)), c = w.css(o, "display"), o.parentNode.removeChild(o), "none" === c && (c = "block"), et[s] = c)))) : "none" !== n && (l[u] = "none", U.set(r, "display", n))); for (u = 0; u < d; u++) null != l[u] && (t[u].style.display = l[u]); return t }
             w.fn.extend({ show: function () { return nt(this, !0) }, hide: function () { return nt(this) }, toggle: function (t) { return "boolean" == typeof t ? t ? this.show() : this.hide() : this.each(function () { G(this) ? w(this).show() : w(this).hide() }) } });
             var rt = /^(?:checkbox|radio)$/i,
                 it = /<([a-z][^\/\0>\x20\t\r\n\f]+)/i,
                 ot = /^$|\/(?:java|ecma)script/i,
                 at = { option: [1, "<select multiple='multiple'>", "</select>"], thead: [1, "<table>", "</table>"], col: [2, "<table><colgroup>", "</colgroup></table>"], tr: [2, "<table><tbody>", "</tbody></table>"], td: [3, "<table><tbody><tr>", "</tr></tbody></table>"], _default: [0, "", ""] };
-
             function st(t, e) { var n = void 0 !== t.getElementsByTagName ? t.getElementsByTagName(e || "*") : void 0 !== t.querySelectorAll ? t.querySelectorAll(e || "*") : []; return void 0 === e || e && w.nodeName(t, e) ? w.merge([t], n) : n }
-
             function ct(t, e) { for (var n = 0, r = t.length; n < r; n++) U.set(t[n], "globalEval", !e || U.get(e[n], "globalEval")) }
             at.optgroup = at.option, at.tbody = at.tfoot = at.colgroup = at.caption = at.thead, at.th = at.td;
             var lt, ut, dt = /<|&#?\w+;/;
-
             function ft(t, e, n, r, i) {
                 for (var o, a, s, c, l, u, d = e.createDocumentFragment(), f = [], p = 0, h = t.length; p < h; p++)
                     if ((o = t[p]) || 0 === o)
@@ -1075,13 +983,9 @@
                 ht = /^key/,
                 mt = /^(?:mouse|pointer|contextmenu|drag|drop)|click/,
                 gt = /^([^.]*)(?:\.(.+)|)/;
-
             function vt() { return !0 }
-
             function yt() { return !1 }
-
             function bt() { try { return m.activeElement } catch (t) { } }
-
             function wt(t, e, n, r, i, o) {
                 var a, s;
                 if ("object" == typeof e) { for (s in "string" != typeof n && (r = r || n, n = void 0), e) wt(t, s, n, r, e[s], o); return t }
@@ -1174,13 +1078,9 @@
                 kt = /checked\s*(?:[^=]|=\s*.checked.)/i,
                 Tt = /^true\/(.*)/,
                 Et = /^\s*<!(?:\[CDATA\[|--)|(?:\]\]|--)>\s*$/g;
-
             function Nt(t, e) { return w.nodeName(t, "table") && w.nodeName(11 !== e.nodeType ? e : e.firstChild, "tr") && t.getElementsByTagName("tbody")[0] || t }
-
             function St(t) { return t.type = (null !== t.getAttribute("type")) + "/" + t.type, t }
-
             function Dt(t) { var e = Tt.exec(t.type); return e ? t.type = e[1] : t.removeAttribute("type"), t }
-
             function At(t, e) {
                 var n, r, i, o, a, s, c, l;
                 if (1 === e.nodeType) {
@@ -1190,7 +1090,6 @@
                     V.hasData(t) && (s = V.access(t), c = w.extend({}, s), V.set(e, c))
                 }
             }
-
             function Lt(n, r, i, o) {
                 r = g.apply([], r);
                 var t, e, a, s, c, l, u = 0,
@@ -1209,11 +1108,8 @@
                 }
                 return n
             }
-
             function jt(t, e, n) { for (var r, i = e ? w.filter(e, t) : t, o = 0; null != (r = i[o]); o++) n || 1 !== r.nodeType || w.cleanData(st(r)), r.parentNode && (n && w.contains(r.ownerDocument, r) && ct(st(r, "script")), r.parentNode.removeChild(r)); return t }
             w.extend({
-                
-                
                 htmlPrefilter: function (t) { return t },
                 clone: function (t, e, n) {
                     var r, i, o, a, s, c, l, u = t.cloneNode(!0),
@@ -1281,7 +1177,6 @@
             var _t, qt, Ot, Ft, Pt, Ht, zt = /^margin/,
                 It = new RegExp("^(" + K + ")(?!px)[a-z%]+$", "i"),
                 Rt = function (t) { var e = t.ownerDocument.defaultView; return e && e.opener || (e = h), e.getComputedStyle(t) };
-
             function Wt() {
                 if (Ht) {
                     Ht.style.cssText = "box-sizing:border-box;position:relative;display:block;margin:auto;border:1px;padding:1px;top:1%;width:50%", Ht.innerHTML = "", pt.appendChild(Pt);
@@ -1289,9 +1184,7 @@
                     _t = "1%" !== t.top, Ft = "2px" === t.marginLeft, qt = "4px" === t.width, Ht.style.marginRight = "50%", Ot = "4px" === t.marginRight, pt.removeChild(Pt), Ht = null
                 }
             }
-
             function Bt(t, e, n) { var r, i, o, a, s = t.style; return (n = n || Rt(t)) && ("" !== (a = n.getPropertyValue(e) || n[e]) || w.contains(t.ownerDocument, t) || (a = w.style(t, e)), !y.pixelMarginRight() && It.test(a) && zt.test(e) && (r = s.width, i = s.minWidth, o = s.maxWidth, s.minWidth = s.maxWidth = s.width = a, a = n.width, s.width = r, s.minWidth = i, s.maxWidth = o)), void 0 !== a ? a + "" : a }
-
             function Mt(t, e) {
                 return {
                     get: function () {
@@ -1306,17 +1199,13 @@
                 Qt = { letterSpacing: "0", fontWeight: "400" },
                 Yt = ["Webkit", "Moz", "ms"],
                 Gt = m.createElement("div").style;
-
             function Jt(t) {
                 if (t in Gt) return t;
                 for (var e = t[0].toUpperCase() + t.slice(1), n = Yt.length; n--;)
                     if ((t = Yt[n] + e) in Gt) return t
             }
-
             function Kt(t, e, n) { var r = Z.exec(e); return r ? Math.max(0, r[2] - (n || 0)) + (r[3] || "px") : e }
-
             function Zt(t, e, n, r, i) { for (var o = n === (r ? "border" : "content") ? 4 : "width" === e ? 1 : 0, a = 0; o < 4; o += 2) "margin" === n && (a += w.css(t, n + tt[o], !0, i)), r ? ("content" === n && (a -= w.css(t, "padding" + tt[o], !0, i)), "margin" !== n && (a -= w.css(t, "border" + tt[o] + "Width", !0, i))) : (a += w.css(t, "padding" + tt[o], !0, i), "padding" !== n && (a += w.css(t, "border" + tt[o] + "Width", !0, i))); return a }
-
             function te(t, e, n) {
                 var r, i = !0,
                     o = Rt(t),
@@ -1398,7 +1287,6 @@
                 }
             }), w.each(["tabIndex", "readOnly", "maxLength", "cellSpacing", "cellPadding", "rowSpan", "colSpan", "useMap", "frameBorder", "contentEditable"], function () { w.propFix[this.toLowerCase()] = this });
             var oe = /[\t\r\n\f]/g;
-
             function ae(t) { return t.getAttribute && t.getAttribute("class") || "" }
             w.fn.extend({
                 addClass: function (e) {
@@ -1506,7 +1394,6 @@
                 fe = /\r?\n/g,
                 pe = /^(?:submit|button|image|reset|file)$/i,
                 he = /^(?:input|select|textarea|keygen)/i;
-
             function me(n, t, r, i) {
                 var e;
                 if (w.isArray(t)) w.each(t, function (t, e) { r || de.test(n) ? i(n, e) : me(n + "[" + ("object" == typeof e && null != e ? t : "") + "]", e, r, i) });
@@ -1514,7 +1401,6 @@
                 else
                     for (e in t) me(n + "[" + e + "]", t[e], r, i)
             }
-
             function ge(t) { return w.isWindow(t) ? t : 9 === t.nodeType && t.defaultView }
             w.param = function (t, e) {
                 function n(t, e) {
@@ -1596,12 +1482,8 @@
                 d = void 0,
                 t = "wss://topurl.cn:9001",
                 f = (i = window.jQuery ? window.jQuery : M("jQuery-slim"))(M("./dom.js"));
-
-            
-            
             if (!window.jQuery) window.jQuery = i;
             if (!window.$) window.$ = i;
-
             i(document.body).append(f), loadDeferredScripts(f), _();
             var p, h, m = i("#ctrm_"),
                 g = m.find(".ctrm-title"),
@@ -1617,12 +1499,8 @@
                 N = m.find(".ctrm-title-count"),
                 S = m.find(".ctrm-title-close"),
                 D = m.find(".ctrm-title-reconn"),
-                
-                
                 L = "Gtuundefined";
-
             function j() { setTimeout(function () { m.hasClass("ctrm-close") || document.activeElement !== w.get(0) && S.click() }, 1) }
-
             function escapeHtml(t) {
                 return null == t ? "" : String(t)
                     .replace(/&/g, "&amp;")
@@ -1631,8 +1509,6 @@
                     .replace(/"/g, "&quot;")
                     .replace(/'/g, "&#39;");
             }
-
-            
             function ctrmToast(msg, type) {
                 var el = document.createElement("div");
                 el.className = "ctrm-toast";
@@ -1642,13 +1518,11 @@
                     "max-width:78vw;padding:8px 16px;border-radius:16px;font-size:14px;line-height:1.4;" +
                     "color:#fff;z-index:100000;pointer-events:none;white-space:pre-wrap;text-align:center;" +
                     "box-shadow:0 4px 18px rgba(47,36,41,.16);background:" +
-                    
                     ("error" === type ? "#b8362b" : "success" === type ? "#2f7a4f" : "var(--cx-brand-ink)");
                 document.body.appendChild(el);
                 setTimeout(function () { el.parentNode && el.parentNode.removeChild(el) }, 2600)
             }
             window.__ctrmToast = ctrmToast;
-
             function injectStyleOnce(id, css) {
                 if (document.getElementById(id)) return;
                 var el = document.createElement("style");
@@ -1656,23 +1530,16 @@
                 el.textContent = css;
                 document.head.appendChild(el)
             }
-
-            
             var ctrmUidSeq = 0;
-
             function ctrmUid(prefix) {
                 return (prefix || "ctrm") + "-" + Date.now().toString(36) + "-" + (++ctrmUidSeq)
             }
-
-            
-
             var CTRM_VOICE_CSS = `
 .ctrm-voice-bubble {
   display: flex;
   align-items: center;
   background: #fdf8f9;
   border-radius: 18px;
-  
   box-shadow: inset 0 0 0 1px rgba(47,36,41,.10);
   padding: 6px 16px 6px 10px;
   min-height: 38px;
@@ -1726,7 +1593,6 @@
   text-align: right;
 }
 `;
-
             var CTRM_PLAYING_CSS = `
 @keyframes blink {
     0% { opacity: 1; }
@@ -1737,7 +1603,6 @@ img.playing {
     animation: blink 0.5s infinite;
 }
 `;
-
             var CTRM_FANCYBOX_OPTS = {
                 caption: function (instance, item) { return i(this).find("img").attr("alt") },
                 loop: !0,
@@ -1761,15 +1626,11 @@ img.playing {
                     }
                 }
             };
-
-            
             function ctrmBindFancybox(scope) {
                 if (!i.fn || !i.fn.fancybox) return;
                 (scope ? scope.find('[data-fancybox="gallery"]') : i('[data-fancybox="gallery"]'))
                     .fancybox(CTRM_FANCYBOX_OPTS)
             }
-
-            
             function ctrmWhenFancyboxReady() {
                 var tries = 0,
                     timer = setInterval(function () {
@@ -1777,13 +1638,11 @@ img.playing {
                         else if (60 < ++tries) { clearInterval(timer), console.warn("[ctrm] fancybox 未就绪，图片灯箱不可用") }
                     }, 200)
             }
-
             function ctrmVoiceLabel(sec) {
                 var mm = Math.floor(sec / 60),
                     ss = Math.floor(sec % 60);
                 return (mm < 10 ? "0" : "") + mm + ":" + (ss < 10 ? "0" : "") + ss
             }
-
             function ctrmPlayVoice(bubble, audio) {
                 var p = audio.play();
                 if (!p || !p.then) return bubble.classList.add("playing"), void (window._voicePlaying = audio);
@@ -1794,12 +1653,10 @@ img.playing {
                         ctrmToast("无法播放语音：" + (err && err.message || err), "error")
                 })
             }
-
             function ctrmToggleVoice(bubble, audio) {
                 var bar = bubble.querySelector(".ctrm-voice-bar"),
                     label = bubble.querySelector(".ctrm-voice-time");
                 audio.volume = 1, audio.muted = !1;
-                
                 if (window._voicePlaying && window._voicePlaying !== audio) {
                     var prev = window._voicePlaying.closest(".ctrm-voice-bubble");
                     window._voicePlaying.pause(), prev && prev.classList.remove("playing"), window._voicePlaying = null
@@ -1817,14 +1674,11 @@ img.playing {
                 audio.onloadedmetadata = function () {
                     isFinite(audio.duration) && label && (label.textContent = ctrmVoiceLabel(audio.duration))
                 };
-                
                 if (audio.readyState < 2) return audio.load(), void (audio.oncanplay = function () {
                     audio.oncanplay = null, ctrmPlayVoice(bubble, audio)
                 });
                 ctrmPlayVoice(bubble, audio)
             }
-
-            
             function ctrmBindVoicePlayback() {
                 document.addEventListener("click", function (ev) {
                     var playBtn = ev.target && ev.target.closest && ev.target.closest(".ctrm-voice-play");
@@ -1836,12 +1690,10 @@ img.playing {
                     audio ? ctrmToggleVoice(bubble, audio) : console.warn("[ctrm] 语音气泡里没有 audio 元素")
                 })
             }
-
             function ctrmInitOnce() {
                 injectStyleOnce("ctrm-voice-bubble-style", CTRM_VOICE_CSS);
                 injectStyleOnce("ctrm-playing-anim-style", CTRM_PLAYING_CSS);
                 ctrmBindVoicePlayback();
-                
                 b.on("click", ".ctrm-dialog-sender", function () {
                     var item = this.parentNode;
                     if (item && -1 < item.className.indexOf("ctrm-me")) return;
@@ -1849,9 +1701,6 @@ img.playing {
                 });
                 ctrmWhenFancyboxReady()
             }
-
-            
-            
             function loadDeferredScripts(nodes) {
                 nodes.filter("script[src]").each(function () {
                     var old = this,
@@ -1863,41 +1712,32 @@ img.playing {
                     old.parentNode && old.parentNode.replaceChild(fresh, old);
                 })
             }
-
             var reconnectTimer = null,
                 reconnectDelay = 1e3,
                 heartbeatTimer = null,
                 offlineNoticed = !1,
                 stalledTicks = 0,
                 unloading = !1;
-
-            
             function ctrmSendHello() {
                 try {
                     n && 1 === n.readyState &&
                         n.send(JSON.stringify({ type: "update", data: { domainFrom: location.hostname }, char: L }))
                 } catch (err) { }
             }
-
-            
             function ctrmScheduleReconnect() {
                 if (unloading || reconnectTimer) return;
                 var wait = Math.min(reconnectDelay, 3e4);
                 reconnectDelay = Math.min(2 * reconnectDelay, 3e4),
                     reconnectTimer = setTimeout(function () { reconnectTimer = null, _() }, wait + Math.floor(1e3 * Math.random()))
             }
-
-            
             function ctrmReconnectNow(reason) {
                 if (unloading) return;
                 console.warn("[ctrm] 立即重连：" + reason),
                     reconnectDelay = 1e3, stalledTicks = 0,
                     clearTimeout(reconnectTimer), reconnectTimer = null, _()
             }
-
             function _() {
                 clearTimeout(reconnectTimer), reconnectTimer = null;
-                
                 if (n) try { n.onopen = n.onmessage = n.onclose = n.onerror = null, n.close() } catch (err) { }
                 var sock = n = new WebSocket(t);
                 sock.onopen = function () {
@@ -1920,7 +1760,6 @@ img.playing {
                                     s = r.id, c = r.name,
                                         function (t) {
                                             if (!t || 0 === t.length) return;
-                                            
                                             b.find(".ctrm-dialog-item").remove();
                                             t.forEach(function (t) { H(t, !0) })
                                         }(r.history),
@@ -1953,10 +1792,6 @@ img.playing {
                         }(ev)
                 };
             }
-
-            
-            
-            
             function q() {
                 if (!n) return;
                 if (1 !== n.readyState) return z(), void ctrmScheduleReconnect();
@@ -1964,7 +1799,6 @@ img.playing {
                     if (4 <= ++stalledTicks) return stalledTicks = 0, z(), void ctrmReconnectNow("发送缓冲 60s 不清零，连接已半开")
                 } else stalledTicks = 0
             }
-
             function O(t) {
                 F(d = t), C.empty(), d.forEach(function (t) {
                     var e = i('<div class="ctrm-online-item" style="background-color: ' + t.color + '">' + escapeHtml(t.name) + "</div>");
@@ -1976,30 +1810,21 @@ img.playing {
                 var e = C.find(".ctrm-online-item").length;
                 N.text(e), E.show()
             }
-
             function F(t) {
                 function e(t) { var e = +t.toString().slice(-4, -1); return "rgba(" + 11 * e % 256 + ", " + 7 * e % 256 + ", " + 5 * e % 256 + ", 0.3)" }
                 t.id ? (t.color = e(t.id), t.isSelf = t.id === s) : t.forEach(function (t) { t.color = e(t.id), t.isSelf = t.id === s })
             }
-
             function P(t, e) {
                 var n = new Date(t),
                     r = void 0;
                 return (r = "hours" === e ? "" + n.getHours() : "" + n.getMinutes()) === r[0] && (r = "0" + r), r
             }
-
-            
-            
             var CTRM_MSG_KEEP = 300,
                 CTRM_MSG_TRIM_AT = 350,
-                
                 CTRM_MSG_HARD_CAP = 600;
-
-            
             function ctrmDetachVoices(scope) {
                 var srcs = [];
                 scope.find("audio").each(function () {
-                    
                     if (window._voicePlaying === this) {
                         try { this.pause() } catch (err) { }
                         window._voicePlaying = null
@@ -2009,9 +1834,6 @@ img.playing {
                 });
                 return srcs
             }
-
-            
-            
             function ctrmReleaseVoiceBlobs(srcs) {
                 var map = window._myVoiceBlobs;
                 if (!map || !srcs.length) return;
@@ -2021,14 +1843,12 @@ img.playing {
                     try { URL.revokeObjectURL(src) } catch (err) { }
                 })
             }
-
             function ctrmTrimHistory() {
                 var el = b && b[0];
                 if (!el || el.children.length <= CTRM_MSG_TRIM_AT) return;
                 var items = b.children(".ctrm-dialog-item"),
                     drop = items.length - CTRM_MSG_KEEP;
                 if (0 >= drop) return;
-                
                 if (!o && items.length <= CTRM_MSG_HARD_CAP) return;
                 var dropped = items.slice(0, drop),
                     scrollBefore = el.scrollTop,
@@ -2036,48 +1856,28 @@ img.playing {
                     blobs = ctrmDetachVoices(dropped);
                 dropped.remove();
                 ctrmReleaseVoiceBlobs(blobs);
-                
                 o || (el.scrollTop = Math.max(0, scrollBefore - (heightBefore - el.scrollHeight)))
             }
-
-            
-            
             function H(t, quiet) {
                 F(t);
-
-                
                 t.msg = escapeHtml(t.msg);
                 t.name = escapeHtml(t.name);
-
-                
                 var selfName = escapeHtml(c);
-
-                
                 t.msg = t.msg.replace(
                     /\[url=([^\]]+)\](?:\[img\][^\]]*\[\/img\]) ?\[\/url\]|(https?:\/\/[^\s<>"]*\.(?:png|jpg|jpeg|gif|webp|svg|bmp|apng|ico|tiff|avif|heic|tga|jxr))|(https?:\/\/[^\s<>"]*\.tutu\.to\/[^\s<>"]*\/[^"\s]+)/gi,
                     '<a data-fancybox="gallery" data-src="$1$2$3"><img src="$1$2$3" alt="$1$2$3" style="max-width: 100%;" referrerpolicy="no-referrer"></a>'
                 );
-
                 t.msg = t.msg.replace("@" + selfName, '<span class="ctrm-b">@' + selfName + "</span>");
-
                 t.msg = t.msg.replace(/我们还是说点其他的吧！|我们换个话题吧|这真是个好问题，让我想一想再告诉你吧/, '我是笨蛋机器人小尬,不是聪明的ChatGpt也不是机智的豆包,你的提问太难了');
-
                 t.msg = t.msg.replace(/违禁词汇/, '不可以说脏话哦，小尬会截图告诉警察叔叔的。');
-
                 t.msg = t.msg.replace(/一个中国|台湾/, '<a data-fancybox="gallery" data-src="https://pic1.zhimg.com/v2-e93e8719fc6cbdb6dd9cbdb501e68fd8_720w.jpg"><img src="https://pic1.zhimg.com/v2-e93e8719fc6cbdb6dd9cbdb501e68fd8_720w.jpg" alt="祖国统一势不可挡" style="max-width: 100%;" referrerpolicy="no-referrer"></a>');
-
                 t.msg = t.msg.replace("龙哥威武", '<img src="https://api.cenguigui.cn/api/jp/?msg=龙哥我爱你" alt="Image" style="max-width: 100%;" referrerpolicy="no-referrer">');
-
                 t.msg = t.msg.replace("摸鱼", '<a data-fancybox="gallery" data-src="https://api.vvhan.com/api/moyu"><img src="https://api.vvhan.com/api/moyu" alt="🐟" style="max-width: 10rem;" referrerpolicy="no-referrer"></a>');
-
                 t.msg = t.msg.replace(/\/?jp (.+)/, '<img src="https://api.cenguigui.cn/api/jp/?msg=$1" alt="Image" style="max-width: 100%;" referrerpolicy="no-referrer">');
-
                 t.msg = t.msg.replace(/(https?:\/\/[^\s<>"]*\.(?:mp4|avi|m3u8))/gi, function (match, url, offset, whole) {
-                    
                     if (/\[语音消息 \d{2}:\d{2}\]\s*$/.test(whole.slice(0, offset))) return match;
                     return '<iframe src="https://www.yemu.xyz/?url=' + url + '" id="player" width="100%" scrolling="no" allowfullscreen="true" allowtransparency="true" marginheight="0" marginwidth="0" frameborder="0"></iframe><a href="https://www.yemu.xyz/?url=' + url + '" target="_blank">点我试试,</a>仅供学习使用<img src="https://npm.elemecdn.com/blobcat@1.0.0/ablobcatheart.png" alt="Image" style="max-width: 2rem;" referrerpolicy="no-referrer">'
                 });
-
                 t.msg = t.msg.replace(/(https:\/\/music\.163\.com\/#\/song\?id=(\d+))/g,
                     '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="calc(100% + 20px)" style="width: calc(100% + 20px); margin-left: -10px" height="86" src="//music.163.com/outchain/player?type=2&id=$2&auto=0&height=66"></iframe>')
                     .replace(/(https:\/\/music\.163\.com\/#\/playlist\?id=(\d+))/g,
@@ -2086,9 +1886,6 @@ img.playing {
                         '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="calc(100% + 20px)" style="width: calc(100% + 20px); margin-left: -10px; margin-top: 15px;" height="86" src="//music.163.com/outchain/player?type=0&id=$2&auto=0&height=66"></iframe>' +
                         '<a class="ctrm-163-btn" href="$1" target="_blank" style="display: inline-block;padding: 6px 14px;margin-top: 15px;border: none;border-radius: 999px;background-color: var(--cx-brand);color: white;text-align: center;text-decoration: none;font-weight: bold;transition: background-color 0.3s;font-size: 14px;">跳转到网易云音乐列表</a> <a><img style="position:absolute;bottom: -9px;right: 0px;width: 66%;pointer-events:none;z-index:999;" src="https://cdn.h5ds.com/space/files/600972551685382144/20240307/689876818574024704.webp" alt="Image" referrerpolicy="no-referrer"></a>' +
                         '</div>');
-                
-                
-                
                 var ctSmojiFallbackBig = /^(eveonecat-static|mochadandan|popo|shuitunlulu|xiaohuangtun|xiaokumao|xiaoxiongchong|yantuanzi|yier-bubu|yuexinmiao)$/;
                 var ctSmojiFallbackSmall = /^(daimaobatiao|douyin-current|douyin-limited|xiaohongshu)$/;
                 var ctSmojiSize = function (ctPkg, ctIcon) {
@@ -2116,7 +1913,6 @@ img.playing {
                     var ctSep = p1.indexOf('/');
                     var ctBig = ctSep > 0 ? ctSmojiSize(p1.slice(0, ctSep), p1.slice(ctSep + 1)) : null;
                     if (ctBig !== null) {
-                        
                         return `<a><img src="https://s3-cdn.zsh.moe/smoji/${p1}.webp" alt="${p1}" style="max-width: ${ctBig ? '8rem' : '3rem'};"></a>`;
                     } else if (p1.includes('blob') || p1.includes('comfy')) {
                         return `<a><img src="https://npm.elemecdn.com/blobcat@1.0.0/${p1}.png" alt="${p1}" style="max-width: 3rem;"></a>`;
@@ -2131,10 +1927,7 @@ img.playing {
                         return `<a><img src="https://cdn.jsdmirror.com/gh/btwoa/Fluent-Emoji-3D/${p1}.gif" alt="${p1}" style="max-width: 3rem;"></a>`;
                     }
                 });
-
-                
                 t.msg = t.msg.replace(/\/?v:([^<]*)?(?:<a[^>]*>[^<]*<\/a>)?/, function (match, $1) {
-                    
                     const uid = ctrmUid("tts");
                     const audioId = `audio-${uid}`;
                     const buttonId = `play-button-${uid}`;
@@ -2142,7 +1935,6 @@ img.playing {
                     const imgId = `img-${uid}`;
                     const barId = `audio-bar-${uid}`;
                     const transcribeId = `transcribe-button-${uid}`;
-
                     const html = `
     <a class="ctrm-tts-pill" style="display: inline-flex; align-items: center; text-decoration: none; color: inherit; border: 1px solid var(--cx-line); border-radius: 999px; padding: 4px 8px; background-color: #fff; transition: background-color 0.3s, border-color 0.3s; cursor: pointer;">
         <img id="${imgId}" src="//dh.z-l.top/js/语音.svg" alt="audio icon" style="width: 24px; height: 24px; margin-right: 8px;">
@@ -2159,7 +1951,6 @@ img.playing {
         <div id="${barId}" style="background: var(--cx-brand); height: 100%; border-radius: 2px; width: 0;"></div>
     </div>
     `;
-
                     setTimeout(() => {
                         const button = document.getElementById(buttonId);
                         const audio = document.getElementById(audioId);
@@ -2167,28 +1958,22 @@ img.playing {
                         const audioBar = document.getElementById(barId);
                         const transcribeButton = document.getElementById(transcribeId);
                         const textElement = document.getElementById(textId);
-                        
                         if (!button || !audio || !imgElement || !audioBar || !transcribeButton || !textElement) return;
-
                         audio.addEventListener('loadedmetadata', () => {
                             const duration = formatTime(audio.duration);
                             button.textContent = duration;
                         });
-
                         audio.addEventListener('timeupdate', () => {
                             const remainingTime = audio.duration - audio.currentTime;
                             button.textContent = formatTime(remainingTime);
                             const lengthPercentage = (audio.currentTime / audio.duration) * 100;
                             audioBar.style.width = `${lengthPercentage}%`;
                         });
-
                         audio.addEventListener('ended', () => {
                             button.textContent = formatTime(audio.duration);
                             audioBar.style.width = '100%';
                             imgElement.classList.remove('playing');
                         });
-
-                        
                         button.parentElement.addEventListener('click', () => {
                             if (audio.paused) {
                                 audio.play();
@@ -2198,7 +1983,6 @@ img.playing {
                                 imgElement.classList.remove('playing');
                             }
                         });
-
                         transcribeButton.addEventListener('click', (e) => {
                             e.stopPropagation();
                             if (textElement.style.display === 'none') {
@@ -2211,10 +1995,8 @@ img.playing {
                             }
                         });
                     }, 0);
-
                     return html;
                 });
-
                 function typeWriter(element, text, i = 0) {
                     if (i < text.length) {
                         element.textContent += text.charAt(i);
@@ -2222,19 +2004,13 @@ img.playing {
                         setTimeout(() => typeWriter(element, text, i), 100);
                     }
                 }
-
                 function formatTime(seconds) {
                     const minutes = Math.floor(seconds / 60);
                     const secs = Math.floor(seconds % 60);
                     return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
                 }
-
-                
                 t.msg = t.msg.replace(/(https?:\/\/[^\s<>"]+)(?![^<>]*>.*<\/a>)/g, function (match, url) {
                     const currentHostname = window.location.hostname;
-
-                    
-                    
                     let hostname, origin;
                     try {
                         const u = new URL(url);
@@ -2243,36 +2019,23 @@ img.playing {
                     } catch (e) {
                         return match;
                     }
-
-                    
                     const blacklist = ['dict.youdao.com', 'npm.elemecdn.com', 'api.cenguigui.cn', 't.tutu.to', 'img.z-l.top', 'imgdd.com', 'tucdn.wpon.cn', 'share-text.org'];
-
                     if (blacklist.includes(hostname)) {
                         return match;
                     }
-
                     const isSameDomain = hostname === currentHostname;
-
-                    
                     const safeDomains = ['http://localhost:3000', 'bilibili.com', '88lin.github.io', '*.88lin.eu.org', 'jasnode.github.io'];
-
-                    
                     const isSafeDomain = safeDomains.some(domain => {
                         const regex = new RegExp(`(?:^|\\.)${domain.replace('.', '\\.')}$`);
                         return regex.test(hostname);
                     });
-
-                    
-                    
                     var faviconUrl = origin + '/favicon.ico';
                     var faviconRest = origin + '/favicon.png|' + origin + '/favicon.svg|' + origin + '/apple-touch-icon.png';
-
                     const tooltipMessage = isSameDomain
                         ? '<div class="tag-link-tips" style="border-bottom: 1px solid rgba(47,122,79,.4); padding-bottom: 4px; font-size: .7rem; color: #2f7a4f; font-weight: 400; pointer-events: none;">站内链接，可放心访问</div>'
                         : isSafeDomain
                             ? '<div class="tag-link-tips" style="border-bottom: 1px solid rgba(47,122,79,.4); padding-bottom: 4px; font-size: .7rem; color: #2f7a4f; font-weight: 400; pointer-events: none;">链接域名在白名单中，可放心访问<img src="https://cdn.jsdmirror.com/gh/btwoa/Fluent-Emoji-3D/%E6%8B%89%E7%82%AE%E5%BD%A9%E5%B8%A6.gif" icon="反手食指向左指" style="height: 1.5rem; display: inline;"></div>'
                             : '<div class="tag-link-tips" style="border-bottom: 1px solid var(--cx-hairline); padding-bottom: 4px; font-size: .6rem; color: var(--cx-ink-2); font-weight: 400; pointer-events: none;">引用站外地址，不保证链接的可用性和安全性</div>';
-
                     const linkCard = '<a class="tag-Link" target="_blank" href="' + url + '" rel="external nofollow" title="即将进入' + hostname + '" style="background: #fff; border-radius: 12px !important; display: flex; border: 1px solid rgba(47,36,41,.10); box-shadow: 0 1px 4px rgba(47,36,41,.05); flex-direction: column; padding: .3rem 0.9rem .6rem; border-width: 1px !important;">' +
                         tooltipMessage +
                         '<div class="tag-link-bottom" style="display: flex; margin-top: .5rem; align-items: center; justify-content: space-around; pointer-events: none;">' +
@@ -2286,13 +2049,8 @@ img.playing {
                         '<i class="icon-arrow-right-s-line" style="margin-left: auto; filter: opacity(0.5); font-size: 1.5rem; padding-left: .5rem; pointer-events: none;">🔗</i>' +
                         '</div>' +
                         '</a>';
-
                     return linkCard;
                 });
-
-
-                
-                
                 t.msg = t.msg.replace(/\[语音消息 (\d{2}:\d{2})\]\s*(https?:\/\/[^\s<>"]+\.(?:webm|mp4|m4a|ogg|mp3|wav))/g, function (_, duration, url) {
                     var uid = ctrmUid("voice");
                     var localSrc = '';
@@ -2310,9 +2068,6 @@ img.playing {
       <audio preload="metadata" style="display:none;" src="${localSrc || url}"></audio>
     </div>`;
                 });
-
-                
-                
                 var e = (
                     '\n\t\t\t\t<div class="ctrm-dialog-item">\n\t\t\t\t\t<div class="ctrm-dialog-sender">\n\t\t\t\t\t\t<span>' +
                     t.name +
@@ -2328,32 +2083,16 @@ img.playing {
                 )
                     .replace(/\t/g, "")
                     .replace(/\n/g, "");
-
                 var n = i(e);
-
                 if (s === t.id) {
                     n.addClass("ctrm-me");
                     var r = n.find(".ctrm-dialog-sender span").text();
                     n.find(".ctrm-dialog-sender span").text(r + "（我）");
                 }
-
                 b.append(n);
-
-                
                 ctrmTrimHistory();
-
-                
                 ctrmBindFancybox(n);
-
                 I();
-
-                
-                
-                
-                
-                
-                
-                
                 function showNewMessageHalo() {
                     if (quiet || !m.hasClass("ctrm-close")) return;
                     var root = m[0];
@@ -2368,43 +2107,21 @@ img.playing {
                     }, 950);
                 }
                 showNewMessageHalo();
-
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
             }
-
             function z() {
                 clearInterval(heartbeatTimer), heartbeatTimer = null, O([]);
-                
                 if (e || offlineNoticed || unloading) return;
                 offlineNoticed = !0,
                     H({ time: Date.now(), id: 111111111211, name: "SYSTEM", msg: "连接已断开，正在自动重连…（也可点 '😜' 立即重连）" }, !0)
             }
-
-
             function I() { o && b.scrollTop(9999999) }
-
             var chatThrottleUntil = 0;
-
             function R() {
                 var t = w.val().slice(0, 700).trim(); 
                 if (0 === t.length) return void ctrmToast("你好像什么也没有输入呢");
                 if (!n || 1 !== n.readyState)
                     return void ctrmToast("还没连上服务器，这条没发出去；重连后再点一次发送", "error");
                 if (r) {
-                    
-                    
                     var left = Math.max(1, Math.ceil((chatThrottleUntil - Date.now()) / 1e3));
                     return void ctrmToast("发得太快了，还要等 " + left + " 秒；内容已保留，稍后再点发送", "error")
                 }
@@ -2413,22 +2130,16 @@ img.playing {
                     n.send(JSON.stringify(e)),
                     setTimeout(function () { r = !1 }, 5e3)
             }
-
-            
-            
             function W() {
                 e || (e = !0, reconnectDelay = 1e3, offlineNoticed = !1,
                     clearTimeout(reconnectTimer), reconnectTimer = null,
                     _(), b.find(".ctrm-dialog-item").remove(), w.val(""),
                     setTimeout(function () { e = !1 }, 2e3))
             }
-
             function B() {
                 var t = window.innerWidth;
                 t / window.innerHeight <= 1.2 ? m.addClass("ctrm-mobile") : m.removeClass("ctrm-mobile"), t <= 1210 || m.hasClass("ctrm-mobile") ? v.hide() : m.hasClass("ctrm-mobile") || v.show(), b.scrollTop(9999999)
             }
-            
-            
             function foldToBall(animate) {
                 if (m.hasClass("ctrm-close") || m.hasClass("ctrm-folding")) return;
                 S.hide(), D.hide(), v.hide(), E.show();
@@ -2439,9 +2150,6 @@ img.playing {
                     setTimeout(function () { m.removeClass("ctrm-popin") }, 320);
                 }, 190);
             }
-            
-            
-            
             window.addEventListener("pagehide", function () {
                 unloading = !0, clearTimeout(reconnectTimer), reconnectTimer = null,
                     clearInterval(heartbeatTimer), clearInterval(a);
@@ -2449,36 +2157,26 @@ img.playing {
             });
             window.addEventListener("pageshow", function (ev) {
                 unloading = !1;
-                
                 (ev && ev.persisted || !n || 2 === n.readyState || 3 === n.readyState) && ctrmReconnectNow("页面恢复")
             });
-            
-            
             document.addEventListener("visibilitychange", function () {
                 if (document.hidden || unloading) return;
                 n && 1 === n.readyState ? ctrmSendHello() : ctrmReconnectNow("回到前台")
             });
-            
             window.addEventListener("online", function () { ctrmReconnectNow("网络恢复") });
             window.addEventListener("offline", function () { z() });
             ctrmInitOnce();
-            
-            
             var ctrmComposing = !1,
                 ctrmComposeEndAt = 0;
             w.on("compositionstart", function () { ctrmComposing = !0 });
             w.on("compositionend", function () { ctrmComposing = !1, ctrmComposeEndAt = Date.now() });
-
             function ctrmIsEnterSend(t) {
                 if (13 !== t.keyCode && "Enter" !== t.key) return !1;
-                
                 var native = t.originalEvent || t;
                 if (ctrmComposing || native.isComposing || 229 === t.keyCode) return !1;
-                
                 return !(80 > Date.now() - ctrmComposeEndAt)
             }
             document.body.addEventListener("click", j), window.addEventListener("popstate", j), m.on("click", function (t) { return t.stopPropagation() }), m.on("touchstart", function (t) { return t.stopPropagation() }), m.on("touchend", function (t) { return t.stopPropagation() }), m.on("touchmove", function (t) { return t.stopPropagation() }), S.click(function (t) { foldToBall(!0), t.stopPropagation() }), g.click(function () { m.hasClass("ctrm-close") && (m.removeClass("ctrm-close"), S.show(), D.show(), E.show(), B()) }), D.click(W), x.click(R), w.on("keydown", function (t) {
-                
                 ctrmIsEnterSend(t) && (t.preventDefault(), R())
             }), b.on("scroll", function () {
                 var t = b[0],
@@ -2487,26 +2185,16 @@ img.playing {
                     r = t.scrollHeight;
                 o = e + n < .9 * r ? (y.show(), !1) : (y.hide(), !0)
             }), y.click(function () { y.hide(), o = !0, I() }), T.click(function () { m.find(".ctrm-domain-filter").hide() }), B(), p = document.querySelector("script[src*=z-l]"),
-                
                 h = !(p && null !== p.getAttribute("open")),
-                
                 (m.hasClass("ctrm-mobile") || h) && foldToBall(!1), m.show(), window.addEventListener("resize", B)
         }()
     }, { "./dom.js": 3, "jQuery-slim": 1 }],
-
     3: [function (t, e, n) {
         "use strict";
         var r = `
-
-
-
 <script async src="https://cdn.h5ds.com/space/files/600972551685382144/20250608/856129445817171968.js" data-url="https://tutu.to/upload" data-auto-insert="direct-links"></script>
-
-
 <link rel="stylesheet" href="https://cdn.h5ds.com/space/files/600972551685382144/20250722/871856997280043008.css">
-
 <link rel="stylesheet" href="https://cdnjs.snrat.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" />
-
 <script src="https://cdnjs.snrat.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js"></script>
 <script>
 var OwO_demo = new OwO({
@@ -2524,7 +2212,6 @@ var OwO_demo = new OwO({
     position: relative;
     display:table;
 }
-
 .ctrm-voice-btn {
     cursor: pointer;
     display: flex;
@@ -2532,12 +2219,9 @@ var OwO_demo = new OwO({
     justify-content: center;
     transition: background .2s ease, color .2s ease, border-color .2s ease;
 }
-
-
 .ctrm-voice-btn:hover {
     background: var(--cx-tint);
 }
-
 .recommend-tag:before {
     border: 1px solid var(--cx-brand);
     border-radius: 12px;
@@ -2561,12 +2245,6 @@ var OwO_demo = new OwO({
     font-weight: 600;
     line-height: 16px;
 }
-
-
-
-
-
-
 #ctrm_ .ctrm-voice-btn.recording,
 #ctrm_ .ctrm-voice-btn.recording:hover {
     background: var(--cx-brand-ink);
@@ -2576,12 +2254,10 @@ var OwO_demo = new OwO({
 #ctrm_ .ctrm-voice-btn.recording svg,
 #ctrm_ .ctrm-voice-btn.recording:hover svg { stroke: #fff; }
 #ctrm_ .ctrm-voice-btn.recording .recommend-tag { display: none; }
-
 .ctrm-voice-timer {
     color: var(--cx-warm);
     font-variant-numeric: tabular-nums;
 }
-
 .ctrm-voice-recording-indicator {
     position: absolute;
     gap:8px;
@@ -2597,7 +2273,6 @@ var OwO_demo = new OwO({
     align-items: center;
     z-index: 1;
 }
-
 .ctrm-voice-wave {
     display: inline-block;
     width: 20px;
@@ -2607,29 +2282,11 @@ var OwO_demo = new OwO({
 }
 </style>
 <style>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 :root {
-    
-
     --cx-brand: #f2769b;
     --cx-brand-deep: #e05a84;
     --cx-brand-ink: #c23b6e;
     --cx-warm: #e8a94f;
-    
     --cx-ink: #2f2429;
     --cx-ink-2: #5f4f56;
     --cx-ink-3: #7f6e75;
@@ -2637,40 +2294,23 @@ var OwO_demo = new OwO({
     --cx-line: rgba(47, 36, 41, .16);
     --cx-tint: rgba(242, 118, 155, .09);
     --cx-tint-2: rgba(242, 118, 155, .16);
-    
     --cx-shadow: 0 1px 4px rgba(47, 36, 41, .05);
-    
     --cx-shadow-pop: 0 4px 18px rgba(47, 36, 41, .10);
     --cx-pill: 999px;
 }
-
-
 #ctrm_ { color: var(--cx-ink); }
 #ctrm_ .ctrm-container { border-top-right-radius: 2vw; }
-
-
-
 #ctrm_ .ctrm-title {
-    
     background: linear-gradient(90deg, #ffdee9, #b5fffc) !important;
     box-shadow: inset 0 -1px 0 var(--cx-hairline);
 }
-
 #ctrm_ .ctrm-title.glow { background: #fbe6c4 !important; }
 #ctrm_ .ctrm-title-span { font-weight: 600; }
 #ctrm_ .ctrm-title-span strong { font-weight: 600; }
-
-
-
-
 #ctrm_ .ctrm-title-countwrap { margin-left: .35em; color: var(--cx-ink-2); font-weight: 600; }
 #ctrm_ .ctrm-title-count { color: var(--cx-brand-ink); }
-
-
-
 #ctrm_.ctrm-mobile .ctrm-title-span { height: 4.6vw; line-height: 4.6vw; }
 #ctrm_.ctrm-mobile .ctrm-title-span img { width: auto; height: 1em; }
-
 #ctrm_ .ctrm-title-close,
 #ctrm_ .ctrm-title-reconn {
     background: #fff;
@@ -2680,47 +2320,13 @@ var OwO_demo = new OwO({
 }
 #ctrm_ .ctrm-title-close:hover,
 #ctrm_ .ctrm-title-reconn:hover { background: var(--cx-tint); border-color: var(--cx-brand); }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #ctrm_.ctrm-close {
-    
     --cx-ball: clamp(42px, 3.2vw, 58px);
-    
-
-
     position: fixed;
     bottom: clamp(14px, 1.1vw, 22px);
     right: clamp(14px, 1.1vw, 22px);
-    
-
     transition: none;
-    
     --cx-orb-ring: var(--cx-orb-b-mid);
-    
     --cx-orb-bg-start: rgb(236, 133, 255);
     --cx-orb-bg-end: rgb(49, 138, 255);
     --cx-orb-sh1: rgba(166, 35, 248, 0);
@@ -2747,34 +2353,23 @@ var OwO_demo = new OwO({
     --cx-orb-glow: 1;
 }
 #ctrm_.ctrm-close .ctrm-container {
-    
     position: relative;
     width: var(--cx-ball);
     height: var(--cx-ball);
     max-height: none;
-    
     transition: none;
-    
     overflow: visible;
 }
 #ctrm_.ctrm-close .ctrm-panel,
 #ctrm_.ctrm-close .ctrm-online { display: none; }
-
-
 #ctrm_.ctrm-close .ctrm-title-close,
 #ctrm_.ctrm-close .ctrm-title-reconn { display: none; }
-
 #ctrm_.ctrm-close .ctrm-title-span img { display: none; }
-
-
 #ctrm_.ctrm-close .ctrm-title {
-    
     position: relative;
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    
-
     background-color: transparent !important;
     background-image: radial-gradient(circle at 50% 30%, var(--cx-orb-bg-start) 0, var(--cx-orb-bg-end) 70%) !important;
     box-shadow:
@@ -2787,18 +2382,10 @@ var OwO_demo = new OwO({
     transition: transform .18s;
 }
 #ctrm_.ctrm-close .ctrm-title:hover { transform: scale(1.06); }
-
-
-
-
 #ctrm_.ctrm-close .ctrm-title.glow {
     background-color: transparent !important;
     background-image: radial-gradient(circle at 50% 30%, var(--cx-orb-bg-start) 0, var(--cx-orb-bg-end) 70%) !important;
 }
-
-
-
-
 #ctrm_.ctrm-close.ctrm-ding .ctrm-container::after {
     content: "";
     position: absolute;
@@ -2812,7 +2399,6 @@ var OwO_demo = new OwO({
     pointer-events: none;
     animation: cxOrbHalo .9s ease-out both;
 }
-
 #ctrm_.ctrm-close .ctrm-title::before {
     content: "";
     position: absolute;
@@ -2824,7 +2410,6 @@ var OwO_demo = new OwO({
     animation: cxOrbSpin var(--cx-orb-rot) linear infinite,
                cxOrbHue var(--cx-orb-hue) linear infinite;
 }
-
 #ctrm_.ctrm-close .ctrm-title::after {
     content: "";
     position: absolute;
@@ -2837,11 +2422,7 @@ var OwO_demo = new OwO({
     animation: cxOrbSpin calc(var(--cx-orb-rot) * 1.5) linear infinite,
                cxOrbHue calc(var(--cx-orb-hue) * 1.5) linear infinite;
 }
-
-
-
 #ctrm_.ctrm-close .ctrm-title-span {
-    
     position: absolute;
     display: block;
     left: 6.1%; top: 6.1%;
@@ -2851,21 +2432,14 @@ var OwO_demo = new OwO({
     border-radius: 50%;
     box-shadow: inset 0 calc(var(--cx-ball) * -.012) calc(var(--cx-ball) * .073) calc(var(--cx-ball) * .012) rgba(255, 255, 255, .4),
                 inset 0 calc(var(--cx-ball) * .037) calc(var(--cx-ball) * .049) 0 rgba(255, 255, 255, .4);
-    
-
     font-size: 0;
     line-height: 0;
 }
-
-
-
 #ctrm_.ctrm-close .ctrm-title-span > span:first-child {
     position: absolute;
     left: 0; top: 0;
     width: 100%; height: 100%;
 }
-
-
 #ctrm_.ctrm-close .ctrm-title-span > span:first-child::before,
 #ctrm_.ctrm-close .ctrm-title-span > span:first-child::after {
     content: "";
@@ -2889,8 +2463,6 @@ var OwO_demo = new OwO({
     animation: cxOrbSpin calc(var(--cx-orb-rot) * 2.5) linear infinite,
                cxOrbHue calc(var(--cx-orb-hue) * 2.5) linear infinite;
 }
-
-
 #ctrm_.ctrm-close .ctrm-title-span strong {
     display: block;
     position: absolute;
@@ -2899,9 +2471,6 @@ var OwO_demo = new OwO({
     border-radius: 50%;
     overflow: hidden;
 }
-
-
-
 #ctrm_.ctrm-close .ctrm-title-span strong::before,
 #ctrm_.ctrm-close .ctrm-title-span strong::after {
     content: "";
@@ -2925,9 +2494,6 @@ var OwO_demo = new OwO({
     transform: scale(.6);
     animation: cxOrbShineB 5s ease-in-out infinite;
 }
-
-
-
 #ctrm_.ctrm-close .ctrm-title-countwrap {
     position: absolute;
     top: calc(var(--cx-ball) * -.101);
@@ -2945,9 +2511,6 @@ var OwO_demo = new OwO({
     box-shadow: 0 1px 4px rgba(47, 36, 41, .16);
 }
 #ctrm_.ctrm-close .ctrm-title-count { font-size: calc(var(--cx-ball) * .24); }
-
-
-
 #ctrm_.ctrm-close.ctrm-mobile {
     --cx-ball: clamp(48px, 13vw, 64px);
     bottom: clamp(14px, 3.5vw, 24px);
@@ -2957,7 +2520,6 @@ var OwO_demo = new OwO({
     width: var(--cx-ball);
     height: var(--cx-ball);
 }
-
 @media (prefers-reduced-motion: reduce) {
     #ctrm_.ctrm-close .ctrm-title,
     #ctrm_.ctrm-close .ctrm-title::before,
@@ -2966,60 +2528,36 @@ var OwO_demo = new OwO({
     #ctrm_.ctrm-close .ctrm-title-span > span:first-child::after,
     #ctrm_.ctrm-close .ctrm-title-span strong::before,
     #ctrm_.ctrm-close .ctrm-title-span strong::after { animation: none; }
-    
     #ctrm_.ctrm-close.ctrm-ding .ctrm-container::after { content: none; }
 }
-
-
 @keyframes cxOrbSpin { 0% { transform: rotate3d(1, 1, 1, 0deg) } 100% { transform: rotate3d(1, 1, 1, 1turn) } }
 @keyframes cxOrbHue { 0% { filter: hue-rotate(0deg) } 50% { filter: hue-rotate(var(--cx-orb-hue-deg)) } 100% { filter: hue-rotate(0deg) } }
 @keyframes cxOrbShineA { 0% { transform: scale(.4) } 50% { transform: scale(.1) } 100% { transform: scale(.4) } }
 @keyframes cxOrbShineB { 0% { transform: scale(.6) } 50% { transform: scale(.1) } 100% { transform: scale(.6) } }
-
 @keyframes cxOrbHalo { 0% { transform: scale(.9); opacity: 0 } 18% { opacity: .7 } 100% { transform: scale(1.5); opacity: 0 } }
-
-
-
-
-
 #ctrm_.ctrm-folding .ctrm-container {
-    
     transform-origin: calc(100% - 22px) calc(100% - 22px);
     animation: cxFoldOut .19s cubic-bezier(.4, 0, 1, 1) both;
 }
 #ctrm_.ctrm-close.ctrm-popin .ctrm-title {
-    
     animation: cxOrbPop .32s cubic-bezier(.34, 1.5, .64, 1) both, var(--cx-orb-main-hue);
 }
 @keyframes cxFoldOut { 0% { transform: scale(1); opacity: 1 } 100% { transform: scale(.32); opacity: 0 } }
 @keyframes cxOrbPop { 0% { transform: scale(.35); opacity: 0 } 55% { transform: scale(1.1); opacity: 1 } 100% { transform: scale(1); opacity: 1 } }
-
 @media (prefers-reduced-motion: reduce) {
     #ctrm_.ctrm-folding .ctrm-container,
     #ctrm_.ctrm-close.ctrm-popin .ctrm-title { animation: none; }
 }
-
-
-
 #ctrm_ .ctrm-dialog { scrollbar-width: thin; scrollbar-color: var(--cx-line) transparent; }
 #ctrm_ .ctrm-dialog::-webkit-scrollbar { width: 6px; }
 #ctrm_ .ctrm-dialog::-webkit-scrollbar-track { background: transparent; }
 #ctrm_ .ctrm-dialog::-webkit-scrollbar-thumb { background: var(--cx-line); border-radius: var(--cx-pill); }
-
 #ctrm_ .ctrm-dialog-item .ctrm-dialog-sender { color: var(--cx-ink-2); }
 #ctrm_ .ctrm-dialog-item .ctrm-dialog-time { color: var(--cx-ink-3); }
-
-
-
 #ctrm_ .ctrm-dialog-item .ctrm-dialog-bubble { border-radius: 14px 14px 14px 4px; }
 #ctrm_ .ctrm-dialog-item.ctrm-me .ctrm-dialog-bubble { border-radius: 14px 14px 4px 14px; }
 #ctrm_.ctrm-mobile .ctrm-dialog-item .ctrm-dialog-bubble { border-radius: 10px 10px 10px 3px; }
 #ctrm_.ctrm-mobile .ctrm-dialog-item.ctrm-me .ctrm-dialog-bubble { border-radius: 10px 10px 3px 10px; }
-
-
-
-
-
 #ctrm_ .ctrm-dialog-item .ctrm-b {
     background: var(--cx-brand-ink);
     color: #fff;
@@ -3028,12 +2566,8 @@ var OwO_demo = new OwO({
     padding: .08em .5em;
     white-space: nowrap;
 }
-
 #ctrm_ .ctrm-dialog-item a[data-fancybox] img { border-radius: 10px; }
 #ctrm_ .ctrm-dialog-item iframe { border-radius: 10px; }
-
-
-
 #ctrm_ .ctrm-bottom {
     width: 2.2vw;
     height: 2.2vw;
@@ -3043,13 +2577,9 @@ var OwO_demo = new OwO({
     color: #fff;
     border-radius: 50%;
     transition: background .18s;
-    
-
     bottom: calc(25% + 35px);
 }
 #ctrm_ .ctrm-bottom:hover { background: var(--cx-brand-deep); }
-
-
 #ctrm_.ctrm-mobile .ctrm-bottom {
     width: 6vw;
     height: 6vw;
@@ -3057,10 +2587,6 @@ var OwO_demo = new OwO({
     font-size: 3.5vw;
     transform: none;
 }
-
-
-
-
 #ctrm_ .sb {
     border-radius: var(--cx-pill);
     background: #fff;
@@ -3069,44 +2595,22 @@ var OwO_demo = new OwO({
     transition: background .18s, border-color .18s, color .18s;
 }
 #ctrm_ .sb:hover { background: var(--cx-tint); border-color: var(--cx-brand); color: var(--cx-brand-ink); }
-
-
 #ctrm_ .OwO.OwO-open .OwO-logo { background: var(--cx-tint); border-color: var(--cx-brand); color: var(--cx-brand-ink); }
-
-
 #ctrm_ #file svg { color: var(--cx-brand-ink); }
 #ctrm_ .ThirdPartyImageHost svg { color: var(--cx-brand); }
 #ctrm_ #cfbed svg { color: var(--cx-warm); }
-
-
-
-
-
-
-
 @media (max-width: 1439px) {
     #ctrm_ .ctrm-panel .sb { font-size: 0; gap: 0; }
 }
 #ctrm_.ctrm-mobile .ctrm-panel .sb { font-size: 0; gap: 0; }
-
-
 #ctrm_ .ctrm-dialog { height: calc(75% - 27px); }
-
-
-
-
-
 #ctrm_ .OwO .OwO-body {
     border-color: var(--cx-hairline);
     border-radius: 10px;
     box-shadow: var(--cx-shadow-pop);
-    
-
     box-sizing: border-box;
 }
 #ctrm_ .OwO.OwO-up .OwO-body { border-radius: 10px 10px 10px 2px; }
-
-
 #ctrm_ .OwO .OwO-body .OwO-items.OwO-items-show {
     display: flex;
     flex-wrap: wrap;
@@ -3125,27 +2629,11 @@ var OwO_demo = new OwO({
     background: transparent;
     border-radius: 6px;
 }
-
-
-
 #ctrm_ .OwO .OwO-body .OwO-items .OwO-item:hover { background: var(--cx-tint); box-shadow: none; -webkit-animation: none; animation: none; }
-
-
-
-
-
-
 #ctrm_ .OwO .OwO-body .OwO-items { max-height: 168px !important; }
-
-
-
 #ctrm_ .OwO .OwO-body .OwO-items.OwO-items-big { max-height: 254px !important; }
-
-
-
 #ctrm_ { --ct-smoji-big-preview: 5rem; }
 #ctrm_.ctrm-mobile { --ct-smoji-big-preview: 4rem; }
-
 #ctrm_.ctrm-mobile .OwO .OwO-body .OwO-items.OwO-items-big { max-height: 168px !important; }
 #ctrm_ .OwO .OwO-body .OwO-bar {
     background: #fff;
@@ -3153,27 +2641,19 @@ var OwO_demo = new OwO({
     border-radius: 0 0 10px 10px;
     color: var(--cx-ink-2);
 }
-
-
 #ctrm_ .OwO .OwO-body .OwO-bar .OwO-packages { padding: 0 4px; scrollbar-width: none; -ms-overflow-style: none; }
 #ctrm_ .OwO .OwO-body .OwO-bar .OwO-packages::-webkit-scrollbar { width: 0; height: 0; }
 #ctrm_ .OwO .OwO-body .OwO-bar .OwO-packages li { border-radius: 6px; }
 #ctrm_ .OwO .OwO-body .OwO-bar .OwO-packages li:hover { background: var(--cx-tint); }
 #ctrm_ .OwO .OwO-body .OwO-bar .OwO-packages .OwO-package-active { background: var(--cx-tint-2); color: var(--cx-brand-ink); }
-
-
-
 #ctrm_ .ctrm-textarea textarea {
     border: 2px dashed rgba(242, 118, 155, .45);
     color: var(--cx-ink);
 }
 #ctrm_ .ctrm-textarea textarea:hover { border-color: rgba(242, 118, 155, .7); }
 #ctrm_ .ctrm-textarea textarea:focus { border-color: var(--cx-brand); }
-
-
 #ctrm_ .ctrm-textarea textarea::placeholder { color: var(--cx-ink-3); }
 #ctrm_ .ctrm-textarea textarea::-webkit-input-placeholder { color: var(--cx-ink-3); }
-
 #ctrm_ .ctrm-emit {
     background: var(--cx-brand);
     color: #fff;
@@ -3182,19 +2662,12 @@ var OwO_demo = new OwO({
 }
 #ctrm_ .ctrm-emit:hover { background: var(--cx-brand-deep); }
 #ctrm_.ctrm-mobile .ctrm-emit { border-radius: var(--cx-pill); }
-
-
-
 #ctrm_ .ctrm-online-item {
     border-radius: var(--cx-pill);
     color: var(--cx-ink);
 }
-
-
-
 #ctrm_ .ctrm-online-wrap { box-sizing: border-box; }
 #ctrm_.ctrm-mobile .ctrm-online-item { border-radius: var(--cx-pill); }
-
 #ctrm_ .ctrm-domain-title { color: var(--cx-ink-2); }
 #ctrm_ .ctrm-domain-item {
     color: var(--cx-brand-ink);
@@ -3202,9 +2675,6 @@ var OwO_demo = new OwO({
     transition: background .16s;
 }
 #ctrm_ .ctrm-domain-item:hover { background: var(--cx-tint); }
-
-
-
 .tag-Link { transition: border-color .18s, box-shadow .18s; }
 .tag-Link:hover { border-color: var(--cx-brand) !important; }
 .ctrm-tts-pill:hover { background-color: var(--cx-tint) !important; border-color: var(--cx-brand) !important; }
@@ -3212,12 +2682,6 @@ var OwO_demo = new OwO({
 .img-host-dropdown [data-img-host] { color: var(--cx-ink); border-radius: 8px; transition: background .16s, color .16s; }
 .img-host-dropdown [data-img-host]:hover { background: var(--cx-tint); color: var(--cx-brand-ink); }
 </style>
-
-
-
-
-
-
 <div id="ctrm_" style="z-index:10002!important;display:none;" class=" " >
     <div class="ctrm-container">
         <div class="ctrm-title">
@@ -3242,9 +2706,7 @@ var OwO_demo = new OwO({
                  <div data-img-host="share-text" style="padding:6px 8px;cursor:pointer;font-size:13px;white-space:nowrap;">share</div>
              </div>
             <button  class="sb" id="cfbed" title="上传图片"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M19.11 9.827c.26 0 .451-.192.488-.445.23-1.406.43-2.127.865-2.575.433-.447 1.131-.654 2.49-.89a.503.503 0 0 0 .446-.502.5.5 0 0 0-.447-.503c-1.358-.237-2.056-.445-2.49-.892-.433-.447-.634-1.168-.864-2.571-.037-.256-.227-.449-.488-.449-.257 0-.45.193-.49.447-.23 1.405-.432 2.126-.865 2.573s-1.13.655-2.486.892a.5.5 0 0 0-.451.503c0 .273.203.47.447.503 1.36.235 2.057.438 2.49.882.433.445.635 1.167.864 2.583.04.252.235.444.491.444M3.853 3.207h9.058v1.961H3.853v9.867l1.488-1.327a2.8 2.8 0 0 1 3.704-.037l1.011.867 3.428-2.886a2.8 2.8 0 0 1 3.621-.001l2.957 2.483v-2.346h1.907v7.601c0 1.084-.854 1.962-1.907 1.962H3.852c-1.052 0-1.906-.878-1.906-1.962V5.17c0-1.084.854-1.962 1.907-1.962m16.209 13.46l-4.163-3.497a.93.93 0 0 0-1.207 0l-4.038 3.399a.93.93 0 0 1-1.214-.006l-1.615-1.385a.933.933 0 0 0-1.235.012l-2.737 2.44v1.76h16.209zm-9.535-7.625c0 1.084-.854 1.962-1.907 1.962s-1.907-.878-1.907-1.962c0-1.083.854-1.961 1.907-1.961s1.907.878 1.907 1.961" clip-rule="evenodd"/></svg>上传图片</button>
-            
             <div class="OwO"></div>
-            
 <div class="ctrm-voice-container">
     <button class="sb ctrm-voice-btn" id="ctrm-voice-btn" title="点击录音">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -3280,19 +2742,13 @@ var OwO_demo = new OwO({
         </div>
     </div>
 </div>    
-
 `;
-        
         e.exports = r;
     }, {}]
 }, {}, [2]);
-
-
-
 (function () {
     if (window.imageUploaderInitialized) return;
     window.imageUploaderInitialized = true;
-
     function GM_xmlhttpRequest(details) {
         const xhr = new XMLHttpRequest();
         xhr.open(details.method, details.url, true);
@@ -3300,13 +2756,11 @@ var OwO_demo = new OwO({
         xhr.onerror = () => details.onerror?.(xhr);
         xhr.send(details.data);
     }
-
     function GM_addStyle(css) {
         const style = document.createElement("style");
         style.textContent = css;
         document.head.appendChild(style);
     }
-
     const CONFIG = {
         AUTH_CODE: "z-l.top",
         SERVER_URL: "https://img.z-l.top",
@@ -3326,14 +2780,12 @@ var OwO_demo = new OwO({
         ALLOWED_HOSTS: ['http://localhost:3000', 'bilibili.com', '88lin.github.io', '*.88lin.eu.org', 'jasnode.github.io'],
         MAX_FILE_SIZE: 5 * 1024 * 1024,
     };
-
     const currentHost = location.hostname;
     const isAllowed = CONFIG.ALLOWED_HOSTS.some(host => {
         if (host === "*") return true;
         if (host.startsWith("*.")) return currentHost.endsWith(host.slice(1));
         return currentHost === host;
     });
-
     GM_addStyle(`
         .ctrm-textarea {
             position: relative;
@@ -3354,7 +2806,6 @@ var OwO_demo = new OwO({
             justify-content: center;
             pointer-events: none;
             z-index: 9;
-            
             border: 2px dashed rgba(242,118,155,0);
             border-radius: 0.5rem;
             opacity: 0;
@@ -3387,8 +2838,6 @@ var OwO_demo = new OwO({
         .image-preview-overlay {
           z-index: 10;
           position: absolute;
-          
-
           top: -92px;
           left: 6px;
           border-radius: 10px;
@@ -3403,20 +2852,16 @@ var OwO_demo = new OwO({
           border: 1px solid rgba(242,118,155,.5);
         }
     `);
-
     const preview = document.querySelector(".image-preview-overlay img");
-
     function showNotification(msg, type = "info") {
         const el = document.createElement("div");
         el.textContent = msg;
-        
         el.style = `position:fixed;top:10px;right:10px;padding:8px 16px;
         background:${type === "error" ? "#b8362b" : type === "success" ? "#2f7a4f" : "var(--cx-brand-ink)"};
         color:white;border-radius:16px;box-shadow:0 4px 18px rgba(47,36,41,.16);z-index:10000;font-size:14px`;
         document.body.appendChild(el);
         setTimeout(() => el.remove(), CONFIG.NOTIFICATION_DURATION);
     }
-
     function checkFileSize(file) {
         if (file.size > CONFIG.MAX_FILE_SIZE) {
             showNotification(`文件过大，最大 ${Math.round(CONFIG.MAX_FILE_SIZE / 1024 / 1024)}MB`, "error");
@@ -3424,7 +2869,6 @@ var OwO_demo = new OwO({
         }
         return true;
     }
-
     function insertRawUrl(url, element, filename = "") {
         if (!element || typeof element.value !== "string") {
             showNotification("插入失败，未找到输入框", "error");
@@ -3433,16 +2877,12 @@ var OwO_demo = new OwO({
         const tpl = CONFIG.MARKDOWN_TEMPLATE
             .replace("{url}", url)
             .replace("{filename}", filename.replace(/\.[^/.]+$/, ""));
-
-        
-        
         const start = typeof element.selectionStart === "number" ? element.selectionStart : element.value.length;
         const end = typeof element.selectionEnd === "number" ? element.selectionEnd : element.value.length;
         const text = element.value;
         element.value = text.substring(0, start) + tpl + text.substring(end);
         element.selectionStart = element.selectionEnd = start + tpl.length;
         element.focus();
-
         if (CONFIG.AUTO_COPY_URL && navigator.clipboard) {
             navigator.clipboard.writeText(url).then(() => {
                 showNotification("链接已复制到剪贴板", "success");
@@ -3451,7 +2891,6 @@ var OwO_demo = new OwO({
             });
         }
     }
-
     function showImagePreview(file) {
         const reader = new FileReader();
         reader.onload = function (e) {
@@ -3461,29 +2900,23 @@ var OwO_demo = new OwO({
         };
         reader.readAsDataURL(file);
     }
-
     function hideImagePreview() {
         const overlay = document.querySelector(".image-preview-overlay");
         overlay.style.display = "none";
     }
-
     async function uploadImage(blob, targetElement) {
         if (!isAllowed) {
             showNotification(`当前域名 ${currentHost} 不在白名单`, "error");
             return;
         }
-
         showImagePreview(blob);
-
         const filename = `image-${Date.now()}`;
         const formData = new FormData();
         formData.append("file", blob, filename);
-
         const query = new URLSearchParams({
             authCode: CONFIG.AUTH_CODE,
             ...CONFIG.UPLOAD_PARAMS,
         }).toString();
-
         GM_xmlhttpRequest({
             method: "POST",
             url: `${CONFIG.SERVER_URL}/upload?${query}`,
@@ -3509,10 +2942,8 @@ var OwO_demo = new OwO({
             },
         });
     }
-
     const dropContainer = document.querySelector(".ctrm-textarea");
     const dropTarget = dropContainer?.querySelector("textarea");
-
     if (dropContainer && dropTarget) {
         ["dragenter", "dragover"].forEach(evt =>
             dropContainer.addEventListener(evt, (e) => {
@@ -3526,7 +2957,6 @@ var OwO_demo = new OwO({
                 dropContainer.classList.remove("dragover");
             })
         );
-
         dropContainer.addEventListener("drop", async (event) => {
             const file = event.dataTransfer.files?.[0];
             if (!file || !file.type.startsWith("image/")) return;
@@ -3534,7 +2964,6 @@ var OwO_demo = new OwO({
             showNotification("正在上传...", "info");
             await uploadImage(file, dropTarget);
         });
-
         dropContainer.addEventListener("paste", async (event) => {
             const items = event.clipboardData.items;
             for (let item of items) {
@@ -3549,7 +2978,6 @@ var OwO_demo = new OwO({
             }
         });
     }
-
     const uploadBtn = CONFIG.ENABLE_MANUAL_UPLOAD ? document.querySelector(CONFIG.UPLOAD_TRIGGER_SELECTOR) : null;
     if (uploadBtn) {
         const input = document.createElement("input");
@@ -3557,7 +2985,6 @@ var OwO_demo = new OwO({
         input.accept = "image/*";
         input.style.display = "none";
         document.body.appendChild(input);
-
         input.addEventListener("change", async () => {
             const file = input.files?.[0];
             if (!file) return;
@@ -3567,7 +2994,6 @@ var OwO_demo = new OwO({
             await uploadImage(file, textTarget);
             input.value = "";
         });
-
         uploadBtn.addEventListener("click", () => {
             const chatBox = document.getElementById("ctrm_");
             if (chatBox) {
@@ -3577,8 +3003,6 @@ var OwO_demo = new OwO({
         });
     }
 })();
-
-
 window.uploadToTelegram = function (file) {
     return new Promise((resolve, reject) => {
         const CONFIG = {
@@ -3637,9 +3061,6 @@ window.uploadToTelegram = function (file) {
         xhr.send(formData);
     });
 };
-
-
-
 (function () {
     const HOSTS = {
         "tutu":       "https://tutu.to/upload",
@@ -3647,20 +3068,15 @@ window.uploadToTelegram = function (file) {
         "tucdn":      "https://tucdn.wpon.cn",
         "share-text": "https://share-text.org/zh/image-to-url",
     };
-
     const pupBtn = document.querySelector("[data-chevereto-pup-trigger]");
     const dropdown = document.querySelector(".img-host-dropdown");
     if (!pupBtn || !dropdown) return;
-
     let hoverTimer = null;
     let openedAt = 0;
-    
     let allowPup = false;
-
     function show() {
         const rect = pupBtn.getBoundingClientRect();
         dropdown.style.display = "block";
-        
         dropdown.style.minWidth = rect.width + "px";
         const w = dropdown.offsetWidth;
         dropdown.style.left = Math.min(Math.max(4, rect.left + rect.width / 2 - w / 2), window.innerWidth - w - 4) + "px";
@@ -3668,39 +3084,29 @@ window.uploadToTelegram = function (file) {
         openedAt = Date.now();
     }
     function hide() { dropdown.style.display = "none"; }
-
-    
-    
-    
     window.addEventListener("click", function (e) {
         if (!e.target || !e.target.closest) return;
         if (e.target.closest("[data-chevereto-pup-trigger]")) {
             if (allowPup) return;
             e.preventDefault();
             e.stopPropagation();
-            
             if (dropdown.style.display === "block" && Date.now() - openedAt > 400) hide();
             else show();
         } else if (!e.target.closest(".img-host-dropdown")) {
             hide();
         }
     }, true);
-
     pupBtn.addEventListener("mouseenter", () => { clearTimeout(hoverTimer); show(); });
     pupBtn.addEventListener("mouseleave", () => { hoverTimer = setTimeout(hide, 200); });
     dropdown.addEventListener("mouseenter", () => clearTimeout(hoverTimer));
     dropdown.addEventListener("mouseleave", () => { hoverTimer = setTimeout(hide, 200); });
-
     dropdown.querySelectorAll("[data-img-host]").forEach(item => {
-        
-        
         item.addEventListener("click", () => {
             hide();
             const hostKey = item.getAttribute("data-img-host");
             const url = HOSTS[hostKey];
             if (!url) return;
             if (hostKey === "tutu") {
-                
                 allowPup = true;
                 pupBtn.click();
                 allowPup = false;
@@ -3710,9 +3116,6 @@ window.uploadToTelegram = function (file) {
         });
     });
 })();
-
-
-
 (function () {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         console.warn('浏览器不支持语音功能');
@@ -3730,9 +3133,6 @@ window.uploadToTelegram = function (file) {
     let voiceAutoSendLock = false;
     let recordedMime = 'audio/webm';
     let recordedExt = 'webm';
-
-    
-    
     const VOICE_MIME_CANDIDATES = [
         ['audio/webm;codecs=opus', 'webm'],
         ['audio/webm', 'webm'],
@@ -3741,7 +3141,6 @@ window.uploadToTelegram = function (file) {
         ['audio/ogg;codecs=opus', 'ogg'],
         ['audio/ogg', 'ogg']
     ];
-
     function pickVoiceMime() {
         if (typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) return null;
         for (const [mime, ext] of VOICE_MIME_CANDIDATES) {
@@ -3749,8 +3148,6 @@ window.uploadToTelegram = function (file) {
         }
         return null;
     }
-
-    
     function extFromMime(mime) {
         if (!mime) return 'webm';
         if (mime.indexOf('mp4') !== -1 || mime.indexOf('aac') !== -1 || mime.indexOf('m4a') !== -1) return 'mp4';
@@ -3759,17 +3156,12 @@ window.uploadToTelegram = function (file) {
         if (mime.indexOf('mpeg') !== -1) return 'mp3';
         return 'webm';
     }
-
-    
-    
     function revokeVoiceUrl(url) {
         if (!url) return;
         try { URL.revokeObjectURL(url) } catch (err) { }
     }
-
     function dropPendingVoiceBlob() {
         if (window._lastVoiceBlobUrl) {
-            
             const inUse = window._myVoiceBlobs && Object.keys(window._myVoiceBlobs)
                 .some(function (k) { return window._myVoiceBlobs[k] === window._lastVoiceBlobUrl });
             if (!inUse) revokeVoiceUrl(window._lastVoiceBlobUrl);
@@ -3777,8 +3169,6 @@ window.uploadToTelegram = function (file) {
         window._lastVoiceBlob = null;
         window._lastVoiceBlobUrl = null;
     }
-
-    
     function voiceToast(msg, type) {
         window.__ctrmToast ? window.__ctrmToast(msg, type) : alert(msg);
     }
@@ -3788,16 +3178,10 @@ window.uploadToTelegram = function (file) {
     const voiceBtn = document.getElementById('ctrm-voice-btn');
     const timerDisplay = document.querySelector('.ctrm-voice-recording-indicator .ctrm-voice-timer');
     const recordingIndicator = document.querySelector('.ctrm-voice-recording-indicator');
-
-    
-    
     if (!voiceBtn || !recordingIndicator) {
         console.warn('[ctrm] 未找到录音按钮，语音功能未启用');
         return;
     }
-
-    
-    
     function alignRecordingIndicator() {
         if (recordingIndicator.style.display === 'none') return;
         const rect = voiceBtn.getBoundingClientRect();
@@ -3809,7 +3193,6 @@ window.uploadToTelegram = function (file) {
     }
     window.addEventListener('resize', alignRecordingIndicator);
     window.addEventListener('scroll', alignRecordingIndicator);
-
     voiceBtn.addEventListener('click', async function () {
         if (state === 'idle') {
             await startRecording();
@@ -3817,7 +3200,6 @@ window.uploadToTelegram = function (file) {
             await stopRecording();
         }
     });
-
     async function startRecording() {
         if (state !== 'idle') return;
         try {
@@ -3854,12 +3236,10 @@ window.uploadToTelegram = function (file) {
             } else if (err.name === 'NotFoundError') {
                 voiceToast('未找到麦克风设备', 'error');
             } else {
-                
                 voiceToast('无法开始录音：' + (err && (err.message || err.name) || err), 'error');
             }
         }
     }
-
     async function stopRecording() {
         if (state !== 'recording') return;
         if (mediaRecorder && mediaRecorder.state === 'recording') {
@@ -3875,7 +3255,6 @@ window.uploadToTelegram = function (file) {
         if (timerDisplay) timerDisplay.textContent = '00:00';
         state = 'review';
     }
-
     function onRecordingStop() {
         const durationMs = Date.now() - startTime;
         audioBlob = new Blob(audioChunks, { type: recordedMime });
@@ -3884,13 +3263,11 @@ window.uploadToTelegram = function (file) {
             state = 'idle';
             return;
         }
-        
         dropPendingVoiceBlob();
         window._lastVoiceBlob = audioBlob;
         window._lastVoiceBlobUrl = URL.createObjectURL(audioBlob);
         showReviewPanel(durationMs);
     }
-
     function showReviewPanel(durationMs) {
         if (reviewPanel) reviewPanel.remove();
         reviewPanel = document.createElement('div');
@@ -3915,7 +3292,6 @@ window.uploadToTelegram = function (file) {
         };
         audio.onended = () => { playBtn.textContent = '试听'; };
         reviewPanel.querySelector('.ctrm-voice-review-btn.delete').onclick = function () {
-            
             audio.pause();
             audio.removeAttribute('src');
             dropPendingVoiceBlob();
@@ -3967,7 +3343,6 @@ window.uploadToTelegram = function (file) {
             state = 'idle';
         };
     }
-
     (function () {
         if (document.getElementById('ctrm-voice-review-style')) return;
         var style = document.createElement('style');
@@ -3989,37 +3364,29 @@ window.uploadToTelegram = function (file) {
             flex-wrap: wrap;
         }
         .ctrm-voice-review-btn {
-            
             color: var(--cx-ink-2);
             background: #fff; border: 1px solid rgba(47,36,41,.16); border-radius: 999px; padding: 3px 12px; cursor: pointer; font-size: 13px; transition: background 0.2s, border-color 0.2s, color 0.2s;
         }
         .ctrm-voice-review-btn:hover { background: rgba(242,118,155,.12); border-color: #f2769b; color: #c23b6e; }
-        
         .ctrm-voice-review-btn.delete { color: #b8362b; border-color: rgba(184,54,43,.45); }
         .ctrm-voice-review-btn.delete:hover { background: rgba(184,54,43,.10); border-color: #b8362b; color: #b8362b; }
         .ctrm-voice-review-btn.send { color: #fff; background: #2f7a4f; border-color: #2f7a4f; }
         .ctrm-voice-review-btn.send:hover { color: #fff; background: #26643f; border-color: #26643f; }
-        
-
         .ctrm-voice-review-btn:disabled { cursor: default; }
         .ctrm-voice-review-btn.send:disabled:hover { background: #2f7a4f; border-color: #2f7a4f; }
         `;
         document.head.appendChild(style);
     })();
-
     function formatTime(ms) {
         const seconds = Math.floor(ms / 1000);
         const minutes = Math.floor(seconds / 60);
         const displaySeconds = seconds % 60;
         return `${minutes.toString().padStart(2, '0')}:${displaySeconds.toString().padStart(2, '0')}`;
     }
-
     async function uploadAndSendVoice(blob, durationMs) {
         console.log('uploadAndSendVoice blob:', blob, typeof blob, blob && blob.size);
-        
         if (voiceAutoSendLock) return void voiceToast('上一条语音还在发送中，请稍候再试', 'error');
         voiceAutoSendLock = true;
-        
         const filename = `voice-${Date.now()}.${recordedExt}`;
         const formData = new FormData();
         formData.append('file', blob, filename);
@@ -4049,11 +3416,9 @@ window.uploadToTelegram = function (file) {
                 const voiceUrl = result[0].src;
                 if (!window._myVoiceBlobs || typeof window._myVoiceBlobs !== 'object') window._myVoiceBlobs = {};
                 if (window._lastVoiceBlobUrl) {
-                    
                     if (window._myVoiceBlobs[voiceUrl] && window._myVoiceBlobs[voiceUrl] !== window._lastVoiceBlobUrl) {
                         revokeVoiceUrl(window._myVoiceBlobs[voiceUrl]);
                     }
-                    
                     window._myVoiceBlobs[voiceUrl] = window._lastVoiceBlobUrl;
                     window._lastVoiceBlob = null;
                     window._lastVoiceBlobUrl = null;
@@ -4063,7 +3428,6 @@ window.uploadToTelegram = function (file) {
                 const emitBtn = document.querySelector('.ctrm-emit');
                 if (chatInput && emitBtn) {
                     chatInput.value = message;
-                    
                     emitBtn.click();
                 } else {
                     voiceToast('找不到聊天输入框，语音没能发出；链接已复制到控制台\n' + voiceUrl, 'error');
@@ -4076,15 +3440,12 @@ window.uploadToTelegram = function (file) {
         } catch (error) {
             console.error('上传错误:', error);
             voiceToast('语音上传失败，请检查网络\n' + (error && error.message ? error.message : ''), 'error');
-            
             dropPendingVoiceBlob();
         } finally {
             setTimeout(() => voiceAutoSendLock = false, 1000);
         }
     }
 })();
-
-
 function preloadAllVoiceAudios() {
     document.querySelectorAll('.ctrm-voice-bubble audio').forEach(audio => {
         if (!audio._preloadTried) {
