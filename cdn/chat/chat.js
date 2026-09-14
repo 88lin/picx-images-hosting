@@ -2073,9 +2073,6 @@ img.playing {
                         return `<a data-fancybox=\"gallery\" data-src=\"https://tools.kalvinbg.cn/static/image/emotion/${p1}.gif\"><img src=\"https://tools.kalvinbg.cn/static/image/emotion/${p1}.gif\" alt=\"${p1}\" style=\"max-width: 4rem;\"></a>`;
                     } else if (p1.includes('long') || p1.includes('iq')) {
                         return `<a><img src="https://emoticons.z-l.top/${p1}.png" alt="${p1}" style="max-width: 3rem;"></a>`;
-                    } else if (/_202824_/.test(p1) || p1.startsWith('quicker/')) {
-                        // quicker 系表情已下线，历史消息原样显示代码
-                        return match;
                     }
                     else {
                         return `<a><img src="https://cdn.jsdmirror.com/gh/btwoa/Fluent-Emoji-3D/${p1}.gif" alt="${p1}" style="max-width: 3rem;"></a>`;
