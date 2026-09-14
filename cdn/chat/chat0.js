@@ -108,7 +108,7 @@
 
                             for (var _i = 0; _i < opackage.length; _i++) {
                                 if (this.odata[this.packages[i]].type === 'smoji') {
-                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '">' + '<img data-original="' + 'https://s3-cdn.zsh.moe/smoji/' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '.webp" src="" icon="' + opackage[_i].text + '"' + (opackage[_i].big ? ' style="height:' + ctSmojiBigPreviewRem + 'rem;min-height:' + ctSmojiBigPreviewRem + 'rem;width:auto;"' : '') + ' referrerpolicy="no-referrer"></li>';
+                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '">' + '<img data-original="' + 'https://s3-cdn.zsh.moe/smoji/' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '.webp" src="" icon="' + opackage[_i].text + '"' + (opackage[_i].big ? ' style="height:var(--ct-smoji-big-preview,' + ctSmojiBigPreviewRem + 'rem);min-height:var(--ct-smoji-big-preview,' + ctSmojiBigPreviewRem + 'rem);width:auto;"' : '') + ' referrerpolicy="no-referrer"></li>';
                                 } else if (this.odata[this.packages[i]].type === 'image-zl') {
                                     html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '">' + '<img data-original="' + 'https://emoticons.z-l.top/' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '.png" src="" icon="' + opackage[_i].text + '" referrerpolicy="no-referrer"></li>';
                                 } else if (this.odata[this.packages[i]].type === 'image') {
@@ -3140,6 +3140,13 @@ var OwO_demo = new OwO({
    按同样的算法（3 行，上下 padding 8px 算进可视区）：3*90 - 16 = 254px，
    第四行刚好从可视区外面开始，不会露半排脑袋。小图包继续用上面的 168px。 */
 #ctrm_ .OwO .OwO-body .OwO-items.OwO-items-big { max-height: 254px !important; }
+/* 大图包预览尺寸改由这个变量控制（面板里只写 var()，具体值全交给 CSS）：
+   桌面 5rem；移动端 5rem 有点高了、会顶出行框，降到 4rem。移动端的判定跟其他规则保持一致，
+   用的是 JS 打上的 .ctrm-mobile 类（宽高比 <= 1.2 时添加），不是媒体查询。 */
+#ctrm_ { --ct-smoji-big-preview: 5rem; }
+#ctrm_.ctrm-mobile { --ct-smoji-big-preview: 4rem; }
+/* 移动端面板可视高度保持原来的 168px，不跟着大图预览放大 */
+#ctrm_.ctrm-mobile .OwO .OwO-body .OwO-items.OwO-items-big { max-height: 168px !important; }
 #ctrm_ .OwO .OwO-body .OwO-bar {
     background: #fff;
     border-top-color: var(--cx-hairline);
