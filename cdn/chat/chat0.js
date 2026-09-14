@@ -1672,7 +1672,7 @@
   align-items: center;
   background: #fdf8f9;
   border-radius: 18px;
-  /* 用 inset 描边而不是 border：这里没写 box-sizing:border-box，border 会把盒子撑大。 */
+  
   box-shadow: inset 0 0 0 1px rgba(47,36,41,.10);
   padding: 6px 16px 6px 10px;
   min-height: 38px;
@@ -2497,16 +2497,16 @@ img.playing {
     3: [function (t, e, n) {
         "use strict";
         var r = `
-<!-- 图床插件 -->
-<!--<script src="https://cdn.h5ds.com/space/files/600972551685382144/20240715/737001333214105600.js" data-url="https://image.teammoeg.com/upload" data-auto-insert="direct-links"></script>-->
-<!--<script async src="js/pup.js" data-url="https://tutu.to/upload" data-auto-insert="direct-links"></script>-->
+
+
+
 <script async src="https://cdn.h5ds.com/space/files/600972551685382144/20250608/856129445817171968.js" data-url="https://tutu.to/upload" data-auto-insert="direct-links"></script>
 
-<!-- css -->
+
 <link rel="stylesheet" href="https://cdn.h5ds.com/space/files/600972551685382144/20250722/871856997280043008.css">
-<!-- Fancybox CSS -->
+
 <link rel="stylesheet" href="https://cdnjs.snrat.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" />
-<!-- 引入 Fancybox JS -->
+
 <script src="https://cdnjs.snrat.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js"></script>
 <script>
 var OwO_demo = new OwO({
@@ -2533,7 +2533,7 @@ var OwO_demo = new OwO({
     transition: background .2s ease, color .2s ease, border-color .2s ease;
 }
 
-/* 这排按钮是 float 排在一行里，hover 不能放大或位移，会压到邻居身上，只换底色。 */
+
 .ctrm-voice-btn:hover {
     background: var(--cx-tint);
 }
@@ -2561,12 +2561,12 @@ var OwO_demo = new OwO({
     font-weight: 600;
     line-height: 16px;
 }
-/* 两处特异性都是踩过坑的，别简化：
-   1) 必须带 #ctrm_ —— 按钮的 class 是 "sb ctrm-voice-btn"，主题表里 #ctrm_ .sb 是
-      (1,1,0)，不带 id 的 (0,2,0) 反而压不过它。
-   2) 必须显式写出 :hover —— 不写就跟 #ctrm_ .sb:hover 平手、被后面的主题表压掉，
-      表现是录音中一碰鼠标整颗按钮变白、图标也白。带 :hover 的这条是 (1,3,0)。
-   底色用深粉：图标是白的，白配 #c23b6e 是 5:1，配 #f2769b 只有 2.6:1。 */
+
+
+
+
+
+
 #ctrm_ .ctrm-voice-btn.recording,
 #ctrm_ .ctrm-voice-btn.recording:hover {
     background: var(--cx-brand-ink);
@@ -2607,29 +2607,29 @@ var OwO_demo = new OwO({
 }
 </style>
 <style>
-/* ==========================================================================
-   茉灵聊天室 · 白天模式配色（樱花粉）
 
-   两条硬规矩：
-   1) 只碰 color / background / border-color / border-radius。padding / margin /
-      width / height / font-size / border-width 一律不动 —— 工具条那排按钮是 float
-      排在一行里的，给 .sb 多加 2px padding 就会挤成两行。
-   2) 底色留白：主色只出现在描边、图标、按钮和低透明度的悬停底上，大面积保持白色。
-      .ctrm-panel / .ctrm-online 的底色一个都别动。
 
-   描边一律用墨色低透明度，不用彩色 —— 会跟气泡里服务端下发的随机色打架。
-   阴影只给表情面板和图床下拉这两个浮层，别处一律没有。
-   位置要紧：必须排在上面那个 CDN 主样式表 <link> 之后，靠文档顺序压过它，
-   才不用满篇 !important。CSS 里不能写 // 注释，会吞掉后面的声明。
-   ========================================================================== */
+
+
+
+
+
+
+
+
+
+
+
+
+
 :root {
-    /* 粉色分两档，别混用：--cx-brand 亮粉只做"面"（实底按钮、描边、虚线、hover 边框），
-       --cx-brand-ink 深粉只做"字"（图标、链接、@提示、hover 文字）。亮粉当文字只有 2.6:1。 */
+    
+
     --cx-brand: #f2769b;
     --cx-brand-deep: #e05a84;
     --cx-brand-ink: #c23b6e;
     --cx-warm: #e8a94f;
-    /* 墨色也是暖调的（带一点红），跟粉放一起才像一套。ink-2 7.7:1、ink-3 4.7:1 */
+    
     --cx-ink: #2f2429;
     --cx-ink-2: #5f4f56;
     --cx-ink-3: #7f6e75;
@@ -2637,37 +2637,37 @@ var OwO_demo = new OwO({
     --cx-line: rgba(47, 36, 41, .16);
     --cx-tint: rgba(242, 118, 155, .09);
     --cx-tint-2: rgba(242, 118, 155, .16);
-    /* 唯一一档常规阴影，几乎看不出来，只用在链接卡片这种"卡片"上 */
+    
     --cx-shadow: 0 1px 4px rgba(47, 36, 41, .05);
-    /* 浮层专用，也只是一层很淡的散开 */
+    
     --cx-shadow-pop: 0 4px 18px rgba(47, 36, 41, .10);
     --cx-pill: 999px;
 }
 
-/* ---------- 外壳 ---------- */
+
 #ctrm_ { color: var(--cx-ink); }
 #ctrm_ .ctrm-container { border-top-right-radius: 2vw; }
 
-/* ---------- 标题栏 ---------- */
-/* 底部用 inset 画发丝线，不能用 border-bottom：.ctrm-title 高度是 8%，真边框会撑高 1px。 */
+
+
 #ctrm_ .ctrm-title {
-    /* 标题背景渐变色 */
+    
     background: linear-gradient(90deg, #ffdee9, #b5fffc) !important;
     box-shadow: inset 0 -1px 0 var(--cx-hairline);
 }
-/* 有新消息时的闪烁底色。必须是暖色 —— 标题栏本身是粉蓝渐变，再闪一格粉根本看不出来。 */
+
 #ctrm_ .ctrm-title.glow { background: #fbe6c4 !important; }
 #ctrm_ .ctrm-title-span { font-weight: 600; }
 #ctrm_ .ctrm-title-span strong { font-weight: 600; }
-/* 在线人数。CDN 那套只在折叠态显示它（JS 一展开就 hide），聊着天反而看不见人数，
-   标题栏右边还空一大块。现在两个态都留着（见 O() 末尾的 E.show()），展开态就是标题后
-   面一串跟标题同粗的灰字，别做成胶囊 —— 标题栏本身已经是渐变底了。折叠态的角标样式在下面折叠段里，
-   选择器带 .ctrm-close、排在这条后面，压得住。 */
+
+
+
+
 #ctrm_ .ctrm-title-countwrap { margin-left: .35em; color: var(--cx-ink-2); font-weight: 600; }
 #ctrm_ .ctrm-title-count { color: var(--cx-brand-ink); }
-/* 手机端标题整行偏下 2~4px：.ctrm-title-span 的行高只有 3vw（390px 手机上 11.7px），
-   而里面那颗心是写死的 width="19px" + vertical-align:middle，行盒被它顶高、baseline
-   跟着往下掉。把行盒撑到装得下内容，心改成跟着字号走。 */
+
+
+
 #ctrm_.ctrm-mobile .ctrm-title-span { height: 4.6vw; line-height: 4.6vw; }
 #ctrm_.ctrm-mobile .ctrm-title-span img { width: auto; height: 1em; }
 
@@ -2681,46 +2681,46 @@ var OwO_demo = new OwO({
 #ctrm_ .ctrm-title-close:hover,
 #ctrm_ .ctrm-title-reconn:hover { background: var(--cx-tint); border-color: var(--cx-brand); }
 
-/* ---------- 折叠态：右下角的悬浮光球 ---------- */
-/* 观感移植自 react-ai-orb（MIT）。原版是 6 个兄弟 div + 4 个 SVG blob，这边能用的
-   只有 .ctrm-title 那一小棵树，所以压成 7 个"元素 / 伪元素"：
-     .ctrm-title                球体（主渐变 + 外发光）
-     .ctrm-title::before        shape-a
-     .ctrm-title::after         shape-b   soft-light
-     .ctrm-title-span           glass     白色内圈高光（静止）
-     .ctrm-title-span>span:first-child  纯容器，不画东西
-       ::before                 shape-c   color-dodge
-       ::after                  shape-d   color
-     .ctrm-title-span strong    裁剪筐，收住光斑的 blur
-       ::before                 光斑 A    hard-light
-       ::after                  光斑 B    plus-lighter
-     .ctrm-title-countwrap      人数角标（照旧）
-   四条硬约束，改之前先看：
-   ① mix-blend-mode 只跟最近那个层叠上下文里已经画好的东西混。球体上写 isolation:isolate
-      把混合关在球里；中间两层容器 —— .ctrm-title-span 和它里面那个 span —— 绝对不能带
-      transform / opacity / filter / z-index / mix-blend-mode：一带就生成层叠上下文，
-      颜色立刻塌成一片死渐变。glass 那层原版的 opacity:.8 就是因此乘进 rgba 的 alpha 的。
-   ② 球体不能 overflow:hidden —— 人数角标要露在球外面。光斑那圈 blur 改用 strong 裁。
-   ③ 原版的 px 都是照它默认的 82px 球调的，这颗只有 42~58px，所以全部折算成 --cx-ball
-      的比例，缩放时观感才不变。
-   ④ 原版 shape-b/c/d 上的 filter:blur 会被变色那条动画整条顶掉（同一属性，动画优先），
-      所以那几层实际不带模糊，这里照它的实际观感写，没把 blur 补回去。
-   展开态一个字节都没动：下面每条选择器都带 .ctrm-close，展开的点击照旧绑在 .ctrm-title 上。 */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #ctrm_.ctrm-close {
-    /* 球径。聊天窗关着它也一直挂在页面上，所以不跟着视口无限长大：1280 屏 42px，1920 屏 58px。 */
+    
     --cx-ball: clamp(42px, 3.2vw, 58px);
-    /* 这几条 position 是补 CDN 那张远程样式表的（值跟它写的完全一样）。widget 是 JS 插进
-       DOM 的，样式表还在路上时第一帧就已经画了，那一帧整条祖先链全是 static，下面所有
-       absolute 的光效层就按视口算百分比 —— 满屏一颗横躺的大椭圆。别删。 */
+    
+
+
     position: fixed;
     bottom: clamp(14px, 1.1vw, 22px);
     right: clamp(14px, 1.1vw, 22px);
-    /* CDN 给 #ctrm_ 和 .ctrm-container 都写了 transition:all .3s，不关掉的话折叠会被演成
-       "一颗占掉四分之一屏的大球慢慢缩小"。展开不受影响（那时读的是基础规则里那条）。 */
+    
+
     transition: none;
-    /* 新消息时球边上那圈光晕的颜色。默认跟着调色板走，想单独换就只改这一行。 */
+    
     --cx-orb-ring: var(--cx-orb-b-mid);
-    /* 光球调色板：换配色只动这一段，17 个色位跟 react-ai-orb 的 palette 一一对应。 */
+    
     --cx-orb-bg-start: rgb(236, 133, 255);
     --cx-orb-bg-end: rgb(49, 138, 255);
     --cx-orb-sh1: rgba(166, 35, 248, 0);
@@ -2747,34 +2747,34 @@ var OwO_demo = new OwO({
     --cx-orb-glow: 1;
 }
 #ctrm_.ctrm-close .ctrm-container {
-    /* 见上面 position 那段：这一层是光效层的定位参照，必须自己写死。 */
+    
     position: relative;
     width: var(--cx-ball);
     height: var(--cx-ball);
     max-height: none;
-    /* 同上：宽高是在这一层身上变的，不关掉缩小动画照样跑。 */
+    
     transition: none;
-    /* 人数角标和光晕都要能露到球外面。折叠态里 .ctrm-panel / .ctrm-online 已经 display:none。 */
+    
     overflow: visible;
 }
 #ctrm_.ctrm-close .ctrm-panel,
 #ctrm_.ctrm-close .ctrm-online { display: none; }
-/* 防御性：▼ / 😜 正常是 JS 折叠时 hide() 掉的，这条保证它们不会糊在球里。展开时 JS 先
-   摘掉 .ctrm-close 再 show()，所以挡不住它们。 */
+
+
 #ctrm_.ctrm-close .ctrm-title-close,
 #ctrm_.ctrm-close .ctrm-title-reconn { display: none; }
-/* 标题里那颗心在球上没有意义（它是站点装饰，不是"聊天"这个语义），收掉。 */
+
 #ctrm_.ctrm-close .ctrm-title-span img { display: none; }
 
-/* ---- 球体本身 = .ctrm-title ---- */
+
 #ctrm_.ctrm-close .ctrm-title {
-    /* 同样是补 CDN 的：球里的光效层全是 absolute + 百分比，参照的就是这一层。 */
+    
     position: relative;
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    /* 两条 !important 是为了压住 #ctrm_ .ctrm-title 那条带 !important 的渐变底色 ——
-       不加，折叠态的球会被拍成标题栏的粉蓝渐变。 */
+    
+
     background-color: transparent !important;
     background-image: radial-gradient(circle at 50% 30%, var(--cx-orb-bg-start) 0, var(--cx-orb-bg-end) 70%) !important;
     box-shadow:
@@ -2787,18 +2787,18 @@ var OwO_demo = new OwO({
     transition: transform .18s;
 }
 #ctrm_.ctrm-close .ctrm-title:hover { transform: scale(1.06); }
-/* 新消息的提示只有球边上那一圈化开的光（见下面 .ctrm-ding），球本身不动也不变形。
-   所以这条 .glow 不负责任何视觉，纯防御：上面那条
-   #ctrm_ .ctrm-title.glow { background:#fbe6c4 !important }（CDN 里也有同名的）
-   会把整颗球拍成一块死色，这条 (1,3,0) 压过它们、把球原样留住。 */
+
+
+
+
 #ctrm_.ctrm-close .ctrm-title.glow {
     background-color: transparent !important;
     background-image: radial-gradient(circle at 50% 30%, var(--cx-orb-bg-start) 0, var(--cx-orb-bg-end) 70%) !important;
 }
-/* ---- 新消息那一圈光晕。球的 7 个伪元素都被光效占满了，所以借 .ctrm-container 的 ::after
-   （它一直空着，尺寸又刚好等于球）。z-index:-1 让它沉到球后面，不糊人数角标也不挡点击。
-   实心到 42% 再化开，中间那块正好被球自己挡掉，露出来的只有球边化开的那一圈。
-   类挂在 #ctrm_ 上而不是球上，因为 CSS 选不到父级；JS 那边 950ms 后摘掉。 ---- */
+
+
+
+
 #ctrm_.ctrm-close.ctrm-ding .ctrm-container::after {
     content: "";
     position: absolute;
@@ -2812,7 +2812,7 @@ var OwO_demo = new OwO({
     pointer-events: none;
     animation: cxOrbHalo .9s ease-out both;
 }
-/* ---- shape-a：不带混合模式、不带模糊，就是一层会转的浅色球面 ---- */
+
 #ctrm_.ctrm-close .ctrm-title::before {
     content: "";
     position: absolute;
@@ -2824,7 +2824,7 @@ var OwO_demo = new OwO({
     animation: cxOrbSpin var(--cx-orb-rot) linear infinite,
                cxOrbHue var(--cx-orb-hue) linear infinite;
 }
-/* ---- shape-b：soft-light，偏右下一点，转得比 a 慢 1.5 倍 ---- */
+
 #ctrm_.ctrm-close .ctrm-title::after {
     content: "";
     position: absolute;
@@ -2837,11 +2837,11 @@ var OwO_demo = new OwO({
     animation: cxOrbSpin calc(var(--cx-orb-rot) * 1.5) linear infinite,
                cxOrbHue calc(var(--cx-orb-hue) * 1.5) linear infinite;
 }
-/* ---- glass：白色内圈高光，静止，不参与混合。挂在 .ctrm-title-span 上，87.8% 大小居中，
-   不能用 transform 居中（见约束①），只能算成 left/top：(82-72)/2/82 = 6.1%。
-   原版的 opacity:.8 同样因此乘进了下面两条 rgba 的 alpha（.5 × .8 = .4）。 ---- */
+
+
+
 #ctrm_.ctrm-close .ctrm-title-span {
-    /* 也是补 CDN 的：<span> 默认 inline，inline 盒子的百分比宽高会被忽略，光效层就散了。 */
+    
     position: absolute;
     display: block;
     left: 6.1%; top: 6.1%;
@@ -2851,21 +2851,21 @@ var OwO_demo = new OwO({
     border-radius: 50%;
     box-shadow: inset 0 calc(var(--cx-ball) * -.012) calc(var(--cx-ball) * .073) calc(var(--cx-ball) * .012) rgba(255, 255, 255, .4),
                 inset 0 calc(var(--cx-ball) * .037) calc(var(--cx-ball) * .049) 0 rgba(255, 255, 255, .4);
-    /* "聊天室"三个字是裸文本节点，选不中，只能 font-size:0 连锅端，再把要留的那个元素的
-       字号加回来。"(在线"和"人)"同理，于是角标里干干净净只剩一个数字。 */
+    
+
     font-size: 0;
     line-height: 0;
 }
-/* ---- 里面那个 span 只当容器，一笔都不画（见约束①）。必须写 :first-child —— 人数角标
-   .ctrm-title-countwrap 本身也是 .ctrm-title-span 的 span 子元素，不加会被一起撑成满圈，
-   那块白底直接把整颗球盖成白饼。 ---- */
+
+
+
 #ctrm_.ctrm-close .ctrm-title-span > span:first-child {
     position: absolute;
     left: 0; top: 0;
     width: 100%; height: 100%;
 }
-/* shape-c / shape-d：原版是相对球体 (5%,5%)，这里的参照系是上面那个 87.8% 的框，
-   所以要减掉框自己的 6.1% 偏移：(5% - 6.1%) × 82/72 ≈ -1.25%。 */
+
+
 #ctrm_.ctrm-close .ctrm-title-span > span:first-child::before,
 #ctrm_.ctrm-close .ctrm-title-span > span:first-child::after {
     content: "";
@@ -2889,8 +2889,8 @@ var OwO_demo = new OwO({
     animation: cxOrbSpin calc(var(--cx-orb-rot) * 2.5) linear infinite,
                cxOrbHue calc(var(--cx-orb-hue) * 2.5) linear infinite;
 }
-/* ---- strong 当裁剪筐：两颗光斑带着 blur，不收一下会糊到球外面去。
-   它要撑回整颗球那么大（82/72 = 113.9%，左上各退 5/72 = 6.94%）。 ---- */
+
+
 #ctrm_.ctrm-close .ctrm-title-span strong {
     display: block;
     position: absolute;
@@ -2899,9 +2899,9 @@ var OwO_demo = new OwO({
     border-radius: 50%;
     overflow: hidden;
 }
-/* ---- 两颗白色光斑。原版是 SVG blob + blur + scale 呼吸，这边没法加 SVG，改用一个
-   "窄而高"的椭圆渐变，模糊完就是原版那道斜高光。核心不能太白（横向只给 26%、alpha .8）：
-   满框的圆渐变会把整颗球洗成白饼。filter 在 transform 之前生效，scale 会把 blur 一起缩。 ---- */
+
+
+
 #ctrm_.ctrm-close .ctrm-title-span strong::before,
 #ctrm_.ctrm-close .ctrm-title-span strong::after {
     content: "";
@@ -2925,9 +2925,9 @@ var OwO_demo = new OwO({
     transform: scale(.6);
     animation: cxOrbShineB 5s ease-in-out infinite;
 }
-/* ---- 人数角标。定位参照是 .ctrm-title-span（87.8% 大小、往右下偏了 6.1%），所以负偏移
-   要把这 6.1% 一起补回来：-.04 - .061 ≈ -.101（按球径算）。垂直居中走 line-height 不走
-   flex：这个元素的 display 是 jQuery 的 show()/hide() 在管的，别去跟它抢。 ---- */
+
+
+
 #ctrm_.ctrm-close .ctrm-title-countwrap {
     position: absolute;
     top: calc(var(--cx-ball) * -.101);
@@ -2945,9 +2945,9 @@ var OwO_demo = new OwO({
     box-shadow: 0 1px 4px rgba(47, 36, 41, .16);
 }
 #ctrm_.ctrm-close .ctrm-title-count { font-size: calc(var(--cx-ball) * .24); }
-/* ---- 移动端：球给大一点好点，位置也让开一点边。
-   这条必须显式写 width/height —— CDN 那边 #ctrm_.ctrm-close.ctrm-mobile .ctrm-container
-   是 (1,3,0)，比上面那条 (1,2,0) 高一级，不重写的话宽度会被它的 65vw 拽回去。 ---- */
+
+
+
 #ctrm_.ctrm-close.ctrm-mobile {
     --cx-ball: clamp(48px, 13vw, 64px);
     bottom: clamp(14px, 3.5vw, 24px);
@@ -2957,7 +2957,7 @@ var OwO_demo = new OwO({
     width: var(--cx-ball);
     height: var(--cx-ball);
 }
-/* ---- 系统里关了动效的人，就别让球一直转。停下来颜色一层不少，只是不动了。 ---- */
+
 @media (prefers-reduced-motion: reduce) {
     #ctrm_.ctrm-close .ctrm-title,
     #ctrm_.ctrm-close .ctrm-title::before,
@@ -2966,41 +2966,41 @@ var OwO_demo = new OwO({
     #ctrm_.ctrm-close .ctrm-title-span > span:first-child::after,
     #ctrm_.ctrm-close .ctrm-title-span strong::before,
     #ctrm_.ctrm-close .ctrm-title-span strong::after { animation: none; }
-    /* 光晕整个不要，不能停在半路 —— 停住等于球边上永远糊着一圈光。 */
+    
     #ctrm_.ctrm-close.ctrm-ding .ctrm-container::after { content: none; }
 }
-/* ---- 光球的五条动画。转的动 transform，变色的动 filter，并行互不干扰。名字全带 cxOrb
-   前缀，跟 CDN 里的 blink / ctrm-spin 不撞。 ---- */
+
+
 @keyframes cxOrbSpin { 0% { transform: rotate3d(1, 1, 1, 0deg) } 100% { transform: rotate3d(1, 1, 1, 1turn) } }
 @keyframes cxOrbHue { 0% { filter: hue-rotate(0deg) } 50% { filter: hue-rotate(var(--cx-orb-hue-deg)) } 100% { filter: hue-rotate(0deg) } }
 @keyframes cxOrbShineA { 0% { transform: scale(.4) } 50% { transform: scale(.1) } 100% { transform: scale(.4) } }
 @keyframes cxOrbShineB { 0% { transform: scale(.6) } 50% { transform: scale(.1) } 100% { transform: scale(.6) } }
-/* 球边上那圈光：涨开同时淡掉。opacity 在 18% 就到顶，所以是"亮一下再散"。 */
+
 @keyframes cxOrbHalo { 0% { transform: scale(.9); opacity: 0 } 18% { opacity: .7 } 100% { transform: scale(1.5); opacity: 0 } }
 
-/* ---------- 点 ▼ 收起来的那一下（这一段不在调参页那份可复制的块里）----------
-   不要去动宽高：宽高从 35vw/40vw 掉到 42px 的过渡就是"一颗占掉四分之一屏的大球慢慢
-   缩小"的来源。这里是面板带着 transform 缩着淡出（190ms），然后球自己弹进来（320ms）。
-   两个类都是 JS 临时挂的，刷新那次一个都不挂。 */
+
+
+
+
 #ctrm_.ctrm-folding .ctrm-container {
-    /* 落点大致对着球心，不然面板会往屏幕最角上钻，看着像掉下去了。 */
+    
     transform-origin: calc(100% - 22px) calc(100% - 22px);
     animation: cxFoldOut .19s cubic-bezier(.4, 0, 1, 1) both;
 }
 #ctrm_.ctrm-close.ctrm-popin .ctrm-title {
-    /* 逗号后半截把球自己的变色动画接回来，跟上面 .glow 那条一个道理。 */
+    
     animation: cxOrbPop .32s cubic-bezier(.34, 1.5, .64, 1) both, var(--cx-orb-main-hue);
 }
 @keyframes cxFoldOut { 0% { transform: scale(1); opacity: 1 } 100% { transform: scale(.32); opacity: 0 } }
 @keyframes cxOrbPop { 0% { transform: scale(.35); opacity: 0 } 55% { transform: scale(1.1); opacity: 1 } 100% { transform: scale(1); opacity: 1 } }
-/* 关了动效的人：折叠还是一步到位，不闪不动。 */
+
 @media (prefers-reduced-motion: reduce) {
     #ctrm_.ctrm-folding .ctrm-container,
     #ctrm_.ctrm-close.ctrm-popin .ctrm-title { animation: none; }
 }
 
-/* ---------- 消息区 ---------- */
-/* .ctrm-panel / .ctrm-online 的底色一个都不动，保持原来的近白和浅灰。 */
+
+
 #ctrm_ .ctrm-dialog { scrollbar-width: thin; scrollbar-color: var(--cx-line) transparent; }
 #ctrm_ .ctrm-dialog::-webkit-scrollbar { width: 6px; }
 #ctrm_ .ctrm-dialog::-webkit-scrollbar-track { background: transparent; }
@@ -3009,17 +3009,17 @@ var OwO_demo = new OwO({
 #ctrm_ .ctrm-dialog-item .ctrm-dialog-sender { color: var(--cx-ink-2); }
 #ctrm_ .ctrm-dialog-item .ctrm-dialog-time { color: var(--cx-ink-3); }
 
-/* 气泡只把靠说话人那侧的角收窄。底色一律不碰 —— 那是服务端下发的 t.color，写在内联
-   style 上（真要压饱和度得叠一层 background-image 渐变，background-color 压不过它）。 */
+
+
 #ctrm_ .ctrm-dialog-item .ctrm-dialog-bubble { border-radius: 14px 14px 14px 4px; }
 #ctrm_ .ctrm-dialog-item.ctrm-me .ctrm-dialog-bubble { border-radius: 14px 14px 4px 14px; }
 #ctrm_.ctrm-mobile .ctrm-dialog-item .ctrm-dialog-bubble { border-radius: 10px 10px 10px 3px; }
 #ctrm_.ctrm-mobile .ctrm-dialog-item.ctrm-me .ctrm-dialog-bubble { border-radius: 10px 10px 3px 10px; }
 
-/* @我 的高亮：深粉实底 + 白字（5:1），落在任何一种气泡底色上都读得出来。
-   padding 必须有、且要用 em 不用 px —— 999px 圆角会切进首尾那两个字，而移动端气泡是
-   font-size:2.8em，写死 px 在手机上小得看不见。nowrap 防止胶囊在行尾折成两半。
-   font-weight 只到 500：实底胶囊再加粗就变成"喊"，但也不降到 400（白字压饱和色显细）。 */
+
+
+
+
 #ctrm_ .ctrm-dialog-item .ctrm-b {
     background: var(--cx-brand-ink);
     color: #fff;
@@ -3032,8 +3032,8 @@ var OwO_demo = new OwO({
 #ctrm_ .ctrm-dialog-item a[data-fancybox] img { border-radius: 10px; }
 #ctrm_ .ctrm-dialog-item iframe { border-radius: 10px; }
 
-/* ---------- 回到底部 ---------- */
-/* 2.2vw = 跟标题栏那两颗圆按钮一样大，界面上的圆形按钮统一成一个尺寸。 */
+
+
 #ctrm_ .ctrm-bottom {
     width: 2.2vw;
     height: 2.2vw;
@@ -3043,13 +3043,13 @@ var OwO_demo = new OwO({
     color: #fff;
     border-radius: 50%;
     transition: background .18s;
-    /* CDN 的 bottom:28% 让按钮落在工具条那一排上，看着像第五个工具按钮。输入框占
-       25%、工具条 27px，再往上留 8px 才是浮在消息区里面。 */
+    
+
     bottom: calc(25% + 35px);
 }
 #ctrm_ .ctrm-bottom:hover { background: var(--cx-brand-deep); }
-/* CDN 手机端是 3vw 的盒子 + transform:scale(2)，缩放基准 (0 40%) 会把按钮往右下角带、
-   越过消息区。直接写成 6vw：视觉尺寸跟缩放后一模一样，位置才算得准。 */
+
+
 #ctrm_.ctrm-mobile .ctrm-bottom {
     width: 6vw;
     height: 6vw;
@@ -3058,9 +3058,9 @@ var OwO_demo = new OwO({
     transform: none;
 }
 
-/* ---------- 工具条按钮 ---------- */
-/* 盒子不能碰：height:22px / padding:2px 5px / margin 都算进了下面 .ctrm-dialog 的
-   calc 里，变大就折成两排。字号是唯一例外，窄屏那条规则要靠它收掉文字。 */
+
+
+
 #ctrm_ .sb {
     border-radius: var(--cx-pill);
     background: #fff;
@@ -3069,44 +3069,44 @@ var OwO_demo = new OwO({
     transition: background .18s, border-color .18s, color .18s;
 }
 #ctrm_ .sb:hover { background: var(--cx-tint); border-color: var(--cx-brand); color: var(--cx-brand-ink); }
-/* 表情按钮的 class 是 "OwO-logo sb"，上面那条 .sb 也管着它。面板展开时给个"按下去了"
-   的状态：带 #ctrm_ 是 (1,3,0)，压得住 CDN 里 (0,3,0) 的 .OwO.OwO-open .OwO-logo。 */
+
+
 #ctrm_ .OwO.OwO-open .OwO-logo { background: var(--cx-tint); border-color: var(--cx-brand); color: var(--cx-brand-ink); }
 
-/* 三颗图标各给一个色，扫一眼能分开，但都是同一套色里的 */
+
 #ctrm_ #file svg { color: var(--cx-brand-ink); }
 #ctrm_ .ThirdPartyImageHost svg { color: var(--cx-brand); }
 #ctrm_ #cfbed svg { color: var(--cx-warm); }
 
-/* ---------- 工具条必须永远只有一行 ---------- */
-/* 折成两排 = 输入框和发送键被顶到 .ctrm-container 外面裁掉（手机上的表现就是"看不见
-   发送按钮"）。按钮宽度是固定 px，容器宽度是 vw：五个带文字的按钮要 342px，而
-   .ctrm-panel 只有 24.5vw，视口窄于 1440px 就装不下了。窄屏只留图标 —— 按钮里的
-   文字是裸文本节点、选不中，只能 font-size:0 连锅端（svg 有固定宽高，不受影响），
-   顺手把 flex 的 gap 收掉，否则空文本节点还占 4px。 */
+
+
+
+
+
+
 @media (max-width: 1439px) {
     #ctrm_ .ctrm-panel .sb { font-size: 0; gap: 0; }
 }
 #ctrm_.ctrm-mobile .ctrm-panel .sb { font-size: 0; gap: 0; }
-/* 这排按钮实际吃掉 22px 高 + 5px 下边距，CDN 的 calc 只减了 22px，差的 5px 一直在把
-   输入框往外顶（桌面端的表现是虚线框底边被裁掉一条）。 */
+
+
 #ctrm_ .ctrm-dialog { height: calc(75% - 27px); }
 
-/* ---------- 表情包面板 ---------- */
-/* CDN 那版是"每颗表情一个灰底圆角格子 + 10px 外边距"，格子比表情本身还显眼，横竖还各
-   一条滚动条。这里改成纯网格：格子不要底色，只在 hover 时给一层浅粉；圆角压到 6px
-   —— 表情本身只有 32px，圆角再大整颗就成药丸了。 */
+
+
+
+
 #ctrm_ .OwO .OwO-body {
     border-color: var(--cx-hairline);
     border-radius: 10px;
     box-shadow: var(--cx-shadow-pop);
-    /* 内联的 width:100% 是 content-box，左右各 1px 边框会让面板比 .ctrm-panel 宽 2px、
-       压在右边的在线名单上。 */
+    
+
     box-sizing: border-box;
 }
 #ctrm_ .OwO.OwO-up .OwO-body { border-radius: 10px 10px 10px 2px; }
-/* display 只能写在 .OwO-items-show 上：.OwO-items 本身是 display:none，没选中的表情包
-   全靠它藏着，改成 flex 会所有包一起摊开。 */
+
+
 #ctrm_ .OwO .OwO-body .OwO-items.OwO-items-show {
     display: flex;
     flex-wrap: wrap;
@@ -3125,27 +3125,27 @@ var OwO_demo = new OwO({
     background: transparent;
     border-radius: 6px;
 }
-/* hover 不要叠阴影，一颗小格子扛不住。抖动动画是原有的，留着。 */
-/* 悬停时的抖动旋转来自外链样式的 animation:a 5s infinite（那个 css 改不了），在这里关掉。
-   选中就变个底色，不转了。 */
+
+
+
 #ctrm_ .OwO .OwO-body .OwO-items .OwO-item:hover { background: var(--cx-tint); box-shadow: none; -webkit-animation: none; animation: none; }
-/* 宽度就用内联那个 width:100% —— .OwO 是块级、和 .ctrm-panel 一样宽，再宽一点就压到
-   右边的在线名单上去了。别再往大改。
-   max-height 是内联的 197px，正好切在第五行中间，露半排脑袋。一格 40px + 4px 间距，
-   而 overflow 是裁在 padding 边上（上下各 8px 都算进可视区），所以要 4*44 - 16 = 168px：
-   第五行正好从可视区外面开始。面板是向上展开的（.OwO-up，底边贴着按钮），所以这个上限
-   同时管着它会不会盖到标题栏 —— 一样别往大改。 */
+
+
+
+
+
+
 #ctrm_ .OwO .OwO-body .OwO-items { max-height: 168px !important; }
-/* 大图包预览放大了，一行从 40px 变成：图 5rem(80) + li 内边距(3*2=6) + gap(4) = 90px。
-   按同样的算法（3 行，上下 padding 8px 算进可视区）：3*90 - 16 = 254px，
-   第四行刚好从可视区外面开始，不会露半排脑袋。小图包继续用上面的 168px。 */
+
+
+
 #ctrm_ .OwO .OwO-body .OwO-items.OwO-items-big { max-height: 254px !important; }
-/* 大图包预览尺寸改由这个变量控制（面板里只写 var()，具体值全交给 CSS）：
-   桌面 5rem；移动端 5rem 有点高了、会顶出行框，降到 4rem。移动端的判定跟其他规则保持一致，
-   用的是 JS 打上的 .ctrm-mobile 类（宽高比 <= 1.2 时添加），不是媒体查询。 */
+
+
+
 #ctrm_ { --ct-smoji-big-preview: 5rem; }
 #ctrm_.ctrm-mobile { --ct-smoji-big-preview: 4rem; }
-/* 移动端面板可视高度保持原来的 168px，不跟着大图预览放大 */
+
 #ctrm_.ctrm-mobile .OwO .OwO-body .OwO-items.OwO-items-big { max-height: 168px !important; }
 #ctrm_ .OwO .OwO-body .OwO-bar {
     background: #fff;
@@ -3153,24 +3153,24 @@ var OwO_demo = new OwO({
     border-radius: 0 0 10px 10px;
     color: var(--cx-ink-2);
 }
-/* 包名条是横向滚的，滚动条同样藏掉；左右各留 4px，否则选中态那块粉底会怼在面板
-   左下角的圆角上，露出一个直角。 */
+
+
 #ctrm_ .OwO .OwO-body .OwO-bar .OwO-packages { padding: 0 4px; scrollbar-width: none; -ms-overflow-style: none; }
 #ctrm_ .OwO .OwO-body .OwO-bar .OwO-packages::-webkit-scrollbar { width: 0; height: 0; }
 #ctrm_ .OwO .OwO-body .OwO-bar .OwO-packages li { border-radius: 6px; }
 #ctrm_ .OwO .OwO-body .OwO-bar .OwO-packages li:hover { background: var(--cx-tint); }
 #ctrm_ .OwO .OwO-body .OwO-bar .OwO-packages .OwO-package-active { background: var(--cx-tint-2); color: var(--cx-brand-ink); }
 
-/* ---------- 输入框 ---------- */
-/* 手绘虚线要保留：2px dashed + 圆角，宽度和虚线样式都不能动，只换颜色。 */
+
+
 #ctrm_ .ctrm-textarea textarea {
     border: 2px dashed rgba(242, 118, 155, .45);
     color: var(--cx-ink);
 }
 #ctrm_ .ctrm-textarea textarea:hover { border-color: rgba(242, 118, 155, .7); }
 #ctrm_ .ctrm-textarea textarea:focus { border-color: var(--cx-brand); }
-/* 两个 placeholder 选择器必须分开写：塞进同一个选择器列表，浏览器不认识的那个
-   会让整条规则作废。 */
+
+
 #ctrm_ .ctrm-textarea textarea::placeholder { color: var(--cx-ink-3); }
 #ctrm_ .ctrm-textarea textarea::-webkit-input-placeholder { color: var(--cx-ink-3); }
 
@@ -3183,15 +3183,15 @@ var OwO_demo = new OwO({
 #ctrm_ .ctrm-emit:hover { background: var(--cx-brand-deep); }
 #ctrm_.ctrm-mobile .ctrm-emit { border-radius: var(--cx-pill); }
 
-/* ---------- 右侧：在线名单 + 排行 ---------- */
-/* 底色同样是服务端下发的，同样保持原色，只改圆角和字色 */
+
+
 #ctrm_ .ctrm-online-item {
     border-radius: var(--cx-pill);
     color: var(--cx-ink);
 }
-/* 名单 75% + 域名榜 25% 已经占满，CDN 还给名单加了 padding-top:2%（百分比内边距按
-   宽度算，约 3px），content-box 下这 3px 是额外撑出来的，域名榜最后一行底部被
-   .ctrm-container 的 overflow:hidden 削掉一条。改 border-box 让内边距算进 75% 里。 */
+
+
+
 #ctrm_ .ctrm-online-wrap { box-sizing: border-box; }
 #ctrm_.ctrm-mobile .ctrm-online-item { border-radius: var(--cx-pill); }
 
@@ -3203,8 +3203,8 @@ var OwO_demo = new OwO({
 }
 #ctrm_ .ctrm-domain-item:hover { background: var(--cx-tint); }
 
-/* ---------- JS 拼内联样式的几处，hover 只能写在这儿 ---------- */
-/* 分享链接卡片：内联里已经写了 border 和 box-shadow，要 !important 才压得住 */
+
+
 .tag-Link { transition: border-color .18s, box-shadow .18s; }
 .tag-Link:hover { border-color: var(--cx-brand) !important; }
 .ctrm-tts-pill:hover { background-color: var(--cx-tint) !important; border-color: var(--cx-brand) !important; }
@@ -3212,12 +3212,12 @@ var OwO_demo = new OwO({
 .img-host-dropdown [data-img-host] { color: var(--cx-ink); border-radius: 8px; transition: background .16s, color .16s; }
 .img-host-dropdown [data-img-host]:hover { background: var(--cx-tint); color: var(--cx-brand-ink); }
 </style>
-<!-- display:none 是初始状态，不是装饰：jQuery 的 append() 遇到 HTML 里的外链
-     script 标签会走同步 XHR（jQuery._evalUrl 的 async:false），插好的 DOM 就摊在那儿
-     等一个跨域往返，浏览器完全有机会先画一帧 —— 而那时 .ctrm-close 还没挂上（在下面
-     初始化那段的末尾才挂），远程样式表也可能还没到，画出来的就是"展开态的大白板"或者
-     一坨没样式的聊天 DOM，刷新时闪一下很明显。
-     初始化收尾处 m.show() 把它放出来，那一刻折叠与否已经定了，第一帧就是最终样子。 -->
+
+
+
+
+
+
 <div id="ctrm_" style="z-index:10002!important;display:none;" class=" " >
     <div class="ctrm-container">
         <div class="ctrm-title">
@@ -3242,9 +3242,9 @@ var OwO_demo = new OwO({
                  <div data-img-host="share-text" style="padding:6px 8px;cursor:pointer;font-size:13px;white-space:nowrap;">share</div>
              </div>
             <button  class="sb" id="cfbed" title="上传图片"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M19.11 9.827c.26 0 .451-.192.488-.445.23-1.406.43-2.127.865-2.575.433-.447 1.131-.654 2.49-.89a.503.503 0 0 0 .446-.502.5.5 0 0 0-.447-.503c-1.358-.237-2.056-.445-2.49-.892-.433-.447-.634-1.168-.864-2.571-.037-.256-.227-.449-.488-.449-.257 0-.45.193-.49.447-.23 1.405-.432 2.126-.865 2.573s-1.13.655-2.486.892a.5.5 0 0 0-.451.503c0 .273.203.47.447.503 1.36.235 2.057.438 2.49.882.433.445.635 1.167.864 2.583.04.252.235.444.491.444M3.853 3.207h9.058v1.961H3.853v9.867l1.488-1.327a2.8 2.8 0 0 1 3.704-.037l1.011.867 3.428-2.886a2.8 2.8 0 0 1 3.621-.001l2.957 2.483v-2.346h1.907v7.601c0 1.084-.854 1.962-1.907 1.962H3.852c-1.052 0-1.906-.878-1.906-1.962V5.17c0-1.084.854-1.962 1.907-1.962m16.209 13.46l-4.163-3.497a.93.93 0 0 0-1.207 0l-4.038 3.399a.93.93 0 0 1-1.214-.006l-1.615-1.385a.933.933 0 0 0-1.235.012l-2.737 2.44v1.76h16.209zm-9.535-7.625c0 1.084-.854 1.962-1.907 1.962s-1.907-.878-1.907-1.962c0-1.083.854-1.961 1.907-1.961s1.907.878 1.907 1.961" clip-rule="evenodd"/></svg>上传图片</button>
-            <!-- 表情包 -->
+            
             <div class="OwO"></div>
-            <!-- 在ctrm-panel内，ctrm-textarea之前添加 -->
+            
 <div class="ctrm-voice-container">
     <button class="sb ctrm-voice-btn" id="ctrm-voice-btn" title="点击录音">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -3354,7 +3354,7 @@ var OwO_demo = new OwO({
             justify-content: center;
             pointer-events: none;
             z-index: 9;
-            /* 保持 2px dashed —— 拖拽时这圈虚线要和输入框本身那圈手绘虚线对得上 */
+            
             border: 2px dashed rgba(242,118,155,0);
             border-radius: 0.5rem;
             opacity: 0;
@@ -3387,8 +3387,8 @@ var OwO_demo = new OwO({
         .image-preview-overlay {
           z-index: 10;
           position: absolute;
-          /* 缩略图 60px + 边框，-80px 会压住工具条那一排按钮。往上挪够 27px 的工具条高度
-             才完全落在消息区里。 */
+          
+
           top: -92px;
           left: 6px;
           border-radius: 10px;
@@ -3989,18 +3989,18 @@ window.uploadToTelegram = function (file) {
             flex-wrap: wrap;
         }
         .ctrm-voice-review-btn {
-            /* color 必须显式写：面板是深底 + color:white，按钮自己是白底，不写就是白字白底。 */
+            
             color: var(--cx-ink-2);
             background: #fff; border: 1px solid rgba(47,36,41,.16); border-radius: 999px; padding: 3px 12px; cursor: pointer; font-size: 13px; transition: background 0.2s, border-color 0.2s, color 0.2s;
         }
         .ctrm-voice-review-btn:hover { background: rgba(242,118,155,.12); border-color: #f2769b; color: #c23b6e; }
-        /* 红/绿是语义色，跟提示条一致。删除走描边、发送走实底 —— 三颗一样白看不出该点哪个。 */
+        
         .ctrm-voice-review-btn.delete { color: #b8362b; border-color: rgba(184,54,43,.45); }
         .ctrm-voice-review-btn.delete:hover { background: rgba(184,54,43,.10); border-color: #b8362b; color: #b8362b; }
         .ctrm-voice-review-btn.send { color: #fff; background: #2f7a4f; border-color: #2f7a4f; }
         .ctrm-voice-review-btn.send:hover { color: #fff; background: #26643f; border-color: #26643f; }
-        /* disabled 的元素照样匹配 :hover，不写这条鼠标放上去还会变深，像"还能再点一下"。
-           :disabled:hover 是 (0,4,0)，压得住上面 .send:hover 的 (0,3,0)。 */
+        
+
         .ctrm-voice-review-btn:disabled { cursor: default; }
         .ctrm-voice-review-btn.send:disabled:hover { background: #2f7a4f; border-color: #2f7a4f; }
         `;
