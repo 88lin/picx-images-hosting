@@ -153,11 +153,7 @@
                                 var insertContent;
 
                                 if (target.dataset.hasOwnProperty("input")) {
-                                    if (target.dataset.input && target.dataset.input.startsWith('quicker/')) {
-                                        insertContent = "【" + target.dataset.input.replace('quicker/', '') + "】";
-                                    } else {
-                                        insertContent = "【" + target.dataset.input + "】";
-                                    }
+                                    insertContent = "【" + target.dataset.input + "】";
                                 } else {
                                     insertContent = target.innerHTML;
                                 }
@@ -2061,13 +2057,38 @@ img.playing {
                         '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="calc(100% + 20px)" style="width: calc(100% + 20px); margin-left: -10px; margin-top: 15px;" height="86" src="//music.163.com/outchain/player?type=0&id=$2&auto=0&height=66"></iframe>' +
                         '<a class="ctrm-163-btn" href="$1" target="_blank" style="display: inline-block;padding: 6px 14px;margin-top: 15px;border: none;border-radius: 999px;background-color: var(--cx-brand);color: white;text-align: center;text-decoration: none;font-weight: bold;transition: background-color 0.3s;font-size: 14px;">跳转到网易云音乐列表</a> <a><img style="position:absolute;bottom: -9px;right: 0px;width: 66%;pointer-events:none;z-index:999;" src="https://cdn.h5ds.com/space/files/600972551685382144/20240307/689876818574024704.webp" alt="Image" referrerpolicy="no-referrer"></a>' +
                         '</div>');
+                // v: Smoji 显示尺寸以 owo 清单为准（读 big 字段）；清单还没加载好时，
+                //    回退到下方内置名单。今后新增表情包只需改 owo-smoji.json，不用动这里。
+                //    返回 true=8rem，false=3rem，null=不是 Smoji 包（继续往下判断）
+                var ctSmojiFallbackBig = /^(eveonecat-static|mochadandan|popo|shuitunlulu|xiaohuangtun|xiaokumao|xiaoxiongchong|yantuanzi|yier-bubu|yuexinmiao)$/;
+                var ctSmojiFallbackSmall = /^(daimaobatiao|douyin-current|douyin-limited|xiaohongshu)$/;
+                var ctSmojiSize = function (ctPkg, ctIcon) {
+                    try {
+                        var ctInst = window.OwO_demo;
+                        if (ctInst && ctInst.odata && ctInst.packages) {
+                            for (var ctI = 0; ctI < ctInst.packages.length; ctI++) {
+                                var ctPack = ctInst.odata[ctInst.packages[ctI]];
+                                if (ctPack && ctPack.type === 'smoji' && ctPack.name === ctPkg) {
+                                    var ctItems = ctPack.container || [];
+                                    for (var ctJ = 0; ctJ < ctItems.length; ctJ++) {
+                                        if (ctItems[ctJ] && ctItems[ctJ].icon === ctIcon) return ctItems[ctJ].big === true;
+                                    }
+                                    return ctItems.length ? ctItems[0].big === true : false;
+                                }
+                            }
+                            return null;
+                        }
+                    } catch (ctErr) {}
+                    if (ctSmojiFallbackBig.test(ctPkg)) return true;
+                    if (ctSmojiFallbackSmall.test(ctPkg)) return false;
+                    return null;
+                };
                 t.msg = t.msg.replace(/【(.*?)】/g, function (match, p1) {
-                    if (/^(eveonecat-static|mochadandan|popo|shuitunlulu|xiaohuangtun|xiaokumao|xiaoxiongchong|yantuanzi|yier-bubu|yuexinmiao)\//.test(p1)) {
-                        // Smoji 大图包（含文字，需放大）
-                        return `<a><img src="https://s3-cdn.zsh.moe/smoji/${p1}.webp" alt="${p1}" style="max-width: 8rem;"></a>`;
-                    } else if (/^(daimaobatiao|douyin-current|douyin-limited|xiaohongshu)\//.test(p1)) {
-                        // Smoji 常规包
-                        return `<a><img src="https://s3-cdn.zsh.moe/smoji/${p1}.webp" alt="${p1}" style="max-width: 3rem;"></a>`;
+                    var ctSep = p1.indexOf('/');
+                    var ctBig = ctSep > 0 ? ctSmojiSize(p1.slice(0, ctSep), p1.slice(ctSep + 1)) : null;
+                    if (ctBig !== null) {
+                        // Smoji：包名/图标，尺寸由清单 big 字段决定
+                        return `<a><img src="https://s3-cdn.zsh.moe/smoji/${p1}.webp" alt="${p1}" style="max-width: ${ctBig ? '8rem' : '3rem'};"></a>`;
                     } else if (p1.includes('blob') || p1.includes('comfy')) {
                         return `<a><img src="https://npm.elemecdn.com/blobcat@1.0.0/${p1}.png" alt="${p1}" style="max-width: 3rem;"></a>`;
                     } else if (p1.includes('bb_')) {
