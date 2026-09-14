@@ -103,7 +103,7 @@
 
                             for (var _i = 0; _i < opackage.length; _i++) {
                                 if (this.odata[this.packages[i]].type === 'smoji') {
-                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '">' + '<img data-original="' + 'https://s3-cdn.zsh.moe/smoji/' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '.webp" src="" icon="' + opackage[_i].text + '" style="min-height:3rem;height:3rem;max-height:3rem;width:auto;max-width:100%;object-fit:contain" referrerpolicy="no-referrer"></li>';
+                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '">' + '<img data-original="' + 'https://s3-cdn.zsh.moe/smoji/' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '.webp" src="" icon="' + opackage[_i].text + '" referrerpolicy="no-referrer"></li>';
                                 } else if (this.odata[this.packages[i]].type === 'image-zl') {
                                     html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '">' + '<img data-original="' + 'https://emoticons.z-l.top/' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '.png" src="" icon="' + opackage[_i].text + '" referrerpolicy="no-referrer"></li>';
                                 } else if (this.odata[this.packages[i]].type === 'image') {
@@ -2064,10 +2064,10 @@ img.playing {
                 t.msg = t.msg.replace(/【(.*?)】/g, function (match, p1) {
                     if (/^(eveonecat-static|mochadandan|popo|shuitunlulu|xiaohuangtun|xiaokumao|xiaoxiongchong|yantuanzi|yier-bubu|yuexinmiao)\//.test(p1)) {
                         // Smoji 大图包（含文字，需放大）
-                        return `<a><img src="https://s3-cdn.zsh.moe/smoji/${p1}.webp" alt="${p1}" style="max-width: 10rem !important; max-height: 10rem !important; width: auto !important; height: auto !important;"></a>`;
+                        return `<a><img src="https://s3-cdn.zsh.moe/smoji/${p1}.webp" alt="${p1}" style="max-width: 8rem;"></a>`;
                     } else if (/^(daimaobatiao|douyin-current|douyin-limited|xiaohongshu)\//.test(p1)) {
                         // Smoji 常规包
-                        return `<a><img src="https://s3-cdn.zsh.moe/smoji/${p1}.webp" alt="${p1}" style="max-width: 3rem !important; max-height: 3rem !important; width: auto !important; height: auto !important;"></a>`;
+                        return `<a><img src="https://s3-cdn.zsh.moe/smoji/${p1}.webp" alt="${p1}" style="max-width: 3rem;"></a>`;
                     } else if (p1.includes('blob') || p1.includes('comfy')) {
                         return `<a><img src="https://npm.elemecdn.com/blobcat@1.0.0/${p1}.png" alt="${p1}" style="max-width: 3rem;"></a>`;
                     } else if (p1.includes('bb_')) {
