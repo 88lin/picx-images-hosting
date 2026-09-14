@@ -97,13 +97,18 @@
 
                         var html = '\n <div class="OwO-logo sb">' + option.logo + '</div>\n <div class="OwO-body" style="width: ' + option.width + '">';
 
+                        // v: Smoji 面板预览尺寸。外部样式把所有预览图压到 min-height:2rem，
+                        //    大图包（清单里 big=true 的）内联放大才看得清。发出去的消息是 8rem，
+                        //    预览比它小一点；想调只改这一个数字（单位 rem）。小图包不加内联，保持原样。
+                        var ctSmojiBigPreviewRem = 5;
+
                         for (var i = 0; i < this.packages.length; i++) {
-                            html += '\n <ul class="OwO-items OwO-' + this.odata[this.packages[i]].name + ' OwO-items-' + this.odata[this.packages[i]].type + '" style="max-height: ' + (parseInt(option.maxHeight) - 53 + 'px') + ';">';
+                            html += '\n <ul class="OwO-items OwO-' + this.odata[this.packages[i]].name + ' OwO-items-' + this.odata[this.packages[i]].type + (this.odata[this.packages[i]].container[0] && this.odata[this.packages[i]].container[0].big === true ? ' OwO-items-big' : '') + '" style="max-height: ' + (parseInt(option.maxHeight) - 53 + 'px') + ';">';
                             var opackage = this.odata[this.packages[i]].container;
 
                             for (var _i = 0; _i < opackage.length; _i++) {
                                 if (this.odata[this.packages[i]].type === 'smoji') {
-                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '">' + '<img data-original="' + 'https://s3-cdn.zsh.moe/smoji/' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '.webp" src="" icon="' + opackage[_i].text + '" referrerpolicy="no-referrer"></li>';
+                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '">' + '<img data-original="' + 'https://s3-cdn.zsh.moe/smoji/' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '.webp" src="" icon="' + opackage[_i].text + '"' + (opackage[_i].big ? ' style="height:' + ctSmojiBigPreviewRem + 'rem;min-height:' + ctSmojiBigPreviewRem + 'rem;width:auto;"' : '') + ' referrerpolicy="no-referrer"></li>';
                                 } else if (this.odata[this.packages[i]].type === 'image-zl') {
                                     html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '">' + '<img data-original="' + 'https://emoticons.z-l.top/' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '.png" src="" icon="' + opackage[_i].text + '" referrerpolicy="no-referrer"></li>';
                                 } else if (this.odata[this.packages[i]].type === 'image') {
@@ -167,6 +172,30 @@
                         });
 
                         this.packagesEle = this.container.getElementsByClassName('OwO-packages')[0];
+
+                        // v: 系列栏的滚动条是特意藏掉的，鼠标滚轮默认只会滚页面、滚不动它，
+                        //    这里把纵向滚轮映射成横向滚动。
+                        //    - 触控板横向手势（deltaX 占主导）不管，保持原生行为
+                        //    - 已经滚到最左/最右时不再拦截，页面照常滚，避免“卡住”的感觉
+                        //    - 只有真的溢出才接管；Ctrl+滚轮（缩放）不动
+                        (function (ctBar) {
+                            if (ctBar) {
+                                ctBar.addEventListener('wheel', function (ctEvt) {
+                                    if (ctEvt.ctrlKey) return;
+                                    var ctMax = ctBar.scrollWidth - ctBar.clientWidth;
+                                    if (ctMax <= 0) return;
+                                    if (Math.abs(ctEvt.deltaX) > Math.abs(ctEvt.deltaY)) return;
+                                    var ctStep = ctEvt.deltaY;
+                                    if (ctEvt.deltaMode === 1) ctStep = ctStep * 16;
+                                    else if (ctEvt.deltaMode === 2) ctStep = ctStep * ctBar.clientWidth;
+                                    if (!ctStep) return;
+                                    // 只要鼠标还在这条栏上，滚轮就全部当给它：即便滚到了尽头也不放给页面，
+                                    // 否则一不小心滚到头就会把整个页面带走。
+                                    ctEvt.preventDefault();
+                                    ctBar.scrollLeft = Math.max(0, Math.min(ctMax, ctBar.scrollLeft + ctStep));
+                                }, { passive: false });
+                            }
+                        })(this.packagesEle);
 
                         var _loop = function _loop(_i3) {
                             (function (index) {
@@ -3097,7 +3126,9 @@ var OwO_demo = new OwO({
     border-radius: 6px;
 }
 /* hover 不要叠阴影，一颗小格子扛不住。抖动动画是原有的，留着。 */
-#ctrm_ .OwO .OwO-body .OwO-items .OwO-item:hover { background: var(--cx-tint); box-shadow: none; }
+/* 悬停时的抖动旋转来自外链样式的 animation:a 5s infinite（那个 css 改不了），在这里关掉。
+   选中就变个底色，不转了。 */
+#ctrm_ .OwO .OwO-body .OwO-items .OwO-item:hover { background: var(--cx-tint); box-shadow: none; -webkit-animation: none; animation: none; }
 /* 宽度就用内联那个 width:100% —— .OwO 是块级、和 .ctrm-panel 一样宽，再宽一点就压到
    右边的在线名单上去了。别再往大改。
    max-height 是内联的 197px，正好切在第五行中间，露半排脑袋。一格 40px + 4px 间距，
@@ -3105,6 +3136,10 @@ var OwO_demo = new OwO({
    第五行正好从可视区外面开始。面板是向上展开的（.OwO-up，底边贴着按钮），所以这个上限
    同时管着它会不会盖到标题栏 —— 一样别往大改。 */
 #ctrm_ .OwO .OwO-body .OwO-items { max-height: 168px !important; }
+/* 大图包预览放大了，一行从 40px 变成：图 5rem(80) + li 内边距(3*2=6) + gap(4) = 90px。
+   按同样的算法（3 行，上下 padding 8px 算进可视区）：3*90 - 16 = 254px，
+   第四行刚好从可视区外面开始，不会露半排脑袋。小图包继续用上面的 168px。 */
+#ctrm_ .OwO .OwO-body .OwO-items.OwO-items-big { max-height: 254px !important; }
 #ctrm_ .OwO .OwO-body .OwO-bar {
     background: #fff;
     border-top-color: var(--cx-hairline);
