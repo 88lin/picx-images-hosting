@@ -103,7 +103,7 @@
 
                             for (var _i = 0; _i < opackage.length; _i++) {
                                 if (this.odata[this.packages[i]].type === 'smoji') {
-                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '">' + '<img data-original="' + 'https://s3-cdn.zsh.moe/smoji/' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '.webp" src="" icon="' + opackage[_i].text + '" referrerpolicy="no-referrer"></li>';
+                                    html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '">' + '<img data-original="' + 'https://s3-cdn.zsh.moe/smoji/' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '.webp" src="" icon="' + opackage[_i].text + '" style="min-height:3rem;height:3rem;max-height:3rem;width:auto;max-width:100%;object-fit:contain" referrerpolicy="no-referrer"></li>';
                                 } else if (this.odata[this.packages[i]].type === 'image-zl') {
                                     html += '\n <li class="OwO-item" title="' + opackage[_i].text + '" data-input="' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '">' + '<img data-original="' + 'https://emoticons.z-l.top/' + this.odata[this.packages[i]].name + "/" + opackage[_i].icon + '.png" src="" icon="' + opackage[_i].text + '" referrerpolicy="no-referrer"></li>';
                                 } else if (this.odata[this.packages[i]].type === 'image') {
@@ -2062,8 +2062,11 @@ img.playing {
                         '<a class="ctrm-163-btn" href="$1" target="_blank" style="display: inline-block;padding: 6px 14px;margin-top: 15px;border: none;border-radius: 999px;background-color: var(--cx-brand);color: white;text-align: center;text-decoration: none;font-weight: bold;transition: background-color 0.3s;font-size: 14px;">跳转到网易云音乐列表</a> <a><img style="position:absolute;bottom: -9px;right: 0px;width: 66%;pointer-events:none;z-index:999;" src="https://cdn.h5ds.com/space/files/600972551685382144/20240307/689876818574024704.webp" alt="Image" referrerpolicy="no-referrer"></a>' +
                         '</div>');
                 t.msg = t.msg.replace(/【(.*?)】/g, function (match, p1) {
-                    if (/^(daimaobatiao|douyin-current|douyin-limited|eveonecat-animated|eveonecat-static|it-home|meiji-dashu|mochadandan|onion|onion-animated|onion-static|popo|shuitunlulu|wangdan|xiaohongshu|xiaohuangtun|xiaokumao|xiaoxiongchong|yantuanzi|yier-bubu|yuexinmiao)\//.test(p1)) {
-                        // Smoji 表情：包名/文件名
+                    if (/^(eveonecat-animated|eveonecat-static|meiji-dashu|mochadandan|onion|onion-animated|onion-static|popo|shuitunlulu|wangdan|xiaohuangtun|xiaokumao|xiaoxiongchong|yantuanzi|yier-bubu|yuexinmiao)\//.test(p1)) {
+                        // Smoji 大图包（含文字，需放大）
+                        return `<a><img src="https://s3-cdn.zsh.moe/smoji/${p1}.webp" alt="${p1}" style="max-width: 6rem;"></a>`;
+                    } else if (/^(daimaobatiao|douyin-current|douyin-limited|it-home|xiaohongshu)\//.test(p1)) {
+                        // Smoji 常规包
                         return `<a><img src="https://s3-cdn.zsh.moe/smoji/${p1}.webp" alt="${p1}" style="max-width: 3rem;"></a>`;
                     } else if (p1.includes('blob') || p1.includes('comfy')) {
                         return `<a><img src="https://npm.elemecdn.com/blobcat@1.0.0/${p1}.png" alt="${p1}" style="max-width: 3rem;"></a>`;
@@ -2460,7 +2463,7 @@ var OwO_demo = new OwO({
     logo: '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15.182 15.182a4.5 4.5 0 0 1-6.364 0M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z"/></svg>表情包',
     container: document.getElementsByClassName('OwO')[0],
     target: document.getElementsByClassName('OwO-textarea')[0],
-    api: 'https://cdn.jsdelivr.net/gh/88lin/picx-images-hosting@master/cdn/chat/owo-smoji.json',
+    api: 'https://cdn.jsdmirror.com/gh/88lin/picx-images-hosting@master/cdn/chat/owo-smoji.json',
     position: 'up',
     width: '100%',
     maxHeight: '250px'
