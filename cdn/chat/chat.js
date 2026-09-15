@@ -2492,6 +2492,7 @@ img.playing {
 
             // 服务端把自己发的那条回发回来了：把本地那条撤掉，让服务端这条正式画出来。
             // 两个队列都要找 —— 回发可能比 ack 晚几十秒，那时它已经在 settled 里了。
+            // 不返回值：去重靠的是"先删本地那条，再让 H() 画服务端那条"，调用点无论如何都要画。
             function ctrmResolvePending(msg) {
                 var raw = String(msg == null ? "" : msg).trim();
                 var lists = [pendingSends, settledSends];
@@ -2499,15 +2500,15 @@ img.playing {
                     for (var k = 0; k < lists[i].length; k++) {
                         var rec = lists[i][k];
                         if (rec.msg !== raw) continue;
-                        // 节点已经被别的路径清掉了（历史重绘、消息裁剪）：记录作废，但别拿它去重，
-                        // 不然服务端这条会被误当成重复而丢掉。
                         var live = rec.node[0] && rec.node[0].isConnected;
                         clearTimeout(rec.timer), clearTimeout(rec.soft), rec.node.remove(), lists[i].splice(k, 1);
-                        if (live) return !0;
+                        // 节点还在界面上：这就是要被服务端那条顶替的，撤掉就收工。
+                        // 已经不在了（历史重绘、消息裁剪清掉的）：这条记录是残留，接着往下找，
+                        // 别让它把服务端那条挡掉。
+                        if (live) return;
                         k--;
                     }
                 }
-                return !1
             }
 
             // 重连时拿服务端重发的 history 当权威，把本地那些"发送中"结算掉：
@@ -2520,17 +2521,22 @@ img.playing {
                 // 整片消息马上会被重绘，留档的记录全作废
                 settledSends = [];
                 if (!pendingSends.length) return;
+                var keep = [];
                 pendingSends.forEach(function (rec) {
                     clearTimeout(rec.timer), clearTimeout(rec.soft);
                     var arrived = h.some(function (x) { return x && String(x.msg == null ? "" : x.msg).trim() === rec.msg });
                     // 到了：本地这条删掉，紧接着的历史重绘会把它正式画出来（那段清空重画一定会跑，
-                    // 因为 history 非空——能在里面找到它）。没到：标未确认并把内容放回输入框。
-                    arrived ? rec.node.remove()
-                        : (rec.node.removeClass("ctrm-pending").addClass("ctrm-unconfirmed"),
-                            w.val() || w.val(rec.msg),
-                            ctrmToast("重连后记录里没有你刚发的那条，内容已放回输入框", "error"))
+                    // 因为 history 非空——能在里面找到它）。
+                    if (arrived) return void rec.node.remove();
+                    // 没到：标未确认、留在界面上，内容放回输入框。
+                    rec.node.removeClass("ctrm-pending").addClass("ctrm-unconfirmed");
+                    w.val() || w.val(rec.msg);
+                    ctrmToast("重连后记录里没有你刚发的那条，内容已放回输入框", "error");
+                    // 记录必须转入留档：服务端其实收到了、只是这次 history 没带的话，晚到的回发
+                    // 会在两个队列里都找不到，H() 就又画一条，界面上变成"未确认"那条加正式那条。
+                    rec.settledAt = Date.now(), keep.push(rec)
                 });
-                pendingSends = []
+                pendingSends = [], settledSends = keep
             }
 
             function ctrmEchoLocal(msg) {
@@ -2540,19 +2546,30 @@ img.playing {
                 if (!node) return;
                 node.addClass("ctrm-pending");
                 var rec = { msg: msg, node: node, timer: null, soft: null, settledAt: 0 };
-                // 软确认：ack 可能根本不来，不能只等它。8s 后只要连接还活着、发送缓冲也清空了
-                // （帧确实写出去了），就摘掉"发送中"。真发不出去时 bufferedAmount 不会清零，
-                // 那就继续挂着，等 90s 那条兜底或看门狗重连。
-                rec.soft = setTimeout(function () {
-                    0 <= pendingSends.indexOf(rec) && n && 1 === n.readyState && 0 === n.bufferedAmount &&
-                        (node.removeClass("ctrm-pending"), ctrmSettleSend(rec))
-                }, 8e3);
+                // 软确认：ack 可能根本不来，不能只等它。连接还活着、发送缓冲也清空了
+                // （帧确实写出去了）就摘掉"发送中"。
+                // 首次 8s 查，条件不满足就每 4s 再查一次直到 60s —— 只查一次太脆：恰好那一刻
+                // 缓冲还没清零，就再也没人管了，只能干等 90s。反复查之后，90s 那条兜底才真正
+                // 只在"帧始终没写出去"时触发，它把内容放回输入框才是对的。
+                var softAt = 8e3;
+                function softCheck() {
+                    if (0 > pendingSends.indexOf(rec)) return;
+                    if (n && 1 === n.readyState && 0 === n.bufferedAmount)
+                        return node.removeClass("ctrm-pending"), void ctrmSettleSend(rec);
+                    softAt += 4e3;
+                    6e4 > softAt && (rec.soft = setTimeout(softCheck, 4e3))
+                }
+                rec.soft = setTimeout(softCheck, softAt);
                 rec.timer = setTimeout(function () {
                     if (0 > pendingSends.indexOf(rec)) return;
                     node.removeClass("ctrm-pending").addClass("ctrm-unconfirmed");
+                    // 走到这里说明上面那串软确认一次都没成立 —— 帧始终没写出去，这条大概率
+                    // 真没发出去，内容得还给用户（手机上重打一段话成本不低）。
+                    // 只在输入框空着时填，不覆盖用户正在打的字。
+                    w.val() || w.val(rec.msg);
                     // 也转入留档：万一回发很晚才到，还能靠它去重
                     ctrmSettleSend(rec);
-                    ctrmToast("这条 90 秒没等到服务器确认，可能没发出去", "error")
+                    ctrmToast("这条 90 秒没等到服务器确认，内容已放回输入框", "error")
                 }, 9e4);
                 pendingSends.push(rec)
             }
