@@ -1718,11 +1718,15 @@ img.playing {
                 offlineNoticed = !1,
                 stalledTicks = 0,
                 unloading = !1;
-            function ctrmSendHello() {
+            var lastRecvAt = 0;
+            function ctrmSendUpdate() {
                 try {
                     n && 1 === n.readyState &&
                         n.send(JSON.stringify({ type: "update", data: { domainFrom: location.hostname }, char: L }))
                 } catch (err) { }
+            }
+            function ctrmSendHello() {
+                2e4 < Date.now() - lastRecvAt && ctrmSendUpdate()
             }
             function ctrmScheduleReconnect() {
                 if (unloading || reconnectTimer) return;
@@ -1743,7 +1747,7 @@ img.playing {
                 sock.onopen = function () {
                     if (sock !== n) return;
                     reconnectDelay = 2e3, offlineNoticed = !1;
-                    ctrmSendHello();
+                    lastRecvAt = Date.now(), ctrmSendUpdate();
                     clearInterval(heartbeatTimer), heartbeatTimer = setInterval(ctrmSendHello, 25e3);
                     clearInterval(a), a = setInterval(q, 15e3)
                 };
@@ -1751,12 +1755,14 @@ img.playing {
                 sock.onclose = function () { sock === n && (z(), ctrmScheduleReconnect()) };
                 sock.onmessage = function (ev) {
                     sock === n && function (t) {
+                        lastRecvAt = Date.now();
                         var e;
                         try { e = JSON.parse(t.data) } catch (err) { return void console.warn("[ctrm] 收到无法解析的帧", t.data) }
                         var n = e.type,
                             r = e.data;
                         switch (n) {
                                 case "identity":
+                                    if (r.id === s && !ctrmPendingInHistory(r.history)) break;
                                     s = r.id, c = r.name,
                                         ctrmFlushPending(r.history),
                                         function (t) {
@@ -2129,6 +2135,12 @@ img.playing {
             function I() { o && b.scrollTop(9999999) }
             var chatThrottleUntil = 0;
             var pendingSends = [];
+            function ctrmPendingInHistory(history) {
+                var h = history || [];
+                return pendingSends.some(function (rec) {
+                    return h.some(function (x) { return x && String(x.msg == null ? "" : x.msg).trim() === rec.msg })
+                })
+            }
             function ctrmResolvePending(msg) {
                 var raw = String(msg == null ? "" : msg).trim();
                 for (var k = 0; k < pendingSends.length; k++) {
@@ -2209,7 +2221,7 @@ img.playing {
             });
             document.addEventListener("visibilitychange", function () {
                 if (document.hidden || unloading) return;
-                n && 1 === n.readyState ? ctrmSendHello() : ctrmReconnectNow("回到前台")
+                n && 1 === n.readyState ? ctrmSendUpdate() : ctrmReconnectNow("回到前台")
             });
             window.addEventListener("online", function () { ctrmReconnectNow("网络恢复") });
             window.addEventListener("offline", function () { z() });
