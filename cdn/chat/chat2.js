@@ -1713,7 +1713,7 @@ img.playing {
                 })
             }
             var reconnectTimer = null,
-                reconnectDelay = 1e3,
+                reconnectDelay = 2e3,
                 heartbeatTimer = null,
                 offlineNoticed = !1,
                 stalledTicks = 0,
@@ -1728,12 +1728,12 @@ img.playing {
                 if (unloading || reconnectTimer) return;
                 var wait = Math.min(reconnectDelay, 3e4);
                 reconnectDelay = Math.min(2 * reconnectDelay, 3e4),
-                    reconnectTimer = setTimeout(function () { reconnectTimer = null, _() }, wait + Math.floor(1e3 * Math.random()))
+                    reconnectTimer = setTimeout(function () { reconnectTimer = null, _() }, wait + Math.floor(4e3 * Math.random()))
             }
             function ctrmReconnectNow(reason) {
                 if (unloading) return;
                 console.warn("[ctrm] 立即重连：" + reason),
-                    reconnectDelay = 1e3, stalledTicks = 0,
+                    reconnectDelay = 2e3, stalledTicks = 0,
                     clearTimeout(reconnectTimer), reconnectTimer = null, _()
             }
             function _() {
@@ -1742,7 +1742,7 @@ img.playing {
                 var sock = n = new WebSocket(t);
                 sock.onopen = function () {
                     if (sock !== n) return;
-                    reconnectDelay = 1e3, offlineNoticed = !1;
+                    reconnectDelay = 2e3, offlineNoticed = !1;
                     ctrmSendHello();
                     clearInterval(heartbeatTimer), heartbeatTimer = setInterval(ctrmSendHello, 25e3);
                     clearInterval(a), a = setInterval(q, 15e3)
@@ -1758,6 +1758,7 @@ img.playing {
                         switch (n) {
                                 case "identity":
                                     s = r.id, c = r.name,
+                                        ctrmFlushPending(r.history),
                                         function (t) {
                                             if (!t || 0 === t.length) return;
                                             b.find(".ctrm-dialog-item").remove();
@@ -1784,6 +1785,7 @@ img.playing {
                                     O(r);
                                     break;
                                 case "chat":
+                                    r && String(r.id) === String(s) && ctrmResolvePending(r.msg);
                                     H(r);
                                     break;
                                 case "ack":
@@ -1796,19 +1798,29 @@ img.playing {
                 if (!n) return;
                 if (1 !== n.readyState) return z(), void ctrmScheduleReconnect();
                 if (0 < n.bufferedAmount) {
-                    if (4 <= ++stalledTicks) return stalledTicks = 0, z(), void ctrmReconnectNow("发送缓冲 60s 不清零，连接已半开")
+                    if (10 <= ++stalledTicks) return stalledTicks = 0, z(), void ctrmReconnectNow("发送缓冲 150s 不清零，连接已半开")
                 } else stalledTicks = 0
             }
+            var onlineSig = null,
+                onlineBound = !1;
             function O(t) {
-                F(d = t), C.empty(), d.forEach(function (t) {
-                    var e = i('<div class="ctrm-online-item" style="background-color: ' + t.color + '">' + escapeHtml(t.name) + "</div>");
-                    t.isSelf && e.css({ "font-weight": "bold" }), C.append(e), e.click(function () {
-                        var t = this.innerText;
-                        w.val("@" + t + " "), w.get(0).focus()
-                    })
-                });
-                var e = C.find(".ctrm-online-item").length;
-                N.text(e), E.show()
+                F(d = t);
+                var sig = d.length + "|",
+                    k = 0;
+                for (; k < d.length; k++) sig += d[k].name + "\u0001" + d[k].color + (d[k].isSelf ? "*" : "") + "\u0002";
+                if (sig !== onlineSig) {
+                    onlineSig = sig;
+                    var html = "";
+                    for (k = 0; k < d.length; k++)
+                        html += '<div class="ctrm-online-item" style="background-color: ' + d[k].color +
+                            (d[k].isSelf ? ';font-weight:bold' : '') + '">' + escapeHtml(d[k].name) + "</div>";
+                    C.html(html), N.text(d.length)
+                }
+                if (!onlineBound) {
+                    onlineBound = !0;
+                    C.on("click", ".ctrm-online-item", function () { w.val("@" + this.innerText + " "), w.get(0).focus() })
+                }
+                E.show()
             }
             function F(t) {
                 function e(t) { var e = +t.toString().slice(-4, -1); return "rgba(" + 11 * e % 256 + ", " + 7 * e % 256 + ", " + 5 * e % 256 + ", 0.3)" }
@@ -1902,7 +1914,6 @@ img.playing {
                                     return ctItems.length ? ctItems[0].big === true : false;
                                 }
                             }
-                            return null;
                         }
                     } catch (ctErr) {}
                     if (ctSmojiFallbackBig.test(ctPkg)) return true;
@@ -2107,6 +2118,7 @@ img.playing {
                     }, 950);
                 }
                 showNewMessageHalo();
+                return n;
             }
             function z() {
                 clearInterval(heartbeatTimer), heartbeatTimer = null, O([]);
@@ -2116,6 +2128,41 @@ img.playing {
             }
             function I() { o && b.scrollTop(9999999) }
             var chatThrottleUntil = 0;
+            var pendingSends = [];
+            function ctrmResolvePending(msg) {
+                var raw = String(msg == null ? "" : msg).trim();
+                for (var k = 0; k < pendingSends.length; k++) {
+                    if (pendingSends[k].msg !== raw) continue;
+                    clearTimeout(pendingSends[k].timer), pendingSends[k].node.remove(), pendingSends.splice(k, 1);
+                    return !0
+                }
+                return !1
+            }
+            function ctrmFlushPending(history) {
+                if (!pendingSends.length) return;
+                var h = history || [];
+                pendingSends.forEach(function (rec) {
+                    clearTimeout(rec.timer), rec.node.remove();
+                    var arrived = h.some(function (x) { return x && String(x.msg == null ? "" : x.msg).trim() === rec.msg });
+                    arrived || (w.val() || w.val(rec.msg), ctrmToast("重连后记录里没有你刚发的那条，内容已放回输入框", "error"))
+                });
+                pendingSends = []
+            }
+            function ctrmEchoLocal(msg) {
+                if (!s) return;
+                var node = H({ id: s, name: c, msg: msg, time: Date.now() }, !0);
+                if (!node) return;
+                node.addClass("ctrm-pending");
+                var rec = { msg: msg, node: node, timer: null };
+                rec.timer = setTimeout(function () {
+                    var k = pendingSends.indexOf(rec);
+                    if (k < 0) return;
+                    pendingSends.splice(k, 1), node.removeClass("ctrm-pending").addClass("ctrm-unconfirmed");
+                    w.val() || w.val(msg);
+                    ctrmToast("这条 90 秒没等到服务器确认，内容已放回输入框", "error")
+                }, 9e4);
+                pendingSends.push(rec)
+            }
             function R() {
                 var t = w.val().slice(0, 700).trim(); 
                 if (0 === t.length) return void ctrmToast("你好像什么也没有输入呢");
@@ -2128,10 +2175,11 @@ img.playing {
                 var e = { type: "chat", data: { msg: t }, char: L };
                 r = !0, chatThrottleUntil = Date.now() + 5e3,
                     n.send(JSON.stringify(e)),
-                    setTimeout(function () { r = !1 }, 5e3)
+                    setTimeout(function () { r = !1 }, 5e3);
+                ctrmEchoLocal(t), w.val("")
             }
             function W() {
-                e || (e = !0, reconnectDelay = 1e3, offlineNoticed = !1,
+                e || (e = !0, reconnectDelay = 2e3, offlineNoticed = !1,
                     clearTimeout(reconnectTimer), reconnectTimer = null,
                     _(), b.find(".ctrm-dialog-item").remove(), w.val(""),
                     setTimeout(function () { e = !1 }, 2e3))
@@ -2554,6 +2602,9 @@ var OwO_demo = new OwO({
 #ctrm_ .ctrm-dialog::-webkit-scrollbar-thumb { background: var(--cx-line); border-radius: var(--cx-pill); }
 #ctrm_ .ctrm-dialog-item .ctrm-dialog-sender { color: var(--cx-ink-2); }
 #ctrm_ .ctrm-dialog-item .ctrm-dialog-time { color: var(--cx-ink-3); }
+#ctrm_ .ctrm-dialog-item.ctrm-pending, #ctrm_ .ctrm-dialog-item.ctrm-unconfirmed { opacity: .55; }
+#ctrm_ .ctrm-dialog-item.ctrm-pending .ctrm-dialog-time::after { content: " · 发送中"; }
+#ctrm_ .ctrm-dialog-item.ctrm-unconfirmed .ctrm-dialog-time::after { content: " · 未确认"; color: #b8362b; }
 #ctrm_ .ctrm-dialog-item .ctrm-dialog-bubble { border-radius: 14px 14px 14px 4px; }
 #ctrm_ .ctrm-dialog-item.ctrm-me .ctrm-dialog-bubble { border-radius: 14px 14px 4px 14px; }
 #ctrm_.ctrm-mobile .ctrm-dialog-item .ctrm-dialog-bubble { border-radius: 10px 10px 10px 3px; }
