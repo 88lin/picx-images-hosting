@@ -1871,12 +1871,25 @@ img.playing {
                 stalledTicks = 0,
                 unloading = !1;
 
-            // 心跳复用已有的 update 帧（服务端本来就收这个类型）。25s 短于代理常见的 60s 空闲断连。
-            function ctrmSendHello() {
+            // 最近一次收到帧的时间，心跳靠它判断链路是否真的空闲
+            var lastRecvAt = 0;
+
+            function ctrmSendUpdate() {
                 try {
                     n && 1 === n.readyState &&
                         n.send(JSON.stringify({ type: "update", data: { domainFrom: location.hostname }, char: L }))
                 } catch (err) { }
+            }
+
+            // 心跳仍复用 update 帧，但只在链路空闲超过 45s 时才发。
+            // 服务端把 update 当注册帧处理：实测 0.0~0.6s 后回一个 identity（同一条连接、
+            // 同一个 id），偶尔直接把连接关掉（174.2s 发出 → 174.6s 关闭）。而客户端收到
+            // identity 会重置会话并清空重画消息列表，于是每 25s 就可能把聊到一半的消息
+            // 抹成服务端那十几条、昵称闪一下。
+            // 房间热闹时 memberList 每秒一两帧，链路根本不会空闲，这个心跳就永远不发；
+            // 安静的房间才发，用来顶住代理常见的 60s 空闲断连（挂久了静默掉线就是它防的）。
+            function ctrmSendHello() {
+                45e3 < Date.now() - lastRecvAt && ctrmSendUpdate()
             }
 
             // 指数退避重连：2s → 4s → 8s … 上限 30s，再叠 0~4s 抖动。
@@ -1905,7 +1918,8 @@ img.playing {
                 sock.onopen = function () {
                     if (sock !== n) return;
                     reconnectDelay = 2e3, offlineNoticed = !1;
-                    ctrmSendHello();
+                    // 这一发是注册（服务端靠它回 identity），不能走 ctrmSendHello 的空闲判断
+                    lastRecvAt = Date.now(), ctrmSendUpdate();
                     clearInterval(heartbeatTimer), heartbeatTimer = setInterval(ctrmSendHello, 25e3);
                     clearInterval(a), a = setInterval(q, 15e3)
                 };
@@ -1913,12 +1927,19 @@ img.playing {
                 sock.onclose = function () { sock === n && (z(), ctrmScheduleReconnect()) };
                 sock.onmessage = function (ev) {
                     sock === n && function (t) {
+                        lastRecvAt = Date.now();
                         var e;
                         try { e = JSON.parse(t.data) } catch (err) { return void console.warn("[ctrm] 收到无法解析的帧", t.data) }
                         var n = e.type,
                             r = e.data;
                         switch (n) {
                                 case "identity":
+                                    // 服务端把 update 当注册帧，同一条连接上会再回一个 identity
+                                    // （实测紧跟 update 之后 0.0~0.6s，id 和昵称都没变）。默认忽略：
+                                    // 走下面那套会清空重画，把聊到一半的消息抹成服务端那十几条。
+                                    // 例外是这份 history 里已经有还在"发送中"的消息 —— 那就借它落地。
+                                    // 两边都来自 identity 帧，类型必然一致，这里可以用 ===。
+                                    if (r.id === s && !ctrmPendingInHistory(r.history)) break;
                                     s = r.id, c = r.name,
                                         ctrmFlushPending(r.history),
                                         function (t) {
@@ -2432,6 +2453,13 @@ img.playing {
             // 不先在本地画出来，用户只会觉得"发不出去"然后反复点。
             // 等服务端把它广播回来（走 ctrmResolvePending）再换成正式那条。
             var pendingSends = [];
+
+            function ctrmPendingInHistory(history) {
+                var h = history || [];
+                return pendingSends.some(function (rec) {
+                    return h.some(function (x) { return x && String(x.msg == null ? "" : x.msg).trim() === rec.msg })
+                })
+            }
 
             function ctrmResolvePending(msg) {
                 var raw = String(msg == null ? "" : msg).trim();
