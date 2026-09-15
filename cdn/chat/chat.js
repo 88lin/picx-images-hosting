@@ -1948,8 +1948,11 @@ img.playing {
                                     O(r);
                                     break;
                                 case "chat":
-                                    // 自己发的那条被广播回来了：先撤掉本地那个"发送中"气泡，不然会重复一条
-                                    r && r.id === s && ctrmResolvePending(r.msg);
+                                    // 自己发的那条被广播回来了：先撤掉本地那个"发送中"气泡，不然会重复一条。
+                                    // 用 String() 松比较：identity 和 chat 两处的 id 类型只要有一处不一样，
+                                    // 严格相等就永远撤不掉（文件里别处判"（我）"用的是 ===，那边不匹配只是少个标记，
+                                    // 这边不匹配会多一条气泡加一次 90s 假警报，代价不一样）。
+                                    r && String(r.id) === String(s) && ctrmResolvePending(r.msg);
                                     H(r);
                                     break;
                                 case "ack":
@@ -2440,15 +2443,16 @@ img.playing {
                 return !1
             }
 
-            // 重连后服务端重发整份 history、并清空重画，本地那些"发送中"节点跟着被删掉。
-            // 拿 history 当权威结算：里面有就静默收掉，没有就立刻标未确认并把内容放回输入框，
-            // 别留着定时器对一个已经脱离文档的节点空喊。
+            // 重连时拿服务端重发的 history 当权威，把本地那些"发送中"结算掉：
+            // 里面有就静默收掉（随后的历史重绘会把它正式画出来），没有就把内容放回输入框。
+            // 节点必须在这里自己删：下面那段历史重绘开头有 if (!t || 0 === t.length) return，
+            // history 为空时它不会清 DOM，靠它顺手带走的话会留下一个永远"发送中"的孤儿气泡。
             // 只比文本不比 id —— 每次连接服务端都会重发一个新 id，老消息带的是旧 id。
             function ctrmFlushPending(history) {
                 if (!pendingSends.length) return;
                 var h = history || [];
                 pendingSends.forEach(function (rec) {
-                    clearTimeout(rec.timer);
+                    clearTimeout(rec.timer), rec.node.remove();
                     var arrived = h.some(function (x) { return x && String(x.msg == null ? "" : x.msg).trim() === rec.msg });
                     arrived || (w.val() || w.val(rec.msg), ctrmToast("重连后记录里没有你刚发的那条，内容已放回输入框", "error"))
                 });
