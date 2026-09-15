@@ -1865,7 +1865,7 @@ img.playing {
             }
 
             var reconnectTimer = null,
-                reconnectDelay = 1e3,
+                reconnectDelay = 2e3,
                 heartbeatTimer = null,
                 offlineNoticed = !1,
                 stalledTicks = 0,
@@ -1879,19 +1879,21 @@ img.playing {
                 } catch (err) { }
             }
 
-            // 指数退避重连：1s → 2s → 4s … 上限 30s，带随机抖动，避免整个房间同时重连
+            // 指数退避重连：2s → 4s → 8s … 上限 30s，再叠 0~4s 抖动。
+            // 抖动比退避本身更重要：房间上百人时服务端每收一个连接就要给全场重播一次
+            // 在线名单，集体掉线的人如果在同一秒回来会把服务端再压趴一次。
             function ctrmScheduleReconnect() {
                 if (unloading || reconnectTimer) return;
                 var wait = Math.min(reconnectDelay, 3e4);
                 reconnectDelay = Math.min(2 * reconnectDelay, 3e4),
-                    reconnectTimer = setTimeout(function () { reconnectTimer = null, _() }, wait + Math.floor(1e3 * Math.random()))
+                    reconnectTimer = setTimeout(function () { reconnectTimer = null, _() }, wait + Math.floor(4e3 * Math.random()))
             }
 
             // 立刻重连，不走退避。只在拿到明确外部信号时用（回前台、网络恢复、bfcache 恢复）。
             function ctrmReconnectNow(reason) {
                 if (unloading) return;
                 console.warn("[ctrm] 立即重连：" + reason),
-                    reconnectDelay = 1e3, stalledTicks = 0,
+                    reconnectDelay = 2e3, stalledTicks = 0,
                     clearTimeout(reconnectTimer), reconnectTimer = null, _()
             }
 
@@ -1902,7 +1904,7 @@ img.playing {
                 var sock = n = new WebSocket(t);
                 sock.onopen = function () {
                     if (sock !== n) return;
-                    reconnectDelay = 1e3, offlineNoticed = !1;
+                    reconnectDelay = 2e3, offlineNoticed = !1;
                     ctrmSendHello();
                     clearInterval(heartbeatTimer), heartbeatTimer = setInterval(ctrmSendHello, 25e3);
                     clearInterval(a), a = setInterval(q, 15e3)
@@ -1918,6 +1920,7 @@ img.playing {
                         switch (n) {
                                 case "identity":
                                     s = r.id, c = r.name,
+                                        ctrmFlushPending(r.history),
                                         function (t) {
                                             if (!t || 0 === t.length) return;
                                             // 重连后服务端会重发整份 history，先清旧的再画，否则记录会重复一遍。
@@ -1945,6 +1948,8 @@ img.playing {
                                     O(r);
                                     break;
                                 case "chat":
+                                    // 自己发的那条被广播回来了：先撤掉本地那个"发送中"气泡，不然会重复一条
+                                    r && r.id === s && ctrmResolvePending(r.msg);
                                     H(r);
                                     break;
                                 case "ack":
@@ -1956,25 +1961,43 @@ img.playing {
 
             // 看门狗。除了看 readyState，还要查发送缓冲：半开连接（睡眠、NAT 超时、换网）上
             // readyState 会一直停在 OPEN，onclose 可能十几分钟才来。心跳只有几十字节，连着
-            // 4 个 15s 周期都排不出去就是死连接；这个判据不依赖服务端回话，安静房间也不误判。
+            // 10 个 15s 周期都排不出去就是死连接；这个判据不依赖服务端回话，安静房间也不误判。
+            // 阈值从 4 个周期（60s）放宽到 10 个（150s）：人多时服务端广播本来就会排队，
+            // 60s 会把"慢"误判成"死"，强制重连反而又给服务端加一轮全场广播。
             function q() {
                 if (!n) return;
                 if (1 !== n.readyState) return z(), void ctrmScheduleReconnect();
                 if (0 < n.bufferedAmount) {
-                    if (4 <= ++stalledTicks) return stalledTicks = 0, z(), void ctrmReconnectNow("发送缓冲 60s 不清零，连接已半开")
+                    if (10 <= ++stalledTicks) return stalledTicks = 0, z(), void ctrmReconnectNow("发送缓冲 150s 不清零，连接已半开")
                 } else stalledTicks = 0
             }
 
+            var onlineSig = null,
+                onlineBound = !1;
+
+            // 服务端在有人进出时把全量名单（80 人 ≈ 3.4KB）广播给所有人，实测 1.27 帧/s，
+            // 且同一份内容常连发十几帧。原来每帧都 empty() 再建 N 个 jQuery 节点、绑 N 个
+            // click，全是白干：先按内容算签名，没变就一个 DOM 都不动。
             function O(t) {
-                F(d = t), C.empty(), d.forEach(function (t) {
-                    var e = i('<div class="ctrm-online-item" style="background-color: ' + t.color + '">' + escapeHtml(t.name) + "</div>");
-                    t.isSelf && e.css({ "font-weight": "bold" }), C.append(e), e.click(function () {
-                        var t = this.innerText;
-                        w.val("@" + t + " "), w.get(0).focus()
-                    })
-                });
-                var e = C.find(".ctrm-online-item").length;
-                N.text(e), E.show()
+                F(d = t);
+                var sig = d.length + "|",
+                    k = 0;
+                for (; k < d.length; k++) sig += d[k].name + "\u0001" + d[k].color + (d[k].isSelf ? "*" : "") + "\u0002";
+                if (sig !== onlineSig) {
+                    onlineSig = sig;
+                    var html = "";
+                    for (k = 0; k < d.length; k++)
+                        html += '<div class="ctrm-online-item" style="background-color: ' + d[k].color +
+                            (d[k].isSelf ? ';font-weight:bold' : '') + '">' + escapeHtml(d[k].name) + "</div>";
+                    // 一次 innerHTML 比 N 次 append 少 N-1 次重排
+                    C.html(html), N.text(d.length)
+                }
+                // 点名字 @ 他：委托绑一次，不用每个节点挂一个监听器
+                if (!onlineBound) {
+                    onlineBound = !0;
+                    C.on("click", ".ctrm-online-item", function () { w.val("@" + this.innerText + " "), w.get(0).focus() })
+                }
+                E.show()
             }
 
             function F(t) {
@@ -2105,7 +2128,9 @@ img.playing {
                                     return ctItems.length ? ctItems[0].big === true : false;
                                 }
                             }
-                            return null;
+                            // 包已从清单里删掉（如月薪喵）：不能 return null，
+                            // 否则历史里那些表情会掉到最后的 Fluent 分支、变成 404 坏图。
+                            // 落到下面的内置名单，六个删掉的包都还列在那里。
                         }
                     } catch (ctErr) {}
                     if (ctSmojiFallbackBig.test(ctPkg)) return true;
@@ -2369,6 +2394,9 @@ img.playing {
                 }
                 showNewMessageHalo();
 
+                // 返回这条消息的节点：乐观回显要拿它加/去掉"发送中"的样子
+                return n;
+
                 // 仅在消息来源不是 SYSTEM 时发送邮件通知
                 // if (t.name !== 'SYSTEM') {
                 //     const emailMessage = `Time: ${P(t.time, "hours")}:${P(t.time, "minutes")}\nSender: ${t.name}\nMessage: ${t.msg}`;
@@ -2397,6 +2425,53 @@ img.playing {
 
             var chatThrottleUntil = 0;
 
+            // 乐观回显。房间人多时服务端的广播会排队（实测 80 人时自己那条 60s 才回来），
+            // 不先在本地画出来，用户只会觉得"发不出去"然后反复点。
+            // 等服务端把它广播回来（走 ctrmResolvePending）再换成正式那条。
+            var pendingSends = [];
+
+            function ctrmResolvePending(msg) {
+                var raw = String(msg == null ? "" : msg).trim();
+                for (var k = 0; k < pendingSends.length; k++) {
+                    if (pendingSends[k].msg !== raw) continue;
+                    clearTimeout(pendingSends[k].timer), pendingSends[k].node.remove(), pendingSends.splice(k, 1);
+                    return !0
+                }
+                return !1
+            }
+
+            // 重连后服务端重发整份 history、并清空重画，本地那些"发送中"节点跟着被删掉。
+            // 拿 history 当权威结算：里面有就静默收掉，没有就立刻标未确认并把内容放回输入框，
+            // 别留着定时器对一个已经脱离文档的节点空喊。
+            // 只比文本不比 id —— 每次连接服务端都会重发一个新 id，老消息带的是旧 id。
+            function ctrmFlushPending(history) {
+                if (!pendingSends.length) return;
+                var h = history || [];
+                pendingSends.forEach(function (rec) {
+                    clearTimeout(rec.timer);
+                    var arrived = h.some(function (x) { return x && String(x.msg == null ? "" : x.msg).trim() === rec.msg });
+                    arrived || (w.val() || w.val(rec.msg), ctrmToast("重连后记录里没有你刚发的那条，内容已放回输入框", "error"))
+                });
+                pendingSends = []
+            }
+
+            function ctrmEchoLocal(msg) {
+                // s 是服务端下发的自己的 id；identity 还没到就别画，F() 会拿 id 算颜色。
+                if (!s) return;
+                var node = H({ id: s, name: c, msg: msg, time: Date.now() }, !0);
+                if (!node) return;
+                node.addClass("ctrm-pending");
+                var rec = { msg: msg, node: node, timer: null };
+                rec.timer = setTimeout(function () {
+                    var k = pendingSends.indexOf(rec);
+                    if (k < 0) return;
+                    pendingSends.splice(k, 1), node.removeClass("ctrm-pending").addClass("ctrm-unconfirmed");
+                    w.val() || w.val(msg);
+                    ctrmToast("这条 90 秒没等到服务器确认，内容已放回输入框", "error")
+                }, 9e4);
+                pendingSends.push(rec)
+            }
+
             function R() {
                 var t = w.val().slice(0, 700).trim(); // 上限 700，已与 textarea 的 maxlength 对齐
                 if (0 === t.length) return void ctrmToast("你好像什么也没有输入呢");
@@ -2411,13 +2486,15 @@ img.playing {
                 var e = { type: "chat", data: { msg: t }, char: L };
                 r = !0, chatThrottleUntil = Date.now() + 5e3,
                     n.send(JSON.stringify(e)),
-                    setTimeout(function () { r = !1 }, 5e3)
+                    setTimeout(function () { r = !1 }, 5e3);
+                // 本地先画出来，输入框跟着清空；90s 还没等到确认会把内容放回输入框
+                ctrmEchoLocal(t), w.val("")
             }
 
             // 手动重连（😜）。_() 自己会摘旧回调 + 关旧连接，这里只把退避状态归零；
             // 不要在这里 n.close()，它的 onclose 会再排一次重连，等于开两条。
             function W() {
-                e || (e = !0, reconnectDelay = 1e3, offlineNoticed = !1,
+                e || (e = !0, reconnectDelay = 2e3, offlineNoticed = !1,
                     clearTimeout(reconnectTimer), reconnectTimer = null,
                     _(), b.find(".ctrm-dialog-item").remove(), w.val(""),
                     setTimeout(function () { e = !1 }, 2e3))
@@ -3008,6 +3085,10 @@ var OwO_demo = new OwO({
 
 #ctrm_ .ctrm-dialog-item .ctrm-dialog-sender { color: var(--cx-ink-2); }
 #ctrm_ .ctrm-dialog-item .ctrm-dialog-time { color: var(--cx-ink-3); }
+/* 乐观回显：本地先画的那条半透明，等服务端广播回来才转正；90s 没等到就标未确认 */
+#ctrm_ .ctrm-dialog-item.ctrm-pending, #ctrm_ .ctrm-dialog-item.ctrm-unconfirmed { opacity: .55; }
+#ctrm_ .ctrm-dialog-item.ctrm-pending .ctrm-dialog-time::after { content: " · 发送中"; }
+#ctrm_ .ctrm-dialog-item.ctrm-unconfirmed .ctrm-dialog-time::after { content: " · 未确认"; color: #b8362b; }
 
 /* 气泡只把靠说话人那侧的角收窄。底色一律不碰 —— 那是服务端下发的 t.color，写在内联
    style 上（真要压饱和度得叠一层 background-image 渐变，background-color 压不过它）。 */
