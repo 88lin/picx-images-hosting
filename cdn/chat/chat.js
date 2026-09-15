@@ -1980,7 +1980,10 @@ img.playing {
                                     H(r);
                                     break;
                                 case "ack":
-                                    w.val("")
+                                    // 服务端收下这条的确认。它不回发给发送者自己（实测对方 4~25s
+                                    // 都收到了，发送方一条 chat 回发都没有），所以"发送中"只能靠它落地。
+                                    // ack 不带内容（{"type":"ack","data":""}），按发送顺序对最早那条。
+                                    ctrmConfirmOldestPending(), w.val("")
                             }
                         }(ev)
                 };
@@ -2452,10 +2455,33 @@ img.playing {
 
             var chatThrottleUntil = 0;
 
-            // 乐观回显。房间人多时服务端的广播会排队（实测 80 人时自己那条 60s 才回来），
+            // 乐观回显。服务端把消息发给别人要好几秒到几十秒，自己这条更是常常没有回音，
             // 不先在本地画出来，用户只会觉得"发不出去"然后反复点。
-            // 等服务端把它广播回来（走 ctrmResolvePending）再换成正式那条。
-            var pendingSends = [];
+            // 这个服务端的确认信号完全不可靠，实测同一个房间里：
+            //   · 一轮连发 6 条，对方 4~25s 全收到，发送方一个 ack、一个回发都没有；
+            //   · 下一轮同样 6 条，ack 2.6~25.8s 陆续到，自己那条回发 20~37s 也到了。
+            // 所以要按"ack 和回发都可能来、可能都不来、顺序不定"来写：
+            //   pending  = 还顶着"发送中"的，等 ack / 8s 软确认 / 90s 兜底；
+            //   settled  = 已经摘掉"发送中"但还留档的，专门用来跟晚到的回发去重
+            //              （摘掉就丢掉的话，回发一到 H() 会再画一条，界面上就是重复两条）。
+            var pendingSends = [],
+                settledSends = [];
+
+            function ctrmSettleSend(rec) {
+                clearTimeout(rec.timer), clearTimeout(rec.soft);
+                var k = pendingSends.indexOf(rec);
+                0 <= k && pendingSends.splice(k, 1);
+                rec.settledAt = Date.now();
+                settledSends.push(rec);
+                // 只留 3 分钟：实测回发最慢 37s，留够余量就行，别无限攒着
+                settledSends = settledSends.filter(function (x) { return 18e4 > Date.now() - x.settledAt })
+            }
+
+            // ack 是"服务端收下了"，但它不带内容（实测 {"type":"ack","data":""}），
+            // 只能按发送顺序对最早那条。
+            function ctrmConfirmOldestPending() {
+                pendingSends.length && ctrmSettleSend(pendingSends[0])
+            }
 
             function ctrmPendingInHistory(history) {
                 var h = history || [];
@@ -2464,12 +2490,22 @@ img.playing {
                 })
             }
 
+            // 服务端把自己发的那条回发回来了：把本地那条撤掉，让服务端这条正式画出来。
+            // 两个队列都要找 —— 回发可能比 ack 晚几十秒，那时它已经在 settled 里了。
             function ctrmResolvePending(msg) {
                 var raw = String(msg == null ? "" : msg).trim();
-                for (var k = 0; k < pendingSends.length; k++) {
-                    if (pendingSends[k].msg !== raw) continue;
-                    clearTimeout(pendingSends[k].timer), pendingSends[k].node.remove(), pendingSends.splice(k, 1);
-                    return !0
+                var lists = [pendingSends, settledSends];
+                for (var i = 0; i < lists.length; i++) {
+                    for (var k = 0; k < lists[i].length; k++) {
+                        var rec = lists[i][k];
+                        if (rec.msg !== raw) continue;
+                        // 节点已经被别的路径清掉了（历史重绘、消息裁剪）：记录作废，但别拿它去重，
+                        // 不然服务端这条会被误当成重复而丢掉。
+                        var live = rec.node[0] && rec.node[0].isConnected;
+                        clearTimeout(rec.timer), clearTimeout(rec.soft), rec.node.remove(), lists[i].splice(k, 1);
+                        if (live) return !0;
+                        k--;
+                    }
                 }
                 return !1
             }
@@ -2480,12 +2516,19 @@ img.playing {
             // history 为空时它不会清 DOM，靠它顺手带走的话会留下一个永远"发送中"的孤儿气泡。
             // 只比文本不比 id —— 每次连接服务端都会重发一个新 id，老消息带的是旧 id。
             function ctrmFlushPending(history) {
-                if (!pendingSends.length) return;
                 var h = history || [];
+                // 整片消息马上会被重绘，留档的记录全作废
+                settledSends = [];
+                if (!pendingSends.length) return;
                 pendingSends.forEach(function (rec) {
-                    clearTimeout(rec.timer), rec.node.remove();
+                    clearTimeout(rec.timer), clearTimeout(rec.soft);
                     var arrived = h.some(function (x) { return x && String(x.msg == null ? "" : x.msg).trim() === rec.msg });
-                    arrived || (w.val() || w.val(rec.msg), ctrmToast("重连后记录里没有你刚发的那条，内容已放回输入框", "error"))
+                    // 到了：本地这条删掉，紧接着的历史重绘会把它正式画出来（那段清空重画一定会跑，
+                    // 因为 history 非空——能在里面找到它）。没到：标未确认并把内容放回输入框。
+                    arrived ? rec.node.remove()
+                        : (rec.node.removeClass("ctrm-pending").addClass("ctrm-unconfirmed"),
+                            w.val() || w.val(rec.msg),
+                            ctrmToast("重连后记录里没有你刚发的那条，内容已放回输入框", "error"))
                 });
                 pendingSends = []
             }
@@ -2496,17 +2539,23 @@ img.playing {
                 var node = H({ id: s, name: c, msg: msg, time: Date.now() }, !0);
                 if (!node) return;
                 node.addClass("ctrm-pending");
-                var rec = { msg: msg, node: node, timer: null };
+                var rec = { msg: msg, node: node, timer: null, soft: null, settledAt: 0 };
+                // 软确认：ack 可能根本不来，不能只等它。8s 后只要连接还活着、发送缓冲也清空了
+                // （帧确实写出去了），就摘掉"发送中"。真发不出去时 bufferedAmount 不会清零，
+                // 那就继续挂着，等 90s 那条兜底或看门狗重连。
+                rec.soft = setTimeout(function () {
+                    0 <= pendingSends.indexOf(rec) && n && 1 === n.readyState && 0 === n.bufferedAmount &&
+                        (node.removeClass("ctrm-pending"), ctrmSettleSend(rec))
+                }, 8e3);
                 rec.timer = setTimeout(function () {
-                    var k = pendingSends.indexOf(rec);
-                    if (k < 0) return;
-                    pendingSends.splice(k, 1), node.removeClass("ctrm-pending").addClass("ctrm-unconfirmed");
-                    w.val() || w.val(msg);
-                    ctrmToast("这条 90 秒没等到服务器确认，内容已放回输入框", "error")
+                    if (0 > pendingSends.indexOf(rec)) return;
+                    node.removeClass("ctrm-pending").addClass("ctrm-unconfirmed");
+                    // 也转入留档：万一回发很晚才到，还能靠它去重
+                    ctrmSettleSend(rec);
+                    ctrmToast("这条 90 秒没等到服务器确认，可能没发出去", "error")
                 }, 9e4);
                 pendingSends.push(rec)
             }
-
             function R() {
                 var t = w.val().slice(0, 700).trim(); // 上限 700，已与 textarea 的 maxlength 对齐
                 if (0 === t.length) return void ctrmToast("你好像什么也没有输入呢");
