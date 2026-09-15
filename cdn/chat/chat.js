@@ -1881,15 +1881,18 @@ img.playing {
                 } catch (err) { }
             }
 
-            // 心跳仍复用 update 帧，但只在链路空闲超过 45s 时才发。
+            // 心跳仍复用 update 帧，但只在链路空闲超过 20s 时才发。
             // 服务端把 update 当注册帧处理：实测 0.0~0.6s 后回一个 identity（同一条连接、
             // 同一个 id），偶尔直接把连接关掉（174.2s 发出 → 174.6s 关闭）。而客户端收到
             // identity 会重置会话并清空重画消息列表，于是每 25s 就可能把聊到一半的消息
             // 抹成服务端那十几条、昵称闪一下。
             // 房间热闹时 memberList 每秒一两帧，链路根本不会空闲，这个心跳就永远不发；
             // 安静的房间才发，用来顶住代理常见的 60s 空闲断连（挂久了静默掉线就是它防的）。
+            // 门控必须小于下面那个 25s 的 tick：取 20s 时，安静房间第一拍（空闲 25s）就发得出去，
+            // 实际周期 25s；取 30s 或 45s 都会被第一拍挡掉、跨到第二拍，实际周期变成 50s，
+            // 离 60s 只剩 10s 余量。改 tick 或改这个数时两个值要一起看。
             function ctrmSendHello() {
-                45e3 < Date.now() - lastRecvAt && ctrmSendUpdate()
+                2e4 < Date.now() - lastRecvAt && ctrmSendUpdate()
             }
 
             // 指数退避重连：2s → 4s → 8s … 上限 30s，再叠 0~4s 抖动。
@@ -2562,10 +2565,14 @@ img.playing {
                 (ev && ev.persisted || !n || 2 === n.readyState || 3 === n.readyState) && ctrmReconnectNow("页面恢复")
             });
             // 切后台时定时器被降频甚至冻结，心跳停摆、连接被代理掐掉。所以一回前台就查一次：
-            // 连接还在就补发一帧心跳探活，已经断了就立刻重连。
+            // 连接还在就补发一帧探活，已经断了就立刻重连。
+            // 这里必须用 ctrmSendUpdate 而不是 ctrmSendHello：探活的目的就是"写一帧出去看看
+            // 还写不写得动"（写不动 bufferedAmount 就不清零，看门狗 q() 才拿得到判据）。
+            // 走 ctrmSendHello 的空闲门控的话，热闹房间刚收过帧、这一帧根本发不出去，
+            // 半开连接要等房间安静下来再攒满看门狗的 150s，最坏三分钟才恢复。
             document.addEventListener("visibilitychange", function () {
                 if (document.hidden || unloading) return;
-                n && 1 === n.readyState ? ctrmSendHello() : ctrmReconnectNow("回到前台")
+                n && 1 === n.readyState ? ctrmSendUpdate() : ctrmReconnectNow("回到前台")
             });
             // 换 WiFi / 切蜂窝：旧连接通常是半开的，onclose 十几分钟都不来
             window.addEventListener("online", function () { ctrmReconnectNow("网络恢复") });
