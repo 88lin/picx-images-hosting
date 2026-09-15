@@ -1795,7 +1795,7 @@ img.playing {
                                     H(r);
                                     break;
                                 case "ack":
-                                    w.val("")
+                                    ctrmConfirmOldestPending(), w.val("")
                             }
                         }(ev)
                 };
@@ -2134,7 +2134,19 @@ img.playing {
             }
             function I() { o && b.scrollTop(9999999) }
             var chatThrottleUntil = 0;
-            var pendingSends = [];
+            var pendingSends = [],
+                settledSends = [];
+            function ctrmSettleSend(rec) {
+                clearTimeout(rec.timer), clearTimeout(rec.soft);
+                var k = pendingSends.indexOf(rec);
+                0 <= k && pendingSends.splice(k, 1);
+                rec.settledAt = Date.now();
+                settledSends.push(rec);
+                settledSends = settledSends.filter(function (x) { return 18e4 > Date.now() - x.settledAt })
+            }
+            function ctrmConfirmOldestPending() {
+                pendingSends.length && ctrmSettleSend(pendingSends[0])
+            }
             function ctrmPendingInHistory(history) {
                 var h = history || [];
                 return pendingSends.some(function (rec) {
@@ -2143,34 +2155,54 @@ img.playing {
             }
             function ctrmResolvePending(msg) {
                 var raw = String(msg == null ? "" : msg).trim();
-                for (var k = 0; k < pendingSends.length; k++) {
-                    if (pendingSends[k].msg !== raw) continue;
-                    clearTimeout(pendingSends[k].timer), pendingSends[k].node.remove(), pendingSends.splice(k, 1);
-                    return !0
+                var lists = [pendingSends, settledSends];
+                for (var i = 0; i < lists.length; i++) {
+                    for (var k = 0; k < lists[i].length; k++) {
+                        var rec = lists[i][k];
+                        if (rec.msg !== raw) continue;
+                        var live = rec.node[0] && rec.node[0].isConnected;
+                        clearTimeout(rec.timer), clearTimeout(rec.soft), rec.node.remove(), lists[i].splice(k, 1);
+                        if (live) return;
+                        k--;
+                    }
                 }
-                return !1
             }
             function ctrmFlushPending(history) {
-                if (!pendingSends.length) return;
                 var h = history || [];
+                settledSends = [];
+                if (!pendingSends.length) return;
+                var keep = [];
                 pendingSends.forEach(function (rec) {
-                    clearTimeout(rec.timer), rec.node.remove();
+                    clearTimeout(rec.timer), clearTimeout(rec.soft);
                     var arrived = h.some(function (x) { return x && String(x.msg == null ? "" : x.msg).trim() === rec.msg });
-                    arrived || (w.val() || w.val(rec.msg), ctrmToast("重连后记录里没有你刚发的那条，内容已放回输入框", "error"))
+                    if (arrived) return void rec.node.remove();
+                    rec.node.removeClass("ctrm-pending").addClass("ctrm-unconfirmed");
+                    w.val() || w.val(rec.msg);
+                    ctrmToast("重连后记录里没有你刚发的那条，内容已放回输入框", "error");
+                    rec.settledAt = Date.now(), keep.push(rec)
                 });
-                pendingSends = []
+                pendingSends = [], settledSends = keep
             }
             function ctrmEchoLocal(msg) {
                 if (!s) return;
                 var node = H({ id: s, name: c, msg: msg, time: Date.now() }, !0);
                 if (!node) return;
                 node.addClass("ctrm-pending");
-                var rec = { msg: msg, node: node, timer: null };
+                var rec = { msg: msg, node: node, timer: null, soft: null, settledAt: 0 };
+                var softAt = 8e3;
+                function softCheck() {
+                    if (0 > pendingSends.indexOf(rec)) return;
+                    if (n && 1 === n.readyState && 0 === n.bufferedAmount)
+                        return node.removeClass("ctrm-pending"), void ctrmSettleSend(rec);
+                    softAt += 4e3;
+                    6e4 > softAt && (rec.soft = setTimeout(softCheck, 4e3))
+                }
+                rec.soft = setTimeout(softCheck, softAt);
                 rec.timer = setTimeout(function () {
-                    var k = pendingSends.indexOf(rec);
-                    if (k < 0) return;
-                    pendingSends.splice(k, 1), node.removeClass("ctrm-pending").addClass("ctrm-unconfirmed");
-                    w.val() || w.val(msg);
+                    if (0 > pendingSends.indexOf(rec)) return;
+                    node.removeClass("ctrm-pending").addClass("ctrm-unconfirmed");
+                    w.val() || w.val(rec.msg);
+                    ctrmSettleSend(rec);
                     ctrmToast("这条 90 秒没等到服务器确认，内容已放回输入框", "error")
                 }, 9e4);
                 pendingSends.push(rec)
