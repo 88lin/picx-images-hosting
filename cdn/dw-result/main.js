@@ -330,7 +330,7 @@ const resultState = {
           '猫鼬': '你是警惕的哨兵与家庭的守护者。你对集体有着极强的归属感和责任心，时刻为家人的安全站岗放哨。你们的生存依赖于高效的团队协作和分工。你的勇敢不是为了个人，而是为了整个族群的安危。'
       };
         elements.animalDescription.textContent = animalDescriptions[best.name] || '你有独特的个性，无法被简单归类。你拥有多面的性格，能够在不同场合展现不同的一面，是一个复杂而有趣的人。';
-        // 第一、二名相似度极接近时才出现（约 19% 的人），原来只算不显示
+        // 第一、二名相似度极接近时才出现，原来只算不显示
         const blendEl = document.getElementById('animal-blend');
         if (blendEl) {
           const blend = resultState.animalResult.blend;
