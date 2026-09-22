@@ -60,6 +60,7 @@ const resultState = {
             }
             resultState.answers = target.answers || {};
             resultState.createdAt = target.createdAt || null;
+            resultState.historyEntry = target;
           } else {
             const storedAnswers = localStorage.getItem('quizAnswers');
             if (!storedAnswers) {
@@ -162,15 +163,18 @@ const resultState = {
         { A: { AES: 2 }, B: { COM: 2 }, C: { SEC: 2 }, D: { DOM: 2 } }
     ];
       const MAX_PER_DIM = {};
-      DIMENSION_KEYS.forEach(k => { MAX_PER_DIM[k] = 0; });
+      const CHANCE_PER_DIM = {};
+      DIMENSION_KEYS.forEach(k => { MAX_PER_DIM[k] = 0; CHANCE_PER_DIM[k] = 0; });
       SCORE_MAP.forEach((row) => {
         const bestThisQuestion = {};
-        DIMENSION_KEYS.forEach(k => { bestThisQuestion[k] = 0; });
+        const sumThisQuestion = {};
+        DIMENSION_KEYS.forEach(k => { bestThisQuestion[k] = 0; sumThisQuestion[k] = 0; });
         ['A', 'B', 'C', 'D'].forEach((opt) => {
           const m = row[opt];
           if (!m) return;
           Object.keys(m).forEach((dim) => {
             const val = m[dim] || 0;
+            sumThisQuestion[dim] += val;
             if (val > bestThisQuestion[dim]) {
               bestThisQuestion[dim] = val;
             }
@@ -178,11 +182,34 @@ const resultState = {
         });
         DIMENSION_KEYS.forEach((dim) => {
           MAX_PER_DIM[dim] += bestThisQuestion[dim];
+          CHANCE_PER_DIM[dim] += sumThisQuestion[dim] / 4;
         });
       });
+      // 随机作答时各维度的期望占比，用作 50 分基准。各维度出题数不同（AGI 25 题、DOM 46 题），
+      // 所以基准必须按维度分别算，不能统一用 0.25。
+      const CHANCE_RATIO = {};
+      DIMENSION_KEYS.forEach((dim) => {
+        CHANCE_RATIO[dim] = MAX_PER_DIM[dim] ? CHANCE_PER_DIM[dim] / MAX_PER_DIM[dim] : 0.25;
+      });
+      const DISPLAY_SPAN = 120;
+      const DISPLAY_FLOOR = 5;
+      const DISPLAY_CEIL = 95;
       function calculateResult(animals) {
       const { ratios, display } = calculateDimensionScores(resultState.answers);
       const match = window.Scoring.nearestAnimal(ratios, animals);
+      // 回看历史时固定用当时存下的动物，否则匹配算法一旦调整，
+      // 历史卡片和点进去的结果页会各说各的
+      const saved = resultState.historyEntry;
+      if (saved && saved.animalId) {
+        const pinned = animals.find(item => item.id === saved.animalId);
+        if (pinned) {
+          match.best = pinned;
+          match.type = saved.typeCombined || pinned.name;
+        }
+      }
+      const typeText = match.type || '';
+      const blendName = typeText.indexOf('-') > -1 ? typeText.split('-')[1] : '';
+      match.blend = blendName ? (animals.find(item => item.name === blendName) || null) : null;
       match.tScores = display;
       resultState.animalResult = match;
     }
@@ -214,14 +241,12 @@ const resultState = {
           if (r > 1) r = 1;
           ratios[dim] = r;
         });
-        const vals = Object.values(ratios);
-        const min = Math.min(...vals);
-        const max = Math.max(...vals);
-        const span = (max - min) || 1;
+        // 绝对分：以随机作答的期望值为 50 分换算。之前是对 7 个维度做 min-max 拉伸，
+        // 导致任何人都必然有一个维度正好 80、一个正好 20，分布平的人也会被拉出假的强弱项。
         const display = {};
         DIMENSION_KEYS.forEach(dim => {
-          const rel = (ratios[dim] - min) / span;
-          display[dim] = Math.round(20 + rel * 60);
+          const scaled = 50 + (ratios[dim] - CHANCE_RATIO[dim]) * DISPLAY_SPAN;
+          display[dim] = Math.round(Math.min(DISPLAY_CEIL, Math.max(DISPLAY_FLOOR, scaled)));
         });
         return { raw, ratios, display };
       }
@@ -257,7 +282,7 @@ const resultState = {
           const { best, type, tScores } = resultState.animalResult || {};
           if (!best || !tScores) return;
           const entry = {
-            id: Date.now().toString(),
+            id: Date.now().toString() + '-' + Math.random().toString(36).slice(2, 6),
             createdAt: resultState.createdAt || new Date().toISOString(),
             animalId: best.id || '',
             animalName: best.name || '',
@@ -304,8 +329,13 @@ const resultState = {
           '浣熊': '你是机灵的都市探险家，总能找到解决问题的“歪路子”。你好奇心极强，动手能力超群，为了达成目的可以不择手段（通常是为了吃的）。你非常灵活，总能在人类制定的规则中找到自己的生存空间。',
           '猫鼬': '你是警惕的哨兵与家庭的守护者。你对集体有着极强的归属感和责任心，时刻为家人的安全站岗放哨。你们的生存依赖于高效的团队协作和分工。你的勇敢不是为了个人，而是为了整个族群的安危。'
       };
-        elements.animalType.textContent = getAnimalTypeByName(best.name);
         elements.animalDescription.textContent = animalDescriptions[best.name] || '你有独特的个性，无法被简单归类。你拥有多面的性格，能够在不同场合展现不同的一面，是一个复杂而有趣的人。';
+        // 第一、二名相似度极接近时才出现，原来只算不显示
+        const blendEl = document.getElementById('animal-blend');
+        if (blendEl) {
+          const blend = resultState.animalResult.blend;
+          blendEl.textContent = blend ? `${blend.emoji} 你身上也有「${blend.name}」的一面` : '';
+        }
         renderDimensions(tScores);
         renderRadarChart(tScores);
         renderFeatureCombinations(tScores);
@@ -865,8 +895,10 @@ const resultState = {
           'AES': '审美性'
         };
         const ctx = document.getElementById('dimensions-radar-chart').getContext('2d');
-        const labels = Object.values(dimensionNames);
-        const data = Object.values(tScores);
+        // 标签和数据都按 tScores 的键取，避免两个对象键顺序不一致时维度名对错
+        const keys = Object.keys(tScores);
+        const labels = keys.map(k => dimensionNames[k] || k);
+        const data = keys.map(k => tScores[k]);
         if (window.dimensionsRadarChart) {
           window.dimensionsRadarChart.destroy();
         }
